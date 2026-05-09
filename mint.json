@@ -1,5 +1,5 @@
 {
-  "$schema": "https://mintlify.com/schema.json",
+  "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Ratel Security",
   "logo": {
@@ -11,52 +11,54 @@
     "light": "#334155",
     "dark": "#0F172A"
   },
-  "navigation": [
-    {
-      "group": "Overview",
-      "pages": [
-        "introduction"
-      ]
-    },
-    {
-      "group": "Core Concepts",
-      "pages": [
-        "core-concepts/screening-pipeline",
-        "core-concepts/scoring-algorithm",
-        "core-concepts/engine-weights"
-      ]
-    },
-    {
-      "group": "Features",
-      "pages": [
-        "features/cbn-rules",
-        "features/sanctions-screening",
-        "features/kyc-verification",
-        "features/behavioral-analysis",
-        "features/custom-rules",
-        "features/email-notifications"
-      ]
-    },
-    {
-      "group": "Modules",
-      "pages": [
-        "modules/overview",
-        "modules/auth",
-        "modules/transactions",
-        "modules/cases",
-        "modules/rules",
-        "modules/kyc",
-        "modules/reports",
-        "modules/audit",
-        "modules/tenants"
-      ]
-    },
-    {
-      "group": "API Reference",
-      "pages": [
-        "api-reference/integration-guide",
-        "api-reference/quick-reference"
-      ]
-    }
-  ]
+  "navigation": {
+    "groups": [
+      {
+        "group": "Overview",
+        "pages": [
+          "introduction"
+        ]
+      },
+      {
+        "group": "Core Concepts",
+        "pages": [
+          "core-concepts/screening-pipeline",
+          "core-concepts/scoring-algorithm",
+          "core-concepts/engine-weights"
+        ]
+      },
+      {
+        "group": "Features",
+        "pages": [
+          "features/cbn-rules",
+          "features/sanctions-screening",
+          "features/kyc-verification",
+          "features/behavioral-analysis",
+          "features/custom-rules",
+          "features/email-notifications"
+        ]
+      },
+      {
+        "group": "Modules",
+        "pages": [
+          "modules/overview",
+          "modules/auth",
+          "modules/transactions",
+          "modules/cases",
+          "modules/rules",
+          "modules/kyc",
+          "modules/reports",
+          "modules/audit",
+          "modules/tenants"
+        ]
+      },
+      {
+        "group": "API Reference",
+        "pages": [
+          "api-reference/integration-guide",
+          "api-reference/quick-reference"
+        ]
+      }
+    ]
+  }
 }

@@ -1,0 +1,21 @@
+---
+title: 'KYC Verification'
+---
+
+Every transaction checks the sender's KYC verification status using their BVN.
+
+**Identity Verification Providers:**
+BVN, NIN, and vNIN verification calls are made to **Prembly IdentityPass** (primary) or **Dojah** (fallback). When you trigger `verify-bvn` or `verify-nin`, the platform calls the provider's API with the ID number and cross-references the returned name against the applicant's name (including swapped name order, which is common in Nigeria). Liveness checks use Prembly's face-match and liveness detection API.
+
+| KYC Status | Score | Outcome | What Happens |
+|-----------|-------|---------|--------------|
+| **REJECTED** | 70 | ESCALATE | Case created, officer notified, enhanced due diligence required |
+| **EXPIRED** | 50 | REVIEW | Officer notified, re-verification required |
+| **NONE** (no record) | 40 | REVIEW | No KYC application found — officer notified |
+| **PENDING** | 20 | APPROVE | Application submitted, not yet processed |
+| **IN_PROGRESS** | 0 | APPROVE | Partial verification passed (BVN/NIN verified via Prembly) |
+| **VERIFIED** | 0 | APPROVE | Fully verified — no risk contribution |
+
+> **Note**: If `senderBvn` is not provided in the request, KYC status defaults to `NONE` (score 40, REVIEW). Always include the sender's BVN for accurate KYC risk scoring.
+
+---

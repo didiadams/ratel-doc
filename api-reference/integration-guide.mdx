@@ -1,0 +1,105 @@
+---
+title: 'Integration Guide'
+---
+
+### Authentication
+
+All API calls require a Bearer token obtained via the login endpoint:
+
+```
+POST /api/v1/auth/login
+Body: { "email": "...", "password": "..." }
+Response: { "accessToken": "...", "refreshToken": "..." }
+```
+
+Include the token in all subsequent requests:
+```
+Authorization: Bearer <accessToken>
+```
+
+### Transaction Screening Request
+
+```
+POST /api/v1/transactions/screen
+Content-Type: application/json
+Authorization: Bearer <token>
+```
+
+### Input Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `externalId` | `string` | ✅ | Your unique transaction reference (e.g. `"TXN-2026-001"`). Used for idempotency — sending the same ID twice returns the cached verdict. |
+| `type` | `string` | ✅ | Transaction type. See **Supported Types** below. |
+| `channel` | `string` | ✅ | Channel through which the transaction was initiated. See **Supported Channels** below. |
+| `amount` | `number` | ✅ | Transaction amount in minor currency unit or full value (e.g. `5000000` for ₦5M). |
+| `currency` | `string` | Optional | ISO 4217 currency code. Defaults to `"NGN"`. |
+| `senderAccountNumber` | `string` | ✅ | Sender's bank account number (NUBAN format, 10 digits). |
+| `senderBvn` | `string` | Optional | Sender's Bank Verification Number (11 digits). **Strongly recommended** — required for KYC verification and structuring detection. |
+| `senderName` | `string` | ✅ | Sender's full name. **Screened against global sanctions and PEP lists.** |
+| `senderBankCode` | `string` | Optional | Sender's bank CBN code (e.g. `"058"` for GTBank). |
+| `receiverAccountNumber` | `string` | Optional | Receiver's bank account number. |
+| `receiverBvn` | `string` | Optional | Receiver's BVN. |
+| `receiverName` | `string` | Optional | Receiver's full name. **Also screened against sanctions/PEP lists if provided.** |
+| `receiverBankCode` | `string` | Optional | Receiver's bank CBN code. |
+| `receiverCountry` | `string` | Optional | ISO 3166-1 alpha-2 country code (e.g. `"NG"`, `"US"`, `"GB"`). Triggers Foreign Transfer Report (FTR) if not `"NG"`. |
+| `narration` | `string` | Optional | Transaction narration/description. Used by custom rules for pattern matching. |
+| `deviceId` | `string` | Optional | Device fingerprint ID. Used by behavioral analysis for device anomaly detection. |
+| `ipAddress` | `string` | Optional | Client IP address. Used by behavioral analysis for geo-anomaly detection. |
+| `latitude` | `number` | Optional | GPS latitude. Used for location-based risk analysis. |
+| `longitude` | `number` | Optional | GPS longitude. Used for location-based risk analysis. |
+| `timestamp` | `string` | ✅ | ISO 8601 timestamp of the transaction (e.g. `"2026-05-08T14:30:00Z"`). |
+| `metadata` | `object` | Optional | Arbitrary key-value pairs for custom rule conditions or audit context. |
+
+### Supported Transaction Types
+
+| Type Value | Description | CBN Rules Triggered |
+|-----------|-------------|-------------------|
+| `CASH_DEPOSIT` | Over-the-counter cash deposit | CBN-001 (≥₦5M → CTR) |
+| `CASH_WITHDRAWAL` | Cash withdrawal from account | CBN-001 (≥₦5M → CTR) |
+| `TRANSFER` | Domestic electronic transfer (NIP, NEFT) | CBN-002 (≥₦10M → CTR) |
+| `INTERNATIONAL_TRANSFER` | Cross-border wire transfer | CBN-002 + CBN-005 (auto FTR) |
+| `BILL_PAYMENT` | Utility / bill payment | Standard screening |
+| `AIRTIME_PURCHASE` | Airtime / data top-up | Standard screening |
+| `POS` | Point-of-sale card transaction | Standard screening |
+| `ATM` | ATM withdrawal or transfer | Standard screening |
+| `LOAN_DISBURSEMENT` | Loan disbursement | Standard screening |
+| `SALARY` | Salary payment | Standard screening |
+
+> **Note**: `CASH_DEPOSIT` and `CASH_WITHDRAWAL` use the ₦5M cash threshold. All other types use the ₦10M electronic threshold for structuring detection.
+
+### Supported Channels
+
+| Channel Value | Description |
+|--------------|-------------|
+| `MOBILE_APP` | Mobile banking application |
+| `INTERNET_BANKING` | Web banking portal |
+| `USSD` | USSD banking (*737#, *901#, etc.) |
+| `ATM` | Automated teller machine |
+| `POS` | Point-of-sale terminal |
+| `BRANCH` | In-branch / over-the-counter |
+| `API` | Direct API integration (fintech) |
+| `CARD` | Card-not-present transaction |
+
+### Example Request
+
+```json
+{
+  "externalId": "TXN-2026-001",
+  "type": "TRANSFER",
+  "channel": "MOBILE_APP",
+  "amount": 5000000,
+  "currency": "NGN",
+  "senderAccountNumber": "0123456789",
+  "senderBvn": "22012345678",
+  "senderName": "John Doe",
+  "receiverAccountNumber": "9876543210",
+  "receiverName": "Jane Smith",
+  "receiverBankCode": "058",
+  "receiverCountry": "NG",
+  "narration": "Payment for goods",
+  "timestamp": "2026-05-08T12:00:00Z"
+}
+```
+
+---

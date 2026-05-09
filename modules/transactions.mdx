@@ -1,0 +1,49 @@
+---
+title: 'Authentication & User Management'
+---
+
+**Purpose**: Manage login sessions, user accounts, and role assignments.
+
+| Action | Endpoint | Who Can Do It |
+|--------|----------|---------------|
+| Login | `POST /api/v1/auth/login` | Anyone |
+| Refresh token | `POST /api/v1/auth/refresh` | Authenticated users |
+| Get my profile | `GET /api/v1/auth/me` | Authenticated users |
+| List users | `GET /api/v1/auth/users` | SUPER_ADMIN, BANK_ADMIN |
+| Create user | `POST /api/v1/auth/users` | SUPER_ADMIN, BANK_ADMIN |
+| Update user | `PATCH /api/v1/auth/users/:id` | SUPER_ADMIN, BANK_ADMIN |
+| Deactivate user | `DELETE /api/v1/auth/users/:id` | SUPER_ADMIN, BANK_ADMIN |
+
+**Login Request:**
+```json
+{ "email": "analyst@bank.com", "password": "SecurePass123!" }
+```
+
+**Login Response:**
+```json
+{
+  "accessToken": "eyJhbG...",
+  "refreshToken": "eyJhbG...",
+  "user": {
+    "id": "uuid",
+    "email": "analyst@bank.com",
+    "role": "ANALYST",
+    "tenantId": "uuid"
+  }
+}
+```
+
+**Create User Request:**
+```json
+{
+  "email": "new.officer@bank.com",
+  "password": "SecurePass123!",
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "role": "COMPLIANCE_OFFICER"
+}
+```
+
+> Access tokens expire after 15 minutes. Use the refresh token to obtain a new access token without re-authenticating.
+
+---

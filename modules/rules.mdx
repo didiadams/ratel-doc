@@ -1,0 +1,22 @@
+---
+title: 'Transaction Screening'
+---
+
+**Purpose**: Submit transactions for real-time AML/CFT screening. This is the core module.
+
+| Action | Endpoint | Who Can Do It |
+|--------|----------|---------------|
+| Screen transaction | `POST /api/v1/transactions/screen` | All authenticated users |
+| List transactions | `GET /api/v1/transactions` | All authenticated users |
+| Get transaction detail | `GET /api/v1/transactions/:id` | All authenticated users |
+
+**What you send**: See the [Integration Guide](#integration-guide) above for the full field reference.
+
+**What you get back**: A verdict with `outcome` (APPROVE/REVIEW/ESCALATE/BLOCK), `riskLevel`, `aggregateScore`, `riskBreakdown` per engine category, and `triggeredRules`.
+
+**Filtering transactions:**
+```
+GET /api/v1/transactions?outcome=BLOCK&riskLevel=CRITICAL&type=TRANSFER&page=1&limit=20
+```
+
+---

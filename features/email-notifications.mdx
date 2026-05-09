@@ -1,0 +1,13 @@
+---
+title: 'Email Notifications'
+---
+
+Every transaction that triggers rules (outcome ≠ APPROVE) sends an email alert to all compliance officers.
+
+| Event | Recipients | Content |
+|-------|-----------|---------|
+| Transaction BLOCK/ESCALATE/REVIEW | All Compliance Officers, Bank Admins, Super Admins | Risk level, score, amount, sender, triggered rules, dashboard link |
+| New user created | The new user | Welcome email with login link |
+| Tenant onboarded | Bank administrator | Onboarding guide |
+
+> In development mode (no email API key configured), emails are logged to the console.

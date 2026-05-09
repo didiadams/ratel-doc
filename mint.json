@@ -1,0 +1,61 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Ratel Security",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "colors": {
+    "primary": "#0F172A",
+    "light": "#334155",
+    "dark": "#0F172A"
+  },
+  "navigation": [
+    {
+      "group": "Overview",
+      "pages": [
+        "introduction"
+      ]
+    },
+    {
+      "group": "Core Concepts",
+      "pages": [
+        "core-concepts/screening-pipeline",
+        "core-concepts/scoring-algorithm",
+        "core-concepts/engine-weights"
+      ]
+    },
+    {
+      "group": "Features",
+      "pages": [
+        "features/cbn-rules",
+        "features/sanctions-screening",
+        "features/kyc-verification",
+        "features/behavioral-analysis",
+        "features/custom-rules",
+        "features/email-notifications"
+      ]
+    },
+    {
+      "group": "Modules",
+      "pages": [
+        "modules/overview",
+        "modules/auth",
+        "modules/transactions",
+        "modules/cases",
+        "modules/rules",
+        "modules/kyc",
+        "modules/reports",
+        "modules/audit",
+        "modules/tenants"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/integration-guide",
+        "api-reference/quick-reference"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+---
+title: 'API Quick Reference'
+---
+
+All endpoints are prefixed with `/api/v1/`. All require `Authorization: Bearer <token>` except login.
+
+| Module | Endpoints | Methods |
+|--------|-----------|---------|
+| **Auth** | `/auth/login`, `/auth/refresh`, `/auth/me`, `/auth/users` | POST, GET, PATCH, DELETE |
+| **Transactions** | `/transactions/screen`, `/transactions`, `/transactions/:id` | POST, GET |
+| **Cases** | `/cases`, `/cases/:id`, `/cases/:id/status`, `/cases/:id/assign`, `/cases/:id/notes` | POST, GET, PATCH |
+| **Rules** | `/rules`, `/rules/:id`, `/rules/:id/activate`, `/rules/:id/pause` | POST, GET, PATCH, DELETE |
+| **KYC** | `/kyc/applications`, `/kyc/applications/:id/verify-*`, `/kyc/applications/:id/approve` | POST, GET, PATCH |
+| **Reports** | `/reports/sar`, `/reports/ctr`, `/reports/ftr`, `/reports/:id/xml`, `/reports/:id/approve` | POST, GET, PATCH |
+| **Audit** | `/audit` | GET |
+| **Tenants** | `/tenants`, `/tenants/:id` | POST, GET, PATCH |
+| **Health** | `/health` | GET (no auth) |
+
+---
+
+> **Ratel Security** — Enterprise-grade AML/CFT compliance for African financial institutions.

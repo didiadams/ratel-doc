@@ -1,0 +1,39 @@
+---
+title: 'Detection Rules'
+---
+
+**Purpose**: Create, edit, activate, and pause custom detection rules. These are bank-specific rules that run alongside the 7 mandatory CBN rules.
+
+| Action | Endpoint | Who Can Do It |
+|--------|----------|---------------|
+| Create rule | `POST /api/v1/rules` | SUPER_ADMIN, BANK_ADMIN, COMPLIANCE_OFFICER |
+| List rules | `GET /api/v1/rules` | All authenticated users |
+| Get rule detail | `GET /api/v1/rules/:id` | All authenticated users |
+| Update rule | `PATCH /api/v1/rules/:id` | SUPER_ADMIN, BANK_ADMIN, COMPLIANCE_OFFICER |
+| Activate rule | `PATCH /api/v1/rules/:id/activate` | SUPER_ADMIN, BANK_ADMIN |
+| Pause rule | `PATCH /api/v1/rules/:id/pause` | SUPER_ADMIN, BANK_ADMIN |
+| Delete rule | `DELETE /api/v1/rules/:id` | SUPER_ADMIN, BANK_ADMIN |
+
+**Create Rule Request:**
+```json
+{
+  "name": "High-Value ATM Withdrawal",
+  "description": "Flag ATM withdrawals over ₦500,000",
+  "ruleType": "CUSTOM",
+  "configuration": {
+    "conditions": [
+      { "field": "amount", "operator": "GREATER_THAN", "value": 500000 },
+      { "field": "channel", "operator": "EQUALS", "value": "ATM" }
+    ],
+    "conditionLogic": "AND",
+    "outcome": "REVIEW",
+    "riskScore": 45,
+    "actions": ["NOTIFY_OFFICER"]
+  },
+  "scoreModifier": 45
+}
+```
+
+> **Note**: The 7 CBN mandatory rules cannot be edited, paused, or deleted. They appear in rule listings with `ruleType: "CBN_BUILTIN"`.
+
+---

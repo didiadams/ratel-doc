@@ -1,0 +1,43 @@
+---
+title: 'Global Sanctions & PEP Screening'
+---
+
+### Coverage
+
+The platform screens against **1.8 million entities** aggregated from:
+
+- UN Security Council Consolidated List
+- US OFAC SDN + Consolidated Lists
+- EU Consolidated Financial Sanctions
+- UK HMT Sanctions List
+- Interpol Red Notices
+- Politically Exposed Persons from 100+ countries
+- FATF Blacklist / Greylist entities
+- 40+ additional international sources
+
+### How Names Are Matched
+
+The matching engine uses multi-algorithm entity resolution:
+
+| Algorithm | What It Does |
+|-----------|-------------|
+| **Exact Match** | Case-normalized literal comparison |
+| **Jaro-Winkler** | Fuzzy string similarity (handles typos) |
+| **Phonetic Match** | Sound-alike matching (handles transliterations) |
+| **Fingerprint Levenshtein** | Edit distance on normalized name tokens |
+| **Country/DOB Penalty** | Reduces score when demographics don't match |
+
+**Threshold**: Only matches with ≥ 70% composite confidence are flagged.
+
+### Score Assignment
+
+| Match Type | Risk Score | Outcome |
+|-----------|------------|---------|
+| Sanctions list match | **95** | BLOCK |
+| PEP match | **70** | ESCALATE |
+| Other watchlist match | **60** | REVIEW |
+| No match | **0** | APPROVE |
+
+Both **sender** and **receiver** names are screened in parallel. PEP detection from this stage automatically feeds into CBN-004 PEP Screening.
+
+---

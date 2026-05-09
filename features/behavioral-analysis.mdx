@@ -1,0 +1,19 @@
+---
+title: 'Behavioral Analysis'
+---
+
+The behavioral analysis engine builds risk profiles over time by tracking device fingerprints, IP addresses, geographic patterns, and transaction velocity.
+
+| Signal | Trigger | Score | What It Detects |
+|--------|---------|-------|-----------------|
+| **Fraud Score** | Internal ML score > 30 | 0–100 | Aggregate behavioral anomaly score |
+| **Multiple Devices** | > 3 devices on one account | Up to 70 | Account takeover, credential sharing |
+| **Multiple IPs** | > 5 IPs on one account | Up to 60 | Proxy/VPN usage, bot activity |
+| **Multi-Country Activity** | > 2 countries on one account | Up to 80 | Impossible travel, geographic anomalies |
+| **Custom Flags** | Engine-detected anomalies | By severity | Session hijacking, device spoofing, velocity spikes |
+
+For **new senders** with no transaction history, the engine returns `"New User (No History)"` with score 0. Behavioral profiles strengthen as more transactions are processed.
+
+> **Tip**: Include `deviceId` and `ipAddress` in your transaction requests to enable the full power of behavioral analysis.
+
+---

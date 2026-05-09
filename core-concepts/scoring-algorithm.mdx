@@ -1,0 +1,36 @@
+---
+title: 'Scoring Algorithm'
+---
+
+### Score-to-Outcome Mapping
+
+Every engine produces a **risk score** from 0 to 100:
+
+| Score Range | Outcome | Risk Level | Action |
+|------------|---------|------------|--------|
+| **0 – 29** | `APPROVE` | `LOW` | Transaction proceeds normally |
+| **30 – 59** | `REVIEW` | `MEDIUM` | Flagged for manual compliance review |
+| **60 – 79** | `ESCALATE` | `HIGH` | Escalated to senior compliance officer |
+| **80 – 100** | `BLOCK` | `CRITICAL` | Transaction blocked, case auto-created, SAR generated |
+
+### Outcome Hierarchy
+
+```
+APPROVE (0) < REVIEW (1) < ESCALATE (2) < BLOCK (3)
+```
+
+> **The highest-severity outcome from ANY engine becomes the final decision.**
+> If the decision engine says APPROVE but sanctions screening says BLOCK → Final = **BLOCK**.
+
+### Risk Level Consistency
+
+The system enforces that risk level can **never understate** the outcome:
+
+| Outcome | Minimum Risk Level |
+|---------|--------------------|
+| BLOCK | CRITICAL |
+| ESCALATE | HIGH |
+| REVIEW | MEDIUM |
+| APPROVE | LOW |
+
+---

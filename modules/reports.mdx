@@ -1,0 +1,52 @@
+---
+title: 'Case Management'
+---
+
+**Purpose**: Investigate flagged transactions. Cases are auto-created when rules trigger, or manually created by compliance officers.
+
+| Action | Endpoint | Who Can Do It |
+|--------|----------|---------------|
+| Create case | `POST /api/v1/cases` | SUPER_ADMIN, BANK_ADMIN, COMPLIANCE_OFFICER, ANALYST |
+| List cases | `GET /api/v1/cases` | All authenticated users |
+| Get case detail | `GET /api/v1/cases/:id` | All authenticated users |
+| Update status | `PATCH /api/v1/cases/:id/status` | SUPER_ADMIN, BANK_ADMIN, COMPLIANCE_OFFICER |
+| Assign case | `PATCH /api/v1/cases/:id/assign` | SUPER_ADMIN, BANK_ADMIN, COMPLIANCE_OFFICER |
+| Add note | `POST /api/v1/cases/:id/notes` | All authenticated users |
+
+**Case Types:**
+
+| Type | When It's Created |
+|------|------------------|
+| `SUSPICIOUS_TRANSACTION` | Transaction BLOCKED by screening |
+| `AML_ALERT` | Transaction ESCALATED |
+| `SANCTIONS_HIT` | Sanctions list match detected |
+| `PEP_MATCH` | Politically Exposed Person matched |
+| `FRAUD_ALERT` | Behavioral anomaly detected |
+| `KYC_REVIEW` | KYC verification issue |
+| `REGULATORY_INQUIRY` | Manual regulatory investigation |
+| `BEHAVIORAL_ANOMALY` | Device/velocity anomaly flagged |
+
+**Case Statuses (Lifecycle):**
+
+```
+OPEN → IN_PROGRESS → PENDING_REVIEW → ESCALATED → RESOLVED_TRUE_POSITIVE / RESOLVED_FALSE_POSITIVE → CLOSED
+```
+
+**Create Case Request:**
+```json
+{
+  "type": "SUSPICIOUS_TRANSACTION",
+  "priority": "HIGH",
+  "title": "Large cash deposit — possible structuring",
+  "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours",
+  "relatedTransactionId": "uuid-of-transaction",
+  "tags": ["structuring", "cash"]
+}
+```
+
+**Filtering cases:**
+```
+GET /api/v1/cases?status=OPEN&type=SANCTIONS_HIT&priority=CRITICAL&page=1&limit=20
+```
+
+---

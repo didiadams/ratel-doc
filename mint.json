@@ -2,10 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Ratel Security",
-  "logo": {
-    "dark": "/logo/dark.svg",
-    "light": "/logo/light.svg"
-  },
+  "logo": "/logo.svg",
   "colors": {
     "primary": "#0F172A",
     "light": "#334155",

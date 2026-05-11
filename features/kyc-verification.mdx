@@ -5,7 +5,7 @@ title: 'KYC Verification'
 Every transaction checks the sender's KYC verification status using their BVN.
 
 **Identity Verification Providers:**
-BVN, NIN, and vNIN verification calls are made. When you trigger `verify-bvn` or `verify-nin`, the platform calls the provider's API with the ID number and cross-references the returned name against the applicant's name (including swapped name order, which is common in Nigeria). Liveness checks uses face-match and liveness detection API.
+BVN, NIN, and vNIN verification calls are made. When you trigger `verify-bvn` or `verify-nin`, the platform calls the provider's API with the ID number and cross-references the returned name against the applicant's name (including swapped name order, which is common in Nigeria). Liveness checks use face-match and liveness detection APIs.
 
 | KYC Status | Score | Outcome | What Happens |
 |-----------|-------|---------|--------------|

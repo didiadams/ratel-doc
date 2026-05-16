@@ -1,5 +1,5 @@
 ---
-title: 'Platform Overview'
+title: "Platform Overview"
 ---
 
 > Real-time AML/CFT Transaction Monitoring & Sanctions Screening Platform
@@ -7,29 +7,27 @@ title: 'Platform Overview'
 
 ---
 
-
-
 Ratel Security processes every financial transaction through a **6-layer screening pipeline** in under 200ms. Each layer produces an independent verdict with a score, outcome, and set of downstream actions. These verdicts are aggregated using a **weighted severity model** to produce a final decision.
 
 ### Key Design Principles
 
-| Principle | Implementation |
-|-----------|---------------|
-| **Fail-Open** | If the sanctions engine is unavailable, transactions proceed (logged for audit) |
-| **Highest-Severity-Wins** | If ANY engine says BLOCK, final outcome is BLOCK |
-| **Regulatory Override** | CBN rules carry 1.5× weight — cannot be disabled |
-| **Async Side-Effects** | Email, case creation, and reports never block the API response |
-| **Immutable Audit Trail** | Every screening event is logged with full context for CBN inspection |
+| Principle                 | Implementation                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------- |
+| **Fail-Open**             | If the sanctions engine is unavailable, transactions proceed (logged for audit) |
+| **Highest-Severity-Wins** | If ANY engine says BLOCK, final outcome is BLOCK                                |
+| **Regulatory Override**   | CBN rules carry 1.5× weight — cannot be disabled                                |
+| **Async Side-Effects**    | Email, case creation, and reports never block the API response                  |
+| **Immutable Audit Trail** | Every screening event is logged with full context for CBN inspection            |
 
 ### Screening Categories
 
-| Category | What It Does |
-|----------|-------------|
-| **Regulatory Compliance** | 7 mandatory CBN AML/CFT rules (always active, cannot be disabled) |
-| **Sanctions & PEP Screening** | Real-time screening against 1.8M entities from UN, OFAC, EU, UK, Interpol |
-| **KYC Verification** | Validates sender's KYC status — flags rejected/expired/missing verification |
-| **Custom Rules** | Bank-configurable detection rules (amount, name, pattern matching) |
-| **Decision Engine** | Scenario-based ML risk scoring |
-| **Behavioral Analysis** | Device fingerprinting, velocity checks, geographic anomaly detection |
+| Category                      | What It Does                                                                |
+| ----------------------------- | --------------------------------------------------------------------------- |
+| **Regulatory Compliance**     | 7 mandatory CBN AML/CFT rules (always active, cannot be disabled)           |
+| **Sanctions & PEP Screening** | Real-time screening against entities from UN, OFAC, EU, UK, Interpol        |
+| **KYC Verification**          | Validates sender's KYC status — flags rejected/expired/missing verification |
+| **Custom Rules**              | Configurable detection rules (amount, name, pattern matching)               |
+| **Decision Engine**           | Scenario-based ML risk scoring                                              |
+| **Behavioral Analysis**       | Device fingerprinting, velocity checks, geographic anomaly detection        |
 
 ---

@@ -1,23 +1,24 @@
 ---
-title: 'Screening Pipeline'
+title: "Screening Pipeline"
 ---
 
 Every transaction flows through these stages sequentially:
 
-| Stage | Category | Latency | Description |
-|-------|----------|---------|-------------|
-| 1 | **Validation** | ~5ms | Idempotency check, schema validation, store in database |
-| 2 | **Context Enrichment** | ~15ms | Fetch sender's last 50 transactions, account dormancy, KYC status |
-| 3 | **Sanctions & PEP** | ~25ms | Screen sender + receiver names against 1.8M global watchlist entities |
-| 4 | **Regulatory Compliance** | ~2ms | Execute 7 mandatory CBN rules (PEP status from Stage 3 feeds in) |
-| 5 | **KYC Verification** | ~0ms | Evaluate sender's KYC status (REJECTED / EXPIRED / NONE / VERIFIED) |
-| 6 | **Custom Rules** | ~10ms | Execute bank-configurable detection rules |
-| 7 | **External Engines** | ~50ms | Decision engine scoring + behavioral analysis (parallel) |
-| 8 | **Aggregation** | ~1ms | Weighted scoring, outcome selection, action dispatch |
+| Stage | Category                  | Latency | Description                                                         |
+| ----- | ------------------------- | ------- | ------------------------------------------------------------------- |
+| 1     | **Validation**            | ~5ms    | Idempotency check, schema validation, store in database             |
+| 2     | **Context Enrichment**    | ~15ms   | Fetch sender's last 50 transactions, account dormancy, KYC status   |
+| 3     | **Sanctions & PEP**       | ~25ms   | Screen sender + receiver names against global watchlist entities    |
+| 4     | **Regulatory Compliance** | ~2ms    | Execute 7 mandatory CBN rules (PEP status from Stage 3 feeds in)    |
+| 5     | **KYC Verification**      | ~0ms    | Evaluate sender's KYC status (REJECTED / EXPIRED / NONE / VERIFIED) |
+| 6     | **Custom Rules**          | ~10ms   | Execute configurable detection rules                                |
+| 7     | **External Engines**      | ~50ms   | Decision engine scoring + behavioral analysis (parallel)            |
+| 8     | **Aggregation**           | ~1ms    | Weighted scoring, outcome selection, action dispatch                |
 
 **Total latency: 80–200ms** (p95)
 
 **After aggregation** (async, non-blocking):
+
 - Auto-create compliance case
 - Generate SAR / CTR / FTR reports
 - Email alert to all compliance officers

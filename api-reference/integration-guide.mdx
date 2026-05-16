@@ -1,6 +1,6 @@
 ---
-title: 'API Reference'
-description: 'Integrate real-time AML/CFT transaction screening into your core banking application.'
+title: "API Reference"
+description: "Integrate real-time AML/CFT transaction screening into your core banking application."
 ---
 
 ## Introduction
@@ -27,7 +27,9 @@ X-API-Key: rk_live_a1b2c3d4e5f6g7h8i9j0
 ```
 
 <Warning>
-**Keep your API key secret.** Your key carries full screening privileges for your workspace. Never expose it in client-side code (mobile apps, browser JavaScript). All API calls must originate from your backend servers.
+  **Keep your API key secret.** Your key carries full screening privileges for
+  your workspace. Never expose it in client-side code (mobile apps, browser
+  JavaScript). All API calls must originate from your backend servers.
 </Warning>
 
 ---
@@ -63,26 +65,26 @@ curl -X POST {BASE_URL}/v1/transactions/screen \
 ```
 
 ```javascript Node.js
-const response = await fetch('BASE_URL/v1/transactions/screen', {
-  method: 'POST',
+const response = await fetch("BASE_URL/v1/transactions/screen", {
+  method: "POST",
   headers: {
-    'X-API-Key': 'rk_live_a1b2c3d4e5f6g7h8i9j0',
-    'Content-Type': 'application/json',
+    "X-API-Key": "rk_live_a1b2c3d4e5f6g7h8i9j0",
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    externalId: 'TXN-2026-001',
-    type: 'TRANSFER',
-    channel: 'MOBILE_APP',
+    externalId: "TXN-2026-001",
+    type: "TRANSFER",
+    channel: "MOBILE_APP",
     amount: 5000000,
-    currency: 'NGN',
-    senderAccountNumber: '0123456789',
-    senderBvn: '22012345678',
-    senderName: 'John Doe',
-    receiverAccountNumber: '9876543210',
-    receiverName: 'Jane Smith',
-    receiverCountry: 'NG',
-    narration: 'Payment for goods',
-    timestamp: '2026-05-08T12:00:00Z',
+    currency: "NGN",
+    senderAccountNumber: "0123456789",
+    senderBvn: "22012345678",
+    senderName: "John Doe",
+    receiverAccountNumber: "9876543210",
+    receiverName: "Jane Smith",
+    receiverCountry: "NG",
+    narration: "Payment for goods",
+    timestamp: "2026-05-08T12:00:00Z",
   }),
 });
 
@@ -119,16 +121,17 @@ response = requests.post(
 verdict = response.json()['data']['verdict']
 print(verdict['outcome'])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
 ```
+
 </CodeGroup>
 
 **Step 3:** Handle the response. Route your transaction based on the `outcome` field:
 
-| Outcome | Risk Level | Score Range | Your Action |
-|---------|------------|-------------|-------------|
-| `APPROVE` | `LOW` | 0–29 | ✅ Process the transaction immediately. |
-| `REVIEW` | `MEDIUM` | 30–59 | ⚠️ Process it, but flag for compliance review. |
-| `ESCALATE` | `HIGH` | 60–79 | 🔶 Hold the transaction pending manual approval. |
-| `BLOCK` | `CRITICAL` | 80–100 | 🚫 Reject the transaction and freeze the account. |
+| Outcome    | Risk Level | Score Range | Your Action                                       |
+| ---------- | ---------- | ----------- | ------------------------------------------------- |
+| `APPROVE`  | `LOW`      | 0–29        | ✅ Process the transaction immediately.           |
+| `REVIEW`   | `MEDIUM`   | 30–59       | ⚠️ Process it, but flag for compliance review.    |
+| `ESCALATE` | `HIGH`     | 60–79       | 🔶 Hold the transaction pending manual approval.  |
+| `BLOCK`    | `CRITICAL` | 80–100      | 🚫 Reject the transaction and freeze the account. |
 
 ---
 
@@ -138,24 +141,24 @@ print(verdict['outcome'])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
 
 `POST /api/v1/transactions/screen`
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `externalId` | `string` | ✅ | Your unique transaction reference. Used for **idempotency** — sending the same ID twice returns the cached verdict. |
-| `type` | `string` | ✅ | `TRANSFER`, `CASH_DEPOSIT`, `CASH_WITHDRAWAL`, `INTERNATIONAL_TRANSFER`, `BILL_PAYMENT` |
-| `channel` | `string` | ✅ | `MOBILE_APP`, `INTERNET_BANKING`, `USSD`, `ATM`, `POS`, `BRANCH` |
-| `amount` | `number` | ✅ | Amount in base currency unit (e.g. `5000000` = ₦5M). |
-| `currency` | `string` | | ISO 4217 code. Defaults to `NGN`. |
-| `senderAccountNumber` | `string` | ✅ | Sender's bank account number (NUBAN, 10 digits). |
-| `senderBvn` | `string` | | Sender's BVN. **Strongly recommended** — enables Identity Risk scoring. |
-| `senderName` | `string` | ✅ | Sender's full name. **Screened against global sanctions & PEP lists.** |
-| `receiverAccountNumber` | `string` | | Receiver's bank account number. |
-| `receiverName` | `string` | | Receiver's full name. **Also screened if provided.** |
-| `receiverBankCode` | `string` | | Receiver's bank CBN code (e.g. `"058"` for GTBank). |
-| `receiverCountry` | `string` | | ISO 3166-1 alpha-2 code (e.g. `"NG"`, `"US"`). Triggers FTR if ≠ `NG`. |
-| `narration` | `string` | | Transaction description. Scanned for high-risk keywords. |
-| `deviceId` | `string` | | Device fingerprint. Enables behavioral anomaly detection. |
-| `ipAddress` | `string` | | Client IP address. Enables geo-anomaly detection. |
-| `timestamp` | `string` | ✅ | ISO 8601 (e.g. `"2026-05-08T12:00:00Z"`). |
+| Field                   | Type     | Required | Description                                                                                                         |
+| ----------------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
+| `externalId`            | `string` | ✅       | Your unique transaction reference. Used for **idempotency** — sending the same ID twice returns the cached verdict. |
+| `type`                  | `string` | ✅       | `TRANSFER`, `CASH_DEPOSIT`, `CASH_WITHDRAWAL`, `INTERNATIONAL_TRANSFER`, `BILL_PAYMENT`                             |
+| `channel`               | `string` | ✅       | `MOBILE_APP`, `INTERNET_BANKING`, `USSD`, `ATM`, `POS`, `BRANCH`                                                    |
+| `amount`                | `number` | ✅       | Amount in base currency unit (e.g. `5000000` = ₦5M).                                                                |
+| `currency`              | `string` |          | ISO 4217 code. Defaults to `NGN`.                                                                                   |
+| `senderAccountNumber`   | `string` | ✅       | Sender's bank account number (NUBAN, 10 digits).                                                                    |
+| `senderBvn`             | `string` |          | Sender's BVN. **Strongly recommended** — enables Identity Risk scoring.                                             |
+| `senderName`            | `string` | ✅       | Sender's full name. **Screened against global sanctions & PEP lists.**                                              |
+| `receiverAccountNumber` | `string` |          | Receiver's bank account number.                                                                                     |
+| `receiverName`          | `string` |          | Receiver's full name. **Also screened if provided.**                                                                |
+| `receiverBankCode`      | `string` |          | Receiver's bank CBN code (e.g. `"058"` for GTBank).                                                                 |
+| `receiverCountry`       | `string` |          | ISO 3166-1 alpha-2 code (e.g. `"NG"`, `"US"`). Triggers FTR if ≠ `NG`.                                              |
+| `narration`             | `string` |          | Transaction description. Scanned for high-risk keywords.                                                            |
+| `deviceId`              | `string` |          | Device fingerprint. Enables behavioral anomaly detection.                                                           |
+| `ipAddress`             | `string` |          | Client IP address. Enables geo-anomaly detection.                                                                   |
+| `timestamp`             | `string` | ✅       | ISO 8601 (e.g. `"2026-05-08T12:00:00Z"`).                                                                           |
 
 ### Response
 
@@ -195,10 +198,13 @@ print(verdict['outcome'])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
   }
 }
 ```
+
 </CodeGroup>
 
 <Note>
-**Idempotency:** If you send the same `externalId` twice, the API returns the previously cached verdict without re-screening. Use this to safely retry failed requests.
+  **Idempotency:** If you send the same `externalId` twice, the API returns the
+  previously cached verdict without re-screening. Use this to safely retry
+  failed requests.
 </Note>
 
 ---
@@ -209,32 +215,33 @@ Every transaction passes through 6 screening layers in sequence. The entire pipe
 
 ### The Pipeline
 
-| Stage | Engine | Latency | What It Does |
-|-------|--------|---------|-------------|
-| 1 | **Validation** | ~5ms | Schema validation, idempotency check, persist transaction |
-| 2 | **Context Enrichment** | ~15ms | Fetch sender's recent history, account dormancy, KYC status |
-| 3 | **Sanctions & PEP** | ~25ms | Screen names against 1.8M global watchlist entities |
-| 4 | **Regulatory Compliance** | ~2ms | Execute 7 mandatory AML rules |
-| 5 | **Identity Risk** | ~1ms | Evaluate sender's KYC verification status |
-| 6 | **Behavioral Analysis** | ~50ms | ML scoring for device, velocity, and geographic anomalies |
+| Stage | Engine                    | Latency | What It Does                                                |
+| ----- | ------------------------- | ------- | ----------------------------------------------------------- |
+| 1     | **Validation**            | ~5ms    | Schema validation, idempotency check, persist transaction   |
+| 2     | **Context Enrichment**    | ~15ms   | Fetch sender's recent history, account dormancy, KYC status |
+| 3     | **Sanctions & PEP**       | ~25ms   | Screen names against global watchlist entities              |
+| 4     | **Regulatory Compliance** | ~2ms    | Execute 7 mandatory AML rules                               |
+| 5     | **Identity Risk**         | ~1ms    | Evaluate sender's KYC verification status                   |
+| 6     | **Behavioral Analysis**   | ~50ms   | ML scoring for device, velocity, and geographic anomalies   |
 
 ### Mandatory Regulatory Rules
 
 These 7 rules are **always active** and **cannot be disabled**. They implement national AML/CFT Act requirements.
 
-| Rule | Trigger | Auto-Actions |
-|------|---------|-------------|
-| **AML-001** Cash Threshold | Cash ≥ ₦5,000,000 | Generate CTR, Notify Officer |
-| **AML-002** Transfer Threshold | Transfer ≥ ₦10,000,000 | Generate CTR, Notify Officer |
-| **AML-003** Structuring | Single txn ≥ 80% of threshold, OR 3+ txns in 24h exceeding threshold | Generate SAR, Create Case |
-| **AML-004** PEP Screening | Sender is a Politically Exposed Person | Enhanced Due Diligence |
-| **AML-005** Foreign Transfer | International transfer or receiver country ≠ NG | Generate FTR |
-| **AML-006** Dormant Account | No activity for ≥ 180 days | Create Case |
-| **AML-007** Rapid Succession | ≥ 5 txns within 60 minutes from same account | Create Case |
+| Rule                           | Trigger                                                              | Auto-Actions                 |
+| ------------------------------ | -------------------------------------------------------------------- | ---------------------------- |
+| **AML-001** Cash Threshold     | Cash ≥ ₦5,000,000                                                    | Generate CTR, Notify Officer |
+| **AML-002** Transfer Threshold | Transfer ≥ ₦10,000,000                                               | Generate CTR, Notify Officer |
+| **AML-003** Structuring        | Single txn ≥ 80% of threshold, OR 3+ txns in 24h exceeding threshold | Generate SAR, Create Case    |
+| **AML-004** PEP Screening      | Sender is a Politically Exposed Person                               | Enhanced Due Diligence       |
+| **AML-005** Foreign Transfer   | International transfer or receiver country ≠ NG                      | Generate FTR                 |
+| **AML-006** Dormant Account    | No activity for ≥ 180 days                                           | Create Case                  |
+| **AML-007** Rapid Succession   | ≥ 5 txns within 60 minutes from same account                         | Create Case                  |
 
 ### Sanctions & PEP Matching
 
 Sender and receiver names are cross-referenced against **1.8 million entities** from:
+
 - UN Security Council Consolidated List
 - US OFAC SDN + Consolidated Lists
 - EU Consolidated Financial Sanctions
@@ -244,43 +251,43 @@ Sender and receiver names are cross-referenced against **1.8 million entities** 
 
 The engine uses multi-algorithm entity resolution to catch typos, transliterations, and aliases:
 
-| Algorithm | Purpose |
-|-----------|---------|
-| **Exact Match** | Case-normalized literal comparison |
-| **Jaro-Winkler** | Fuzzy string similarity (handles typos) |
-| **Phonetic Match** | Sound-alike matching (handles transliterations) |
-| **Fingerprint Levenshtein** | Edit distance on normalized name tokens |
+| Algorithm                   | Purpose                                         |
+| --------------------------- | ----------------------------------------------- |
+| **Exact Match**             | Case-normalized literal comparison              |
+| **Jaro-Winkler**            | Fuzzy string similarity (handles typos)         |
+| **Phonetic Match**          | Sound-alike matching (handles transliterations) |
+| **Fingerprint Levenshtein** | Edit distance on normalized name tokens         |
 
 Only matches with ≥ 70% composite confidence are flagged.
 
 ### Identity Risk Scoring
 
-| Sender KYC Status | Risk Score | Outcome |
-|--------------------|-----------|---------|
-| **VERIFIED** | 0 | APPROVE |
-| **NONE** (no application) | 40 | REVIEW |
-| **EXPIRED** | 50 | REVIEW |
-| **REJECTED** | 70 | ESCALATE |
+| Sender KYC Status         | Risk Score | Outcome  |
+| ------------------------- | ---------- | -------- |
+| **VERIFIED**              | 0          | APPROVE  |
+| **NONE** (no application) | 40         | REVIEW   |
+| **EXPIRED**               | 50         | REVIEW   |
+| **REJECTED**              | 70         | ESCALATE |
 
 ### Behavioral Analysis
 
-| Signal | Trigger | Detects |
-|--------|---------|---------|
-| **Multiple Devices** | > 3 devices on one account | Account takeover, credential sharing |
-| **Multiple IPs** | > 5 IPs on one account | Proxy/VPN usage, bot activity |
-| **Multi-Country** | > 2 countries on one account | Impossible travel, geographic anomalies |
+| Signal               | Trigger                      | Detects                                 |
+| -------------------- | ---------------------------- | --------------------------------------- |
+| **Multiple Devices** | > 3 devices on one account   | Account takeover, credential sharing    |
+| **Multiple IPs**     | > 5 IPs on one account       | Proxy/VPN usage, bot activity           |
+| **Multi-Country**    | > 2 countries on one account | Impossible travel, geographic anomalies |
 
 ### Scoring Algorithm
 
 Each engine produces a risk score (0–100). Scores are aggregated using weighted severity:
 
-| Category | Weight | Rationale |
-|----------|--------|-----------|
-| **Regulatory Compliance** | **1.5×** | Core compliance — highest authority |
-| **Identity Verification** | **1.3×** | KYC integrity is compliance-critical |
-| **Custom Rules** | **1.2×** | Bank-specific logic elevated above generic engines |
-| **Sanctions & PEP** | **1.0×** | Standard weight — severity via outcome escalation |
-| **Behavioral Analysis** | **0.8×** | Supplementary evidence |
+| Category                  | Weight   | Rationale                                          |
+| ------------------------- | -------- | -------------------------------------------------- |
+| **Regulatory Compliance** | **1.5×** | Core compliance — highest authority                |
+| **Identity Verification** | **1.3×** | KYC integrity is compliance-critical               |
+| **Custom Rules**          | **1.2×** | Bank-specific logic elevated above generic engines |
+| **Sanctions & PEP**       | **1.0×** | Standard weight — severity via outcome escalation  |
+| **Behavioral Analysis**   | **0.8×** | Supplementary evidence                             |
 
 **Score Floor Guarantee:** `Final Score = MAX(weighted_average, max_engine_score × 0.8)`
 
@@ -302,13 +309,14 @@ While the API responds in under 200ms, the following actions are queued in the b
 Ratel Security sends real-time notifications to your backend when a compliance officer resolves a case linked to one of your transactions.
 
 <Note>
-**Setup:** Configure your `Webhook URL` and `Webhook Secret` in the **Developer Webhooks** section of the API Keys page in your Dashboard.
+  **Setup:** Configure your `Webhook URL` and `Webhook Secret` in the
+  **Developer Webhooks** section of the API Keys page in your Dashboard.
 </Note>
 
 ### Events
 
-| Event | Trigger |
-|-------|---------|
+| Event           | Trigger                                                                                               |
+| --------------- | ----------------------------------------------------------------------------------------------------- |
 | `case.resolved` | A compliance officer marks a case as `RESOLVED_TRUE_POSITIVE`, `RESOLVED_FALSE_POSITIVE`, or `CLOSED` |
 
 ### Payload
@@ -331,26 +339,28 @@ Ratel Security sends real-time notifications to your backend when a compliance o
 
 **Handling the resolution in your system:**
 
-| `status` Value | Meaning | Your Action |
-|----------------|---------|-------------|
-| `RESOLVED_FALSE_POSITIVE` | Officer confirmed the transaction is legitimate | Unfreeze the transaction and process it |
-| `RESOLVED_TRUE_POSITIVE` | Officer confirmed suspicious activity | Permanently block and escalate internally |
-| `CLOSED` | Case closed after investigation | Take no further action |
+| `status` Value            | Meaning                                         | Your Action                               |
+| ------------------------- | ----------------------------------------------- | ----------------------------------------- |
+| `RESOLVED_FALSE_POSITIVE` | Officer confirmed the transaction is legitimate | Unfreeze the transaction and process it   |
+| `RESOLVED_TRUE_POSITIVE`  | Officer confirmed suspicious activity           | Permanently block and escalate internally |
+| `CLOSED`                  | Case closed after investigation                 | Take no further action                    |
 
 ### Delivery Guarantees
 
 Webhook delivery is backed by a persistent message queue with automatic retries:
 
-| Property | Value |
-|----------|-------|
-| **Max Attempts** | 5 |
-| **Backoff Strategy** | Exponential (5s → 10s → 20s → 40s → 80s) |
-| **Request Timeout** | 10 seconds per attempt |
-| **Completed Job Retention** | 24 hours |
-| **Failed Job Retention** | 7 days |
+| Property                    | Value                                    |
+| --------------------------- | ---------------------------------------- |
+| **Max Attempts**            | 5                                        |
+| **Backoff Strategy**        | Exponential (5s → 10s → 20s → 40s → 80s) |
+| **Request Timeout**         | 10 seconds per attempt                   |
+| **Completed Job Retention** | 24 hours                                 |
+| **Failed Job Retention**    | 7 days                                   |
 
 <Warning>
-**Your endpoint must return a `2xx` status code.** Any non-2xx response will trigger automatic retries. If all 5 attempts fail, the event is retained in the dead-letter queue for 7 days.
+  **Your endpoint must return a `2xx` status code.** Any non-2xx response will
+  trigger automatic retries. If all 5 attempts fail, the event is retained in
+  the dead-letter queue for 7 days.
 </Warning>
 
 ### Signature Verification
@@ -362,29 +372,30 @@ Every webhook includes an `X-Ratel-Signature` header — an HMAC-SHA256 hash of 
 const crypto = require('crypto');
 
 app.post('/ratel/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
-  const signature = req.headers['x-ratel-signature'];
-  const hash = crypto
-    .createHmac('sha256', process.env.RATEL_WEBHOOK_SECRET)
-    .update(req.body)
-    .digest('hex');
+const signature = req.headers['x-ratel-signature'];
+const hash = crypto
+.createHmac('sha256', process.env.RATEL_WEBHOOK_SECRET)
+.update(req.body)
+.digest('hex');
 
-  if (`sha256=${hash}` !== signature) {
-    return res.status(401).send('Invalid signature');
-  }
+if (`sha256=${hash}` !== signature) {
+return res.status(401).send('Invalid signature');
+}
 
-  const event = JSON.parse(req.body);
+const event = JSON.parse(req.body);
 
-  if (event.event === 'case.resolved') {
-    if (event.data.status === 'RESOLVED_FALSE_POSITIVE') {
-      // Unfreeze the transaction in your system
-    } else if (event.data.status === 'RESOLVED_TRUE_POSITIVE') {
-      // Permanently block and escalate
-    }
-  }
+if (event.event === 'case.resolved') {
+if (event.data.status === 'RESOLVED_FALSE_POSITIVE') {
+// Unfreeze the transaction in your system
+} else if (event.data.status === 'RESOLVED_TRUE_POSITIVE') {
+// Permanently block and escalate
+}
+}
 
-  res.status(200).send('OK');
+res.status(200).send('OK');
 });
-```
+
+````
 
 ```python Python (Flask)
 import hmac
@@ -417,7 +428,8 @@ def handle_webhook():
             pass
 
     return 'OK', 200
-```
+````
+
 </CodeGroup>
 
 ---
@@ -426,17 +438,20 @@ def handle_webhook():
 
 Standard HTTP status codes indicate success or failure:
 
-| Code | Meaning | Solution |
-|------|---------|----------|
-| `200` | Success | Request processed successfully. |
-| `400` | Bad Request | Check validation errors in the response body. Ensure all required fields are present. |
-| `401` | Unauthorized | Your `X-API-Key` is missing, invalid, or revoked. Check the API Keys page in your Dashboard. |
-| `409` | Conflict | The `externalId` was already processed. The cached verdict is returned. |
-| `429` | Too Many Requests | You exceeded your workspace's rate limit. Implement exponential backoff. |
-| `500` | Internal Server Error | Unexpected server error. Retry with backoff. |
+| Code  | Meaning               | Solution                                                                                     |
+| ----- | --------------------- | -------------------------------------------------------------------------------------------- |
+| `200` | Success               | Request processed successfully.                                                              |
+| `400` | Bad Request           | Check validation errors in the response body. Ensure all required fields are present.        |
+| `401` | Unauthorized          | Your `X-API-Key` is missing, invalid, or revoked. Check the API Keys page in your Dashboard. |
+| `409` | Conflict              | The `externalId` was already processed. The cached verdict is returned.                      |
+| `429` | Too Many Requests     | You exceeded your workspace's rate limit. Implement exponential backoff.                     |
+| `500` | Internal Server Error | Unexpected server error. Retry with backoff.                                                 |
 
 <Note>
-**Fail-Open Policy:** If the Sanctions or Behavioral engines experience upstream downtime, Ratel Security implements a fail-open policy — your legitimate transactions continue processing without interruption, while partial screenings are logged for retroactive review.
+  **Fail-Open Policy:** If the Sanctions or Behavioral engines experience
+  upstream downtime, Ratel Security implements a fail-open policy — your
+  legitimate transactions continue processing without interruption, while
+  partial screenings are logged for retroactive review.
 </Note>
 
 ---

@@ -92,15 +92,7 @@ data = response.json()
   "data": {
     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-      "id": "550e8400-e29b-41d4-a716-446655440000",
-      "email": "analyst@bank.com",
-      "firstName": "Jane",
-      "lastName": "Smith",
-      "role": "ANALYST",
-      "tenantId": "660e8400-e29b-41d4-a716-446655440001",
-      "createdAt": "2026-01-15T09:30:00Z"
-    }
+    "expiresIn": 3600
   }
 }
 ```
@@ -144,20 +136,21 @@ curl -X POST https://api.ratel.security/v1/auth/refresh \
   "success": true,
   "data": {
     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresIn": 3600
   }
 }
 ```
 
 <Note>
-  Access tokens expire after **15 minutes**. Refresh tokens expire after **7 days**.
+  Access tokens expire after **15 minutes** (`expiresIn: 900`). Refresh tokens expire after **7 days**.
 </Note>
 
 ---
 
 ### Get My Profile
 
-Retrieve the currently authenticated user's details.
+Retrieve the currently authenticated user's details, including their tenant.
 
 **Example Request**
 
@@ -177,8 +170,16 @@ curl -X GET https://api.ratel.security/v1/auth/me \
     "firstName": "Jane",
     "lastName": "Smith",
     "role": "ANALYST",
-    "tenantId": "660e8400-e29b-41d4-a716-446655440001",
-    "lastLoginAt": "2026-05-16T10:00:00Z"
+    "isActive": true,
+    "lastLoginAt": "2026-05-16T10:00:00Z",
+    "createdAt": "2026-01-15T09:30:00Z",
+    "tenant": {
+      "id": "660e8400-e29b-41d4-a716-446655440001",
+      "name": "First Bank of Nigeria",
+      "slug": "first-bank",
+      "logoUrl": null,
+      "primaryColor": "#0F172A"
+    }
   }
 }
 ```
@@ -194,7 +195,7 @@ Retrieve all users within your tenant.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `page` | `integer` | `1` | Page number |
-| `limit` | `integer` | `20` | Items per page (max 100) |
+| `limit` | `integer` | `50` | Items per page (max 100) |
 | `role` | `string` | — | Filter by role |
 
 **Example Request**
@@ -210,7 +211,7 @@ curl -X GET "https://api.ratel.security/v1/auth/users?page=1&limit=10" \
 {
   "success": true,
   "data": {
-    "users": [
+    "items": [
       {
         "id": "550e8400-e29b-41d4-a716-446655440000",
         "email": "analyst@bank.com",
@@ -218,15 +219,14 @@ curl -X GET "https://api.ratel.security/v1/auth/users?page=1&limit=10" \
         "lastName": "Smith",
         "role": "ANALYST",
         "isActive": true,
+        "lastLoginAt": "2026-05-16T10:00:00Z",
         "createdAt": "2026-01-15T09:30:00Z"
       }
     ],
-    "pagination": {
-      "page": 1,
-      "limit": 10,
-      "total": 42,
-      "totalPages": 5
-    }
+    "total": 42,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 5
   }
 }
 ```
@@ -273,8 +273,8 @@ curl -X POST https://api.ratel.security/v1/auth/users \
     "firstName": "Jane",
     "lastName": "Smith",
     "role": "COMPLIANCE_OFFICER",
-    "tenantId": "660e8400-e29b-41d4-a716-446655440001",
     "isActive": true,
+    "lastLoginAt": null,
     "createdAt": "2026-05-16T14:20:00Z"
   }
 }
@@ -339,7 +339,8 @@ curl -X PATCH https://api.ratel.security/v1/auth/users/770e8400-e29b-41d4-a716-4
     "lastName": "Smith",
     "role": "ANALYST",
     "isActive": true,
-    "updatedAt": "2026-05-16T15:00:00Z"
+    "lastLoginAt": null,
+    "createdAt": "2026-05-16T14:20:00Z"
   }
 }
 ```
@@ -363,12 +364,21 @@ curl -X DELETE https://api.ratel.security/v1/auth/users/770e8400-e29b-41d4-a716-
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 204 No Content**
+**Example Response — 200 OK**
 
 ```json
 {
   "success": true,
-  "data": null
+  "data": {
+    "id": "770e8400-e29b-41d4-a716-446655440002",
+    "email": "new.officer@bank.com",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "role": "ANALYST",
+    "isActive": false,
+    "lastLoginAt": null,
+    "createdAt": "2026-05-16T14:20:00Z"
+  }
 }
 ```
 

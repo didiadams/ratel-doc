@@ -89,7 +89,7 @@ const response = await fetch("BASE_URL/v1/transactions/screen", {
 });
 
 const result = await response.json();
-console.log(result.data.verdict.outcome); // "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
+console.log(result.data.outcome); // "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
 ```
 
 ```python Python
@@ -118,8 +118,8 @@ response = requests.post(
     }
 )
 
-verdict = response.json()['data']['verdict']
-print(verdict['outcome'])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
+result = response.json()
+print(result['data']['outcome'])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
 ```
 
 </CodeGroup>
@@ -167,21 +167,66 @@ print(verdict['outcome'])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
 {
   "success": true,
   "data": {
-    "verdict": {
-      "outcome": "ESCALATE",
-      "riskLevel": "HIGH",
-      "score": 75,
-      "triggeredRules": [
-        {
-          "ruleId": "AML-003",
-          "name": "Structuring Detection",
-          "severity": "HIGH",
-          "category": "REGULATORY"
-        }
-      ]
-    },
-    "caseId": "case_12345abcde",
-    "status": "PROCESSED"
+    "transactionId": "fae50ecb-d997-4700-bae7-49650678bb06",
+    "externalId": "TXN-0791-389803",
+    "outcome": "REVIEW",
+    "riskLevel": "MEDIUM",
+    "aggregateScore": 32,
+    "actions": ["NOTIFY_OFFICER"],
+    "riskBreakdown": [
+      {
+        "category": "Regulatory Compliance",
+        "score": 0,
+        "outcome": "APPROVE",
+        "rulesTriggered": 0,
+        "latencyMs": 3
+      },
+      {
+        "category": "Sanctions & PEP Screening",
+        "score": 0,
+        "outcome": "APPROVE",
+        "rulesTriggered": 0,
+        "latencyMs": 3020
+      },
+      {
+        "category": "KYC Verification",
+        "score": 40,
+        "outcome": "REVIEW",
+        "rulesTriggered": 1,
+        "latencyMs": 0
+      },
+      {
+        "category": "Custom Rules",
+        "score": 0,
+        "outcome": "APPROVE",
+        "rulesTriggered": 0,
+        "latencyMs": 10074
+      },
+      {
+        "category": "Decision Engine",
+        "score": 0,
+        "outcome": "APPROVE",
+        "rulesTriggered": 0,
+        "latencyMs": 48
+      },
+      {
+        "category": "Behavioral Analysis",
+        "score": 0,
+        "outcome": "APPROVE",
+        "rulesTriggered": 1,
+        "latencyMs": 206
+      }
+    ],
+    "triggeredRules": [
+      {
+        "name": "No KYC Application Found",
+        "category": "KYC Verification",
+        "riskScore": 40,
+        "details": "No KYC record found for sender (BVN: 22075678966)",
+        "createdBy": null
+      }
+    ],
+    "totalLatencyMs": 13447
   }
 }
 ```

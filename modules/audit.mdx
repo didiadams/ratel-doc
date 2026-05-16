@@ -11,7 +11,7 @@ The Audit module provides a complete, immutable record of every significant acti
 
 **Regulatory inspection:** A CBN examiner requests audit evidence → An `AUDITOR` exports logs for a date range → The logs show every decision, case action, and rule trigger with timestamps and user attribution.
 
-**Internal investigation:** A compliance manager suspects an unauthorized rule change → Queries audit logs for `module: rules` and `action: UPDATE` → Identifies the user and reviews the exact change.
+**Internal investigation:** A compliance manager suspects an unauthorized rule change → Queries audit logs for `resourceType: rules` and `action: UPDATE` → Identifies the user and reviews the exact change.
 
 ## Permissions
 
@@ -23,21 +23,22 @@ The Audit module provides a complete, immutable record of every significant acti
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/v1/audit` | Query audit logs with filters |
+| `GET` | `/api/v1/audit/events` | Query audit logs with filters |
+| `GET` | `/api/v1/audit/verify` | Verify audit chain integrity |
 
 ---
 
-### List Audit Logs
+### List Audit Events
 
-Retrieve audit trail entries with filtering and pagination.
+Retrieve audit trail entries with filtering and pagination. The list view excludes `beforeState` and `afterState` for performance.
 
 **Query Parameters**
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `module` | `string` | — | `transactions`, `cases`, `rules`, `users`, `reports`, `kyc` |
-| `action` | `string` | — | `CREATE`, `UPDATE`, `DELETE`, `SCREEN`, `APPROVE`, `LOGIN` |
-| `userId` | `string` | — | Filter by acting user |
+| `resourceType` | `string` | — | `transactions`, `cases`, `rules`, `users`, `reports`, `kyc`, `api_keys` |
+| `action` | `string` | — | `CREATE`, `UPDATE`, `DELETE`, `SCREEN`, `APPROVE`, `LOGIN`, `VERIFY` |
+| `actorEmail` | `string` | — | Filter by acting user email |
 | `from` | `string` | — | ISO 8601 start date |
 | `to` | `string` | — | ISO 8601 end date |
 | `page` | `integer` | `1` | Page number |
@@ -46,7 +47,7 @@ Retrieve audit trail entries with filtering and pagination.
 **Example Request**
 
 ```bash
-curl -X GET "https://api.ratel.security/v1/audit?module=cases&action=UPDATE&from=2026-05-01T00:00:00Z&to=2026-05-16T23:59:59Z&page=1&limit=20" \
+curl -X GET "https://api.ratel.security/v1/audit/events?resourceType=cases&action=UPDATE&from=2026-05-01T00:00:00Z&to=2026-05-16T23:59:59Z&page=1&limit=20" \
   -H "Authorization: Bearer <access_token>"
 ```
 
@@ -56,56 +57,79 @@ curl -X GET "https://api.ratel.security/v1/audit?module=cases&action=UPDATE&from
 {
   "success": true,
   "data": {
-    "logs": [
+    "items": [
       {
         "id": "audit_001",
-        "timestamp": "2026-05-16T14:30:00Z",
-        "module": "cases",
+        "actorEmail": "officer@bank.com",
         "action": "UPDATE",
-        "userId": "550e8400-e29b-41d4-a716-446655440000",
-        "userEmail": "officer@bank.com",
+        "resourceType": "cases",
         "resourceId": "case_12345abcde",
-        "resourceType": "case",
-        "details": {
-          "field": "status",
-          "oldValue": "OPEN",
-          "newValue": "IN_PROGRESS"
-        },
         "ipAddress": "192.168.1.100",
-        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        "createdAt": "2026-05-16T14:30:00Z",
+        "hash": "a3f5c8e2d1b4..."
       },
       {
         "id": "audit_002",
-        "timestamp": "2026-05-16T14:15:00Z",
-        "module": "transactions",
+        "actorEmail": "system",
         "action": "SCREEN",
-        "userId": "system",
-        "userEmail": "system",
-        "resourceId": "tx_abc123def456",
-        "resourceType": "transaction",
-        "details": {
-          "outcome": "ESCALATE",
-          "score": 75,
-          "triggeredRules": ["AML-003"]
-        },
+        "resourceType": "transactions",
+        "resourceId": "fae50ecb-d997-4700-bae7-49650678bb06",
         "ipAddress": null,
-        "userAgent": "RatelScreeningEngine/1.0"
+        "createdAt": "2026-05-16T14:15:00Z",
+        "hash": "b7e9d2f1a8c3..."
       }
     ],
-    "pagination": {
-      "page": 1,
-      "limit": 20,
-      "total": 145,
-      "totalPages": 8
-    }
+    "total": 145,
+    "page": 1,
+    "limit": 20,
+    "totalPages": 8
   }
 }
 ```
 
 <Note>
-  Audit logs are **immutable** and retained for **7 years** to meet CBN regulatory requirements. They cannot be modified or deleted by any user.
+  Audit logs are **immutable** and retained for **7 years** to meet CBN regulatory requirements. Each entry includes a SHA-256 hash forming a cryptographic chain.
 </Note>
 
 <Warning>
   For large exports, use `limit=500` and paginate through results. Do not attempt to retrieve more than 90 days of logs in a single request.
 </Warning>
+
+---
+
+### Verify Audit Chain
+
+Verify the cryptographic integrity of the audit trail. This checks that no logs have been tampered with.
+
+**Example Request**
+
+```bash
+curl -X GET https://api.ratel.security/v1/audit/verify \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "isValid": true,
+    "totalEvents": 145,
+    "brokenAt": null
+  }
+}
+```
+
+**Example Response — Chain Broken**
+
+```json
+{
+  "success": true,
+  "data": {
+    "isValid": false,
+    "totalEvents": 145,
+    "brokenAt": "audit_003"
+  }
+}
+```

@@ -21,6 +21,7 @@ https://api.ratel.security/v1
 | `/auth/me` | `GET` | Current user profile |
 | `/auth/users` | `POST`, `GET` | Create or list users |
 | `/auth/users/:id` | `PATCH`, `DELETE` | Update or deactivate user |
+| `/auth/api-keys` | `POST`, `GET` | Create or list API keys |
 
 ### Transactions
 | Endpoint | Methods | Description |
@@ -51,9 +52,11 @@ https://api.ratel.security/v1
 |----------|---------|-------------|
 | `/kyc/applications` | `POST`, `GET` | Submit or list applications |
 | `/kyc/applications/:id` | `GET` | Get application details |
-| `/kyc/applications/:id/verify-bvn` | `PATCH` | Verify BVN |
-| `/kyc/applications/:id/verify-nin` | `PATCH` | Verify NIN |
-| `/kyc/applications/:id/approve` | `PATCH` | Approve or reject application |
+| `/kyc/applications/:id/verify-bvn` | `POST` | Verify BVN |
+| `/kyc/applications/:id/verify-nin` | `POST` | Verify NIN |
+| `/kyc/applications/:id/liveness-check` | `POST` | Run liveness check |
+| `/kyc/applications/:id/approve` | `PATCH` | Approve application |
+| `/kyc/applications/:id/reject` | `PATCH` | Reject application |
 
 ### Reports
 | Endpoint | Methods | Description |
@@ -62,18 +65,22 @@ https://api.ratel.security/v1
 | `/reports/ctr` | `POST` | Generate CTR |
 | `/reports/ftr` | `POST` | Generate FTR |
 | `/reports` | `GET` | List reports |
+| `/reports/:id` | `GET` | Get report details |
 | `/reports/:id/xml` | `GET` | Download report XML |
 | `/reports/:id/approve` | `PATCH` | Approve report |
+| `/reports/:id/file` | `PATCH` | Mark report as filed |
 
 ### Audit
 | Endpoint | Methods | Description |
 |----------|---------|-------------|
-| `/audit` | `GET` | Query audit logs |
+| `/audit/events` | `GET` | Query audit logs |
+| `/audit/verify` | `GET` | Verify audit chain integrity |
 
 ### System
 | Endpoint | Methods | Description |
 |----------|---------|-------------|
 | `/health` | `GET` | Health check (no auth required) |
+| `/engines/health` | `GET` | Engine health status |
 
 ## HTTP Status Codes
 

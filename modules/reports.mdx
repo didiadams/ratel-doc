@@ -19,7 +19,7 @@ The Reports module automates the creation of regulatory filings required under t
 |--------|---------------|
 | Generate reports | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
 | List, view reports | All authenticated users |
-| Approve reports | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Approve, file reports | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
 
 ## Report Types
 
@@ -29,6 +29,16 @@ The Reports module automates the creation of regulatory filings required under t
 | **CTR** | Large cash transaction | Cash ≥ ₦5,000,000 |
 | **FTR** | International transfer | Receiver country ≠ `NG` |
 
+## Report Statuses
+
+| Status | Meaning |
+|--------|---------|
+| `DRAFT` | Auto-generated, awaiting review |
+| `PENDING_REVIEW` | Submitted for officer approval |
+| `APPROVED` | Approved for CBN submission |
+| `FILED` | Submitted to CBN |
+| `REJECTED` | Rejected, needs revision |
+
 ## Endpoints
 
 | Method | Endpoint | Description |
@@ -37,8 +47,10 @@ The Reports module automates the creation of regulatory filings required under t
 | `POST` | `/api/v1/reports/ctr` | Generate a Currency Transaction Report |
 | `POST` | `/api/v1/reports/ftr` | Generate a Foreign Transaction Report |
 | `GET` | `/api/v1/reports` | List generated reports |
+| `GET` | `/api/v1/reports/:id` | Retrieve report details |
 | `GET` | `/api/v1/reports/:id/xml` | Download report as CBN XML |
 | `PATCH` | `/api/v1/reports/:id/approve` | Approve report for submission |
+| `PATCH` | `/api/v1/reports/:id/file` | Mark report as filed with CBN |
 
 ---
 
@@ -51,7 +63,7 @@ Create a Suspicious Activity Report for investigated cases.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `caseId` | `string` | ✅ | Related case UUID |
-| `transactionIds` | `string[]` | ✅ | Supporting transaction IDs |
+| `title` | `string` | ✅ | Report title |
 | `description` | `string` | ✅ | Narrative of suspicious activity |
 | `suspicionType` | `string` | | `STRUCTURING`, `SANCTIONS`, `FRAUD`, `OTHER` |
 
@@ -63,7 +75,7 @@ curl -X POST https://api.ratel.security/v1/reports/sar \
   -H "Content-Type: application/json" \
   -d '{
     "caseId": "case_12345abcde",
-    "transactionIds": ["tx_abc123def456", "tx_def789ghi012"],
+    "title": "Structuring Pattern — 4 Deposits in 3 Hours",
     "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours, just below the CTR threshold.",
     "suspicionType": "STRUCTURING"
   }'
@@ -75,16 +87,20 @@ curl -X POST https://api.ratel.security/v1/reports/sar \
 {
   "success": true,
   "data": {
-    "id": "rep_sar_001",
-    "type": "SAR",
-    "caseId": "case_12345abcde",
-    "transactionIds": ["tx_abc123def456", "tx_def789ghi012"],
-    "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours, just below the CTR threshold.",
-    "suspicionType": "STRUCTURING",
-    "status": "PENDING_APPROVAL",
-    "xmlUrl": null,
-    "createdBy": "550e8400-e29b-41d4-a716-446655440000",
-    "createdAt": "2026-05-16T11:00:00Z"
+    "id": "rep_001",
+    "tenantId": "660e8400-e29b-41d4-a716-446655440001",
+    "reportType": "SAR",
+    "reportNumber": "SAR-2026-00001",
+    "title": "Structuring Pattern — 4 Deposits in 3 Hours",
+    "status": "DRAFT",
+    "xmlContent": null,
+    "jsonData": null,
+    "relatedCaseId": "case_12345abcde",
+    "generatedBy": "550e8400-e29b-41d4-a716-446655440000",
+    "approvedBy": null,
+    "filedAt": null,
+    "createdAt": "2026-05-16T11:00:00Z",
+    "updatedAt": "2026-05-16T11:00:00Z"
   }
 }
 ```
@@ -100,6 +116,7 @@ Create a Currency Transaction Report for large cash transactions.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `transactionId` | `string` | ✅ | Triggering transaction UUID |
+| `title` | `string` | ✅ | Report title |
 | `amount` | `number` | ✅ | Transaction amount |
 | `currency` | `string` | | Defaults to `NGN` |
 | `customerId` | `string` | ✅ | Customer UUID |
@@ -113,6 +130,7 @@ curl -X POST https://api.ratel.security/v1/reports/ctr \
   -H "Content-Type: application/json" \
   -d '{
     "transactionId": "tx_cash_999",
+    "title": "Cash Deposit ₦5M — CTR Filing",
     "amount": 5000000,
     "currency": "NGN",
     "customerId": "cust_001",
@@ -126,15 +144,17 @@ curl -X POST https://api.ratel.security/v1/reports/ctr \
 {
   "success": true,
   "data": {
-    "id": "rep_ctr_002",
-    "type": "CTR",
-    "transactionId": "tx_cash_999",
-    "amount": 5000000,
-    "currency": "NGN",
-    "customerId": "cust_001",
-    "branchCode": "LAG-01",
-    "status": "PENDING_APPROVAL",
-    "createdAt": "2026-05-16T11:30:00Z"
+    "id": "rep_002",
+    "reportType": "CTR",
+    "reportNumber": "CTR-2026-00001",
+    "title": "Cash Deposit ₦5M — CTR Filing",
+    "status": "DRAFT",
+    "relatedCaseId": null,
+    "generatedBy": "550e8400-e29b-41d4-a716-446655440000",
+    "approvedBy": null,
+    "filedAt": null,
+    "createdAt": "2026-05-16T11:30:00Z",
+    "updatedAt": "2026-05-16T11:30:00Z"
   }
 }
 ```
@@ -150,6 +170,7 @@ Create a Foreign Transaction Report for cross-border transfers.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `transactionId` | `string` | ✅ | Triggering transaction UUID |
+| `title` | `string` | ✅ | Report title |
 | `foreignAmount` | `number` | ✅ | Amount in foreign currency |
 | `foreignCurrency` | `string` | ✅ | Foreign currency code |
 | `destinationCountry` | `string` | ✅ | ISO 3166-1 alpha-2 code |
@@ -163,6 +184,7 @@ curl -X POST https://api.ratel.security/v1/reports/ftr \
   -H "Content-Type: application/json" \
   -d '{
     "transactionId": "tx_intl_444",
+    "title": "International Transfer — School Fees",
     "foreignAmount": 10000,
     "foreignCurrency": "USD",
     "destinationCountry": "US",
@@ -176,15 +198,17 @@ curl -X POST https://api.ratel.security/v1/reports/ftr \
 {
   "success": true,
   "data": {
-    "id": "rep_ftr_003",
-    "type": "FTR",
-    "transactionId": "tx_intl_444",
-    "foreignAmount": 10000,
-    "foreignCurrency": "USD",
-    "destinationCountry": "US",
-    "purposeOfTransfer": "School fees payment",
-    "status": "PENDING_APPROVAL",
-    "createdAt": "2026-05-16T12:00:00Z"
+    "id": "rep_003",
+    "reportType": "FTR",
+    "reportNumber": "FTR-2026-00001",
+    "title": "International Transfer — School Fees",
+    "status": "DRAFT",
+    "relatedCaseId": null,
+    "generatedBy": "550e8400-e29b-41d4-a716-446655440000",
+    "approvedBy": null,
+    "filedAt": null,
+    "createdAt": "2026-05-16T12:00:00Z",
+    "updatedAt": "2026-05-16T12:00:00Z"
   }
 }
 ```
@@ -193,21 +217,21 @@ curl -X POST https://api.ratel.security/v1/reports/ftr \
 
 ### List Reports
 
-Retrieve generated reports with filtering.
+Retrieve generated reports with filtering. The list view excludes `xmlContent` and `jsonData` for performance.
 
 **Query Parameters**
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `type` | `string` | — | `SAR`, `CTR`, `FTR` |
-| `status` | `string` | — | `PENDING_APPROVAL`, `APPROVED`, `SUBMITTED` |
+| `status` | `string` | — | `DRAFT`, `PENDING_REVIEW`, `APPROVED`, `FILED`, `REJECTED` |
 | `page` | `integer` | `1` | Page number |
 | `limit` | `integer` | `20` | Items per page |
 
 **Example Request**
 
 ```bash
-curl -X GET "https://api.ratel.security/v1/reports?type=SAR&status=PENDING_APPROVAL&page=1&limit=10" \
+curl -X GET "https://api.ratel.security/v1/reports?type=SAR&status=DRAFT&page=1&limit=10" \
   -H "Authorization: Bearer <access_token>"
 ```
 
@@ -217,22 +241,71 @@ curl -X GET "https://api.ratel.security/v1/reports?type=SAR&status=PENDING_APPRO
 {
   "success": true,
   "data": {
-    "reports": [
+    "items": [
       {
-        "id": "rep_sar_001",
-        "type": "SAR",
-        "status": "PENDING_APPROVAL",
-        "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours...",
-        "createdBy": "550e8400-e29b-41d4-a716-446655440000",
-        "createdAt": "2026-05-16T11:00:00Z"
+        "id": "rep_001",
+        "reportType": "SAR",
+        "reportNumber": "SAR-2026-00001",
+        "title": "Structuring Pattern — 4 Deposits in 3 Hours",
+        "status": "DRAFT",
+        "generatedBy": "550e8400-e29b-41d4-a716-446655440000",
+        "approvedBy": null,
+        "filedAt": null,
+        "createdAt": "2026-05-16T11:00:00Z",
+        "updatedAt": "2026-05-16T11:00:00Z"
       }
     ],
-    "pagination": {
-      "page": 1,
-      "limit": 10,
-      "total": 3,
-      "totalPages": 1
-    }
+    "total": 3,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+### Get Report Detail
+
+Retrieve the full report including XML content and structured JSON data.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Report UUID |
+
+**Example Request**
+
+```bash
+curl -X GET https://api.ratel.security/v1/reports/rep_001 \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "rep_001",
+    "tenantId": "660e8400-e29b-41d4-a716-446655440001",
+    "reportType": "SAR",
+    "reportNumber": "SAR-2026-00001",
+    "title": "Structuring Pattern — 4 Deposits in 3 Hours",
+    "status": "APPROVED",
+    "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Report>...</Report>",
+    "jsonData": {
+      "caseId": "case_12345abcde",
+      "transactionIds": ["tx_abc123def456"],
+      "suspicionType": "STRUCTURING"
+    },
+    "relatedCaseId": "case_12345abcde",
+    "generatedBy": "550e8400-e29b-41d4-a716-446655440000",
+    "approvedBy": "550e8400-e29b-41d4-a716-446655440000",
+    "filedAt": null,
+    "createdAt": "2026-05-16T11:00:00Z",
+    "updatedAt": "2026-05-16T14:00:00Z"
   }
 }
 ```
@@ -252,7 +325,7 @@ Download the CBN-compliant XML representation of a report.
 **Example Request**
 
 ```bash
-curl -X GET https://api.ratel.security/v1/reports/rep_sar_001/xml \
+curl -X GET https://api.ratel.security/v1/reports/rep_001/xml \
   -H "Authorization: Bearer <access_token>" \
   -H "Accept: application/xml"
 ```
@@ -263,7 +336,7 @@ curl -X GET https://api.ratel.security/v1/reports/rep_sar_001/xml \
 <?xml version="1.0" encoding="UTF-8"?>
 <Report xmlns="http://www.cbn.gov.ng/aml">
   <ReportType>SAR</ReportType>
-  <ReportId>rep_sar_001</ReportId>
+  <ReportId>SAR-2026-00001</ReportId>
   <SubmissionDate>2026-05-16</SubmissionDate>
   <Institution>First Bank of Nigeria</Institution>
   <Subject>
@@ -302,7 +375,7 @@ Mark a report as approved for regulatory submission.
 **Example Request**
 
 ```bash
-curl -X PATCH https://api.ratel.security/v1/reports/rep_sar_001/approve \
+curl -X PATCH https://api.ratel.security/v1/reports/rep_001/approve \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -316,12 +389,10 @@ curl -X PATCH https://api.ratel.security/v1/reports/rep_sar_001/approve \
 {
   "success": true,
   "data": {
-    "id": "rep_sar_001",
+    "id": "rep_001",
     "status": "APPROVED",
-    "approverId": "550e8400-e29b-41d4-a716-446655440000",
-    "approverNotes": "Verified against case files. Ready for CBN submission.",
-    "xmlUrl": "https://storage.ratel.security/reports/rep_sar_001.xml",
-    "approvedAt": "2026-05-16T14:00:00Z"
+    "approvedBy": "550e8400-e29b-41d4-a716-446655440000",
+    "updatedAt": "2026-05-16T14:00:00Z"
   }
 }
 ```
@@ -329,3 +400,36 @@ curl -X PATCH https://api.ratel.security/v1/reports/rep_sar_001/approve \
 <Warning>
   Once approved, a report cannot be modified. If errors are discovered, create a new amended report referencing the original.
 </Warning>
+
+---
+
+### File Report
+
+Mark a report as officially filed with the CBN.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Report UUID |
+
+**Example Request**
+
+```bash
+curl -X PATCH https://api.ratel.security/v1/reports/rep_001/file \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "rep_001",
+    "status": "FILED",
+    "filedAt": "2026-05-16T15:00:00Z",
+    "updatedAt": "2026-05-16T15:00:00Z"
+  }
+}
+```

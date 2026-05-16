@@ -54,6 +54,7 @@ Manually create a compliance case. Auto-created cases use the same structure.
 | `title` | `string` | ✅ | Short summary |
 | `description` | `string` | ✅ | Detailed explanation |
 | `relatedTransactionId` | `string` | | UUID of triggering transaction |
+| `relatedKycApplicationId` | `string` | | UUID of related KYC application |
 | `tags` | `string[]` | | Labels for categorization |
 
 **Case Types**
@@ -81,7 +82,7 @@ curl -X POST https://api.ratel.security/v1/cases \
     "priority": "HIGH",
     "title": "Large cash deposit — possible structuring",
     "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours",
-    "relatedTransactionId": "tx_abc123def456",
+    "relatedTransactionId": "fae50ecb-d997-4700-bae7-49650678bb06",
     "tags": ["structuring", "cash"]
   }'
 ```
@@ -98,7 +99,7 @@ const response = await fetch("https://api.ratel.security/v1/cases", {
     priority: "HIGH",
     title: "Large cash deposit — possible structuring",
     description: "Customer made 4 deposits totaling ₦4.8M in 3 hours",
-    relatedTransactionId: "tx_abc123def456",
+    relatedTransactionId: "fae50ecb-d997-4700-bae7-49650678bb06",
     tags: ["structuring", "cash"]
   })
 });
@@ -119,7 +120,7 @@ response = requests.post(
         "priority": "HIGH",
         "title": "Large cash deposit — possible structuring",
         "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours",
-        "relatedTransactionId": "tx_abc123def456",
+        "relatedTransactionId": "fae50ecb-d997-4700-bae7-49650678bb06",
         "tags": ["structuring", "cash"]
     }
 )
@@ -134,15 +135,17 @@ result = response.json()
   "success": true,
   "data": {
     "id": "case_12345abcde",
+    "caseNumber": "CASE-2026-00001",
     "type": "SUSPICIOUS_TRANSACTION",
     "priority": "HIGH",
     "title": "Large cash deposit — possible structuring",
     "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours",
     "status": "OPEN",
-    "relatedTransactionId": "tx_abc123def456",
+    "assignedTo": null,
+    "relatedTransactionId": "fae50ecb-d997-4700-bae7-49650678bb06",
+    "relatedKycApplicationId": null,
     "tags": ["structuring", "cash"],
-    "assigneeId": null,
-    "createdBy": "550e8400-e29b-41d4-a716-446655440000",
+    "resolvedAt": null,
     "createdAt": "2026-05-16T14:30:00Z",
     "updatedAt": "2026-05-16T14:30:00Z"
   }
@@ -179,24 +182,26 @@ curl -X GET "https://api.ratel.security/v1/cases?status=OPEN&priority=CRITICAL&p
 {
   "success": true,
   "data": {
-    "cases": [
+    "items": [
       {
         "id": "case_12345abcde",
+        "caseNumber": "CASE-2026-00001",
         "type": "SUSPICIOUS_TRANSACTION",
         "priority": "HIGH",
         "title": "Large cash deposit — possible structuring",
         "status": "OPEN",
-        "assigneeId": null,
+        "assignedTo": null,
+        "tags": ["structuring", "cash"],
+        "resolvedAt": null,
         "createdAt": "2026-05-16T14:30:00Z",
-        "updatedAt": "2026-05-16T14:30:00Z"
+        "updatedAt": "2026-05-16T14:30:00Z",
+        "assignee": null
       }
     ],
-    "pagination": {
-      "page": 1,
-      "limit": 20,
-      "total": 15,
-      "totalPages": 1
-    }
+    "total": 15,
+    "page": 1,
+    "limit": 20,
+    "totalPages": 1
   }
 }
 ```
@@ -205,7 +210,7 @@ curl -X GET "https://api.ratel.security/v1/cases?status=OPEN&priority=CRITICAL&p
 
 ### Get Case Detail
 
-Retrieve a case including its full note history.
+Retrieve a case including its full timeline history and related transaction.
 
 **Path Parameters**
 
@@ -227,25 +232,52 @@ curl -X GET https://api.ratel.security/v1/cases/case_12345abcde \
   "success": true,
   "data": {
     "id": "case_12345abcde",
+    "caseNumber": "CASE-2026-00001",
     "type": "SUSPICIOUS_TRANSACTION",
     "priority": "HIGH",
     "title": "Large cash deposit — possible structuring",
     "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours",
     "status": "OPEN",
-    "relatedTransactionId": "tx_abc123def456",
+    "assignedTo": null,
+    "relatedTransactionId": "fae50ecb-d997-4700-bae7-49650678bb06",
+    "relatedKycApplicationId": null,
     "tags": ["structuring", "cash"],
-    "assigneeId": null,
-    "notes": [
-      {
-        "id": "note_001",
-        "content": "Customer contacted. Awaiting documentation.",
-        "createdBy": "550e8400-e29b-41d4-a716-446655440000",
-        "createdAt": "2026-05-16T15:00:00Z"
-      }
-    ],
-    "createdBy": "550e8400-e29b-41d4-a716-446655440000",
+    "resolvedAt": null,
     "createdAt": "2026-05-16T14:30:00Z",
-    "updatedAt": "2026-05-16T15:00:00Z"
+    "updatedAt": "2026-05-16T14:30:00Z",
+    "assignee": null,
+    "relatedTransaction": {
+      "id": "fae50ecb-d997-4700-bae7-49650678bb06",
+      "externalId": "TXN-0791-389803",
+      "amount": "5000000",
+      "currency": "NGN",
+      "senderName": "John Doe",
+      "verdict": {
+        "outcome": "REVIEW",
+        "riskLevel": "MEDIUM",
+        "aggregateScore": 32,
+        "totalLatencyMs": 13447
+      }
+    },
+    "timeline": [
+      {
+        "id": "evt_001",
+        "caseId": "case_12345abcde",
+        "eventType": "CASE_CREATED",
+        "actorId": "550e8400-e29b-41d4-a716-446655440000",
+        "description": "Case created manually",
+        "previousValue": null,
+        "newValue": null,
+        "metadata": null,
+        "createdAt": "2026-05-16T14:30:00Z",
+        "actor": {
+          "id": "550e8400-e29b-41d4-a716-446655440000",
+          "email": "officer@bank.com",
+          "firstName": "Jane",
+          "lastName": "Smith"
+        }
+      }
+    ]
   }
 }
 ```
@@ -276,8 +308,7 @@ curl -X PATCH https://api.ratel.security/v1/cases/case_12345abcde/status \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "status": "IN_PROGRESS",
-    "resolutionNote": "Reviewing customer transaction history"
+    "status": "IN_PROGRESS"
   }'
 ```
 
@@ -288,8 +319,17 @@ curl -X PATCH https://api.ratel.security/v1/cases/case_12345abcde/status \
   "success": true,
   "data": {
     "id": "case_12345abcde",
+    "caseNumber": "CASE-2026-00001",
+    "type": "SUSPICIOUS_TRANSACTION",
+    "priority": "HIGH",
+    "title": "Large cash deposit — possible structuring",
     "status": "IN_PROGRESS",
-    "resolutionNote": "Reviewing customer transaction history",
+    "assignedTo": null,
+    "relatedTransactionId": "fae50ecb-d997-4700-bae7-49650678bb06",
+    "relatedKycApplicationId": null,
+    "tags": ["structuring", "cash"],
+    "resolvedAt": null,
+    "createdAt": "2026-05-16T14:30:00Z",
     "updatedAt": "2026-05-16T16:00:00Z"
   }
 }
@@ -335,7 +375,17 @@ curl -X PATCH https://api.ratel.security/v1/cases/case_12345abcde/assign \
   "success": true,
   "data": {
     "id": "case_12345abcde",
-    "assigneeId": "550e8400-e29b-41d4-a716-446655440000",
+    "caseNumber": "CASE-2026-00001",
+    "type": "SUSPICIOUS_TRANSACTION",
+    "priority": "HIGH",
+    "title": "Large cash deposit — possible structuring",
+    "status": "OPEN",
+    "assignedTo": "550e8400-e29b-41d4-a716-446655440000",
+    "relatedTransactionId": "fae50ecb-d997-4700-bae7-49650678bb06",
+    "relatedKycApplicationId": null,
+    "tags": ["structuring", "cash"],
+    "resolvedAt": null,
+    "createdAt": "2026-05-16T14:30:00Z",
     "updatedAt": "2026-05-16T16:15:00Z"
   }
 }
@@ -345,7 +395,7 @@ curl -X PATCH https://api.ratel.security/v1/cases/case_12345abcde/assign \
 
 ### Add Note
 
-Append an investigation note to a case.
+Append an investigation note to a case. This creates a timeline event.
 
 **Path Parameters**
 
@@ -376,10 +426,14 @@ curl -X POST https://api.ratel.security/v1/cases/case_12345abcde/notes \
 {
   "success": true,
   "data": {
-    "id": "note_002",
+    "id": "evt_002",
     "caseId": "case_12345abcde",
-    "content": "Spoke with customer. Provided source of funds documentation.",
-    "createdBy": "550e8400-e29b-41d4-a716-446655440000",
+    "eventType": "NOTE_ADDED",
+    "actorId": "550e8400-e29b-41d4-a716-446655440000",
+    "description": "Spoke with customer. Provided source of funds documentation.",
+    "previousValue": null,
+    "newValue": null,
+    "metadata": null,
     "createdAt": "2026-05-16T17:00:00Z"
   }
 }

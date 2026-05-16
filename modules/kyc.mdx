@@ -5,13 +5,13 @@ description: 'Manage Know Your Customer verification applications'
 
 ## Overview
 
-The KYC module handles identity verification for your customers. Applications flow through statuses from submission to final approval, with BVN and NIN verification steps.
+The KYC module handles identity verification for your customers. Applications flow through statuses from submission to final approval, with BVN and NIN verification steps against national identity providers.
 
 ## Common Workflows
 
 **New customer onboarding:** Customer submits KYC application → System verifies BVN/NIN against provider APIs → Officer reviews and approves → Customer can transact without KYC-related risk flags.
 
-**Re-verification:** A customer's KYC expires → They submit updated documents → Officer verifies and approves → KYC status updates to `VERIFIED`.
+**Re-verification:** A customer's KYC expires → They submit updated documents → Officer verifies and approves → KYC status updates to `APPROVED`.
 
 ## Permissions
 
@@ -25,12 +25,14 @@ The KYC module handles identity verification for your customers. Applications fl
 
 | Status | Meaning | Risk Impact |
 |--------|---------|-------------|
-| `NONE` | No application found | Score 40, `REVIEW` |
-| `PENDING` | Submitted, not processed | Score 0, `APPROVE` |
-| `IN_PROGRESS` | BVN/NIN verified | Score 0, `APPROVE` |
-| `VERIFIED` | Fully verified | Score 0, `APPROVE` |
-| `EXPIRED` | Verification expired | Score 50, `REVIEW` |
+| `PENDING` | Submitted, awaiting document upload | No KYC record found — score 40, `REVIEW` |
+| `DOCUMENT_UPLOADED` | ID documents uploaded | Awaiting verification |
+| `NIN_VERIFIED` | NIN check passed | Partially verified |
+| `BVN_VERIFIED` | BVN check passed | Partially verified |
+| `LIVENESS_PASSED` | Biometric liveness check passed | Partially verified |
+| `APPROVED` | Fully verified | Score 0, `APPROVE` |
 | `REJECTED` | Failed verification | Score 70, `ESCALATE` |
+| `EXPIRED` | Verification expired | Score 50, `REVIEW` |
 
 ## Endpoints
 
@@ -39,9 +41,11 @@ The KYC module handles identity verification for your customers. Applications fl
 | `POST` | `/api/v1/kyc/applications` | Submit a KYC application |
 | `GET` | `/api/v1/kyc/applications` | List applications |
 | `GET` | `/api/v1/kyc/applications/:id` | Retrieve application details |
-| `PATCH` | `/api/v1/kyc/applications/:id/verify-bvn` | Verify applicant BVN |
-| `PATCH` | `/api/v1/kyc/applications/:id/verify-nin` | Verify applicant NIN |
-| `PATCH` | `/api/v1/kyc/applications/:id/approve` | Approve or reject application |
+| `POST` | `/api/v1/kyc/applications/:id/verify-bvn` | Verify applicant BVN |
+| `POST` | `/api/v1/kyc/applications/:id/verify-nin` | Verify applicant NIN |
+| `POST` | `/api/v1/kyc/applications/:id/liveness-check` | Run biometric liveness check |
+| `PATCH` | `/api/v1/kyc/applications/:id/approve` | Approve application |
+| `PATCH` | `/api/v1/kyc/applications/:id/reject` | Reject application |
 
 ---
 
@@ -53,15 +57,15 @@ Create a new KYC application for a customer.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
+| `entityType` | `string` | ✅ | `INDIVIDUAL` or `BUSINESS` |
 | `firstName` | `string` | ✅ | Applicant first name |
 | `lastName` | `string` | ✅ | Applicant last name |
 | `bvn` | `string` | | Bank Verification Number |
 | `nin` | `string` | | National Identity Number |
-| `phoneNumber` | `string` | ✅ | Mobile number |
+| `phone` | `string` | ✅ | Mobile number |
 | `email` | `string` | | Email address |
 | `address` | `string` | | Residential address |
 | `dateOfBirth` | `string` | | ISO 8601 date |
-| `idDocumentUrl` | `string` | | URL to uploaded ID document |
 
 **Example Request**
 
@@ -70,15 +74,15 @@ curl -X POST https://api.ratel.security/v1/kyc/applications \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
+    "entityType": "INDIVIDUAL",
     "firstName": "Chinedu",
     "lastName": "Obi",
     "bvn": "22012345678",
     "nin": "12345678901",
-    "phoneNumber": "+2348012345678",
+    "phone": "+2348012345678",
     "email": "chinedu.obi@email.com",
     "address": "12 Lagos Street, Lagos",
-    "dateOfBirth": "1990-03-15",
-    "idDocumentUrl": "https://storage.example.com/id/123.pdf"
+    "dateOfBirth": "1990-03-15"
   }'
 ```
 
@@ -89,16 +93,20 @@ curl -X POST https://api.ratel.security/v1/kyc/applications \
   "success": true,
   "data": {
     "id": "kyc_abc123",
+    "tenantId": "660e8400-e29b-41d4-a716-446655440001",
+    "entityType": "INDIVIDUAL",
     "firstName": "Chinedu",
     "lastName": "Obi",
     "bvn": "22012345678",
     "nin": "12345678901",
-    "phoneNumber": "+2348012345678",
+    "phone": "+2348012345678",
     "email": "chinedu.obi@email.com",
+    "address": "12 Lagos Street, Lagos",
+    "dateOfBirth": "1990-03-15T00:00:00Z",
     "status": "PENDING",
-    "riskScore": 0,
-    "outcome": "APPROVE",
-    "submittedBy": "550e8400-e29b-41d4-a716-446655440000",
+    "riskLevel": null,
+    "assignedTo": null,
+    "notes": null,
     "createdAt": "2026-05-16T08:00:00Z",
     "updatedAt": "2026-05-16T08:00:00Z"
   }
@@ -130,22 +138,22 @@ curl -X GET "https://api.ratel.security/v1/kyc/applications?status=PENDING&page=
 {
   "success": true,
   "data": {
-    "applications": [
+    "items": [
       {
         "id": "kyc_abc123",
+        "entityType": "INDIVIDUAL",
         "firstName": "Chinedu",
         "lastName": "Obi",
         "status": "PENDING",
-        "riskScore": 0,
-        "createdAt": "2026-05-16T08:00:00Z"
+        "riskLevel": null,
+        "createdAt": "2026-05-16T08:00:00Z",
+        "updatedAt": "2026-05-16T08:00:00Z"
       }
     ],
-    "pagination": {
-      "page": 1,
-      "limit": 10,
-      "total": 5,
-      "totalPages": 1
-    }
+    "total": 5,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1
   }
 }
 ```
@@ -153,6 +161,8 @@ curl -X GET "https://api.ratel.security/v1/kyc/applications?status=PENDING&page=
 ---
 
 ### Get KYC Application
+
+Retrieve a KYC application with full verification results and uploaded documents.
 
 **Example Request**
 
@@ -168,25 +178,47 @@ curl -X GET https://api.ratel.security/v1/kyc/applications/kyc_abc123 \
   "success": true,
   "data": {
     "id": "kyc_abc123",
+    "tenantId": "660e8400-e29b-41d4-a716-446655440001",
+    "entityType": "INDIVIDUAL",
+    "status": "BVN_VERIFIED",
     "firstName": "Chinedu",
     "lastName": "Obi",
     "bvn": "22012345678",
     "nin": "12345678901",
-    "phoneNumber": "+2348012345678",
+    "phone": "+2348012345678",
     "email": "chinedu.obi@email.com",
     "address": "12 Lagos Street, Lagos",
-    "dateOfBirth": "1990-03-15",
-    "status": "PENDING",
-    "verificationResults": {
-      "bvnVerified": false,
-      "ninVerified": false,
-      "livenessCheck": false
-    },
-    "riskScore": 0,
-    "outcome": "APPROVE",
-    "submittedBy": "550e8400-e29b-41d4-a716-446655440000",
+    "dateOfBirth": "1990-03-15T00:00:00Z",
+    "riskLevel": null,
+    "assignedTo": null,
+    "notes": null,
     "createdAt": "2026-05-16T08:00:00Z",
-    "updatedAt": "2026-05-16T08:00:00Z"
+    "updatedAt": "2026-05-16T09:00:00Z",
+    "verificationResults": [
+      {
+        "id": "vr_001",
+        "applicationId": "kyc_abc123",
+        "identityType": "BVN",
+        "provider": "PREMBLY",
+        "isMatch": true,
+        "confidence": 0.95,
+        "rawResponse": null,
+        "errorMessage": null,
+        "verifiedAt": "2026-05-16T09:00:00Z"
+      }
+    ],
+    "documents": [
+      {
+        "id": "doc_001",
+        "applicationId": "kyc_abc123",
+        "documentType": "PASSPORT",
+        "fileName": "passport.pdf",
+        "fileUrl": "kyc-documents/passport-123.pdf",
+        "fileSizeBytes": 204800,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T08:30:00Z"
+      }
+    ]
   }
 }
 ```
@@ -212,7 +244,7 @@ Trigger BVN verification against the national identity provider.
 **Example Request**
 
 ```bash
-curl -X PATCH https://api.ratel.security/v1/kyc/applications/kyc_abc123/verify-bvn \
+curl -X POST https://api.ratel.security/v1/kyc/applications/kyc_abc123/verify-bvn \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -226,16 +258,10 @@ curl -X PATCH https://api.ratel.security/v1/kyc/applications/kyc_abc123/verify-b
 {
   "success": true,
   "data": {
-    "id": "kyc_abc123",
-    "status": "IN_PROGRESS",
-    "verificationResults": {
-      "bvnVerified": true,
-      "bvnMatchName": "Chinedu Obi",
-      "bvnMatchDateOfBirth": "1990-03-15",
-      "ninVerified": false,
-      "livenessCheck": false
-    },
-    "updatedAt": "2026-05-16T09:00:00Z"
+    "isMatch": true,
+    "confidence": 0.95,
+    "provider": "PREMBLY",
+    "newStatus": "BVN_VERIFIED"
   }
 }
 ```
@@ -261,7 +287,7 @@ Trigger NIN verification.
 **Example Request**
 
 ```bash
-curl -X PATCH https://api.ratel.security/v1/kyc/applications/kyc_abc123/verify-nin \
+curl -X POST https://api.ratel.security/v1/kyc/applications/kyc_abc123/verify-nin \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -275,15 +301,45 @@ curl -X PATCH https://api.ratel.security/v1/kyc/applications/kyc_abc123/verify-n
 {
   "success": true,
   "data": {
-    "id": "kyc_abc123",
-    "status": "IN_PROGRESS",
-    "verificationResults": {
-      "bvnVerified": true,
-      "ninVerified": true,
-      "ninMatchName": "Chinedu Obi",
-      "livenessCheck": false
-    },
-    "updatedAt": "2026-05-16T09:30:00Z"
+    "isMatch": true,
+    "confidence": 0.94,
+    "provider": "PREMBLY",
+    "newStatus": "NIN_VERIFIED"
+  }
+}
+```
+
+---
+
+### Liveness Check
+
+Run a biometric liveness and face-match check.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Application UUID |
+
+**Example Request**
+
+```bash
+curl -X POST https://api.ratel.security/v1/kyc/applications/kyc_abc123/liveness-check \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "isLive": true,
+    "confidence": 0.97,
+    "faceMatch": true,
+    "faceMatchConfidence": 0.92,
+    "provider": "PREMBLY",
+    "newStatus": "LIVENESS_PASSED"
   }
 }
 ```
@@ -292,7 +348,7 @@ curl -X PATCH https://api.ratel.security/v1/kyc/applications/kyc_abc123/verify-n
 
 ### Approve Application
 
-Final approval or rejection of a KYC application.
+Final approval of a KYC application.
 
 **Path Parameters**
 
@@ -304,7 +360,6 @@ Final approval or rejection of a KYC application.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `status` | `string` | ✅ | `VERIFIED` or `REJECTED` |
 | `notes` | `string` | | Officer notes |
 
 **Example Request**
@@ -314,7 +369,6 @@ curl -X PATCH https://api.ratel.security/v1/kyc/applications/kyc_abc123/approve 
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "status": "VERIFIED",
     "notes": "All documents verified. BVN and NIN match."
   }'
 ```
@@ -326,16 +380,58 @@ curl -X PATCH https://api.ratel.security/v1/kyc/applications/kyc_abc123/approve 
   "success": true,
   "data": {
     "id": "kyc_abc123",
-    "status": "VERIFIED",
-    "riskScore": 0,
-    "outcome": "APPROVE",
-    "approverId": "550e8400-e29b-41d4-a716-446655440000",
-    "approvalNotes": "All documents verified. BVN and NIN match.",
+    "status": "APPROVED",
+    "riskLevel": "LOW",
+    "notes": "All documents verified. BVN and NIN match.",
     "updatedAt": "2026-05-16T10:00:00Z"
   }
 }
 ```
 
 <Note>
-  Approving a KYC application updates the customer's risk profile. Future transactions from this customer will reflect the `VERIFIED` status.
+  Approving a KYC application updates the customer's risk profile. Future transactions from this customer will reflect the `APPROVED` status.
 </Note>
+
+---
+
+### Reject Application
+
+Reject a KYC application that fails verification.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Application UUID |
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `notes` | `string` | | Reason for rejection |
+
+**Example Request**
+
+```bash
+curl -X PATCH https://api.ratel.security/v1/kyc/applications/kyc_abc123/reject \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "notes": "BVN name mismatch. Uploaded document appears fraudulent."
+  }'
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "kyc_abc123",
+    "status": "REJECTED",
+    "riskLevel": "HIGH",
+    "notes": "BVN name mismatch. Uploaded document appears fraudulent.",
+    "updatedAt": "2026-05-16T10:00:00Z"
+  }
+}
+```

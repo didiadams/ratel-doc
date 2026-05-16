@@ -1,52 +1,331 @@
 ---
-title: 'Case Management'
+title: 'Reports'
+description: 'Generate and manage regulatory reports required by the Central Bank of Nigeria'
 ---
 
-**Purpose**: Investigate flagged transactions. Cases are auto-created when rules trigger, or manually created by compliance officers.
+## Overview
 
-| Action | Endpoint | Who Can Do It |
-|--------|----------|---------------|
-| Create case | `POST /api/v1/cases` | SUPER_ADMIN, BANK_ADMIN, COMPLIANCE_OFFICER, ANALYST |
-| List cases | `GET /api/v1/cases` | All authenticated users |
-| Get case detail | `GET /api/v1/cases/:id` | All authenticated users |
-| Update status | `PATCH /api/v1/cases/:id/status` | SUPER_ADMIN, BANK_ADMIN, COMPLIANCE_OFFICER |
-| Assign case | `PATCH /api/v1/cases/:id/assign` | SUPER_ADMIN, BANK_ADMIN, COMPLIANCE_OFFICER |
-| Add note | `POST /api/v1/cases/:id/notes` | All authenticated users |
+The Reports module automates the creation of regulatory filings required under the CBN AML/CFT Act. When transactions trigger certain rules, the system can auto-generate Suspicious Activity Reports (SAR), Currency Transaction Reports (CTR), and Foreign Transaction Reports (FTR). Compliance officers can also generate these manually.
 
-**Case Types:**
+## Common Workflows
 
-| Type | When It's Created |
-|------|------------------|
-| `SUSPICIOUS_TRANSACTION` | Transaction BLOCKED by screening |
-| `AML_ALERT` | Transaction ESCALATED |
-| `SANCTIONS_HIT` | Sanctions list match detected |
-| `PEP_MATCH` | Politically Exposed Person matched |
-| `FRAUD_ALERT` | Behavioral anomaly detected |
-| `KYC_REVIEW` | KYC verification issue |
-| `REGULATORY_INQUIRY` | Manual regulatory investigation |
-| `BEHAVIORAL_ANOMALY` | Device/velocity anomaly flagged |
+**Auto-generation:** A customer makes a cash deposit ≥ ₦5M → The system auto-creates a CTR → The compliance officer reviews and approves it → The XML is submitted to CBN.
 
-**Case Statuses (Lifecycle):**
+**Manual SAR filing:** An officer investigates a structuring case → Manually generates a SAR from the case → Attaches supporting documents → Approves for regulatory submission.
 
+## Permissions
+
+| Action | Who Can Do It |
+|--------|---------------|
+| Generate reports | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| List, view reports | All authenticated users |
+| Approve reports | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+
+## Report Types
+
+| Type | Trigger | Filing Threshold |
+|------|---------|------------------|
+| **SAR** | Suspicious activity (structuring, sanctions, fraud) | Any suspicious pattern |
+| **CTR** | Large cash transaction | Cash ≥ ₦5,000,000 |
+| **FTR** | International transfer | Receiver country ≠ `NG` |
+
+## Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/reports/sar` | Generate a Suspicious Activity Report |
+| `POST` | `/api/v1/reports/ctr` | Generate a Currency Transaction Report |
+| `POST` | `/api/v1/reports/ftr` | Generate a Foreign Transaction Report |
+| `GET` | `/api/v1/reports` | List generated reports |
+| `GET` | `/api/v1/reports/:id/xml` | Download report as CBN XML |
+| `PATCH` | `/api/v1/reports/:id/approve` | Approve report for submission |
+
+---
+
+### Generate SAR
+
+Create a Suspicious Activity Report for investigated cases.
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `caseId` | `string` | ✅ | Related case UUID |
+| `transactionIds` | `string[]` | ✅ | Supporting transaction IDs |
+| `description` | `string` | ✅ | Narrative of suspicious activity |
+| `suspicionType` | `string` | | `STRUCTURING`, `SANCTIONS`, `FRAUD`, `OTHER` |
+
+**Example Request**
+
+```bash
+curl -X POST https://api.ratel.security/v1/reports/sar \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "caseId": "case_12345abcde",
+    "transactionIds": ["tx_abc123def456", "tx_def789ghi012"],
+    "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours, just below the CTR threshold.",
+    "suspicionType": "STRUCTURING"
+  }'
 ```
-OPEN → IN_PROGRESS → PENDING_REVIEW → ESCALATED → RESOLVED_TRUE_POSITIVE / RESOLVED_FALSE_POSITIVE → CLOSED
-```
 
-**Create Case Request:**
+**Example Response — 201 Created**
+
 ```json
 {
-  "type": "SUSPICIOUS_TRANSACTION",
-  "priority": "HIGH",
-  "title": "Large cash deposit — possible structuring",
-  "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours",
-  "relatedTransactionId": "uuid-of-transaction",
-  "tags": ["structuring", "cash"]
+  "success": true,
+  "data": {
+    "id": "rep_sar_001",
+    "type": "SAR",
+    "caseId": "case_12345abcde",
+    "transactionIds": ["tx_abc123def456", "tx_def789ghi012"],
+    "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours, just below the CTR threshold.",
+    "suspicionType": "STRUCTURING",
+    "status": "PENDING_APPROVAL",
+    "xmlUrl": null,
+    "createdBy": "550e8400-e29b-41d4-a716-446655440000",
+    "createdAt": "2026-05-16T11:00:00Z"
+  }
 }
 ```
 
-**Filtering cases:**
+---
+
+### Generate CTR
+
+Create a Currency Transaction Report for large cash transactions.
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `transactionId` | `string` | ✅ | Triggering transaction UUID |
+| `amount` | `number` | ✅ | Transaction amount |
+| `currency` | `string` | | Defaults to `NGN` |
+| `customerId` | `string` | ✅ | Customer UUID |
+| `branchCode` | `string` | | Branch where transaction occurred |
+
+**Example Request**
+
+```bash
+curl -X POST https://api.ratel.security/v1/reports/ctr \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transactionId": "tx_cash_999",
+    "amount": 5000000,
+    "currency": "NGN",
+    "customerId": "cust_001",
+    "branchCode": "LAG-01"
+  }'
 ```
-GET /api/v1/cases?status=OPEN&type=SANCTIONS_HIT&priority=CRITICAL&page=1&limit=20
+
+**Example Response — 201 Created**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "rep_ctr_002",
+    "type": "CTR",
+    "transactionId": "tx_cash_999",
+    "amount": 5000000,
+    "currency": "NGN",
+    "customerId": "cust_001",
+    "branchCode": "LAG-01",
+    "status": "PENDING_APPROVAL",
+    "createdAt": "2026-05-16T11:30:00Z"
+  }
+}
 ```
 
 ---
+
+### Generate FTR
+
+Create a Foreign Transaction Report for cross-border transfers.
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `transactionId` | `string` | ✅ | Triggering transaction UUID |
+| `foreignAmount` | `number` | ✅ | Amount in foreign currency |
+| `foreignCurrency` | `string` | ✅ | Foreign currency code |
+| `destinationCountry` | `string` | ✅ | ISO 3166-1 alpha-2 code |
+| `purposeOfTransfer` | `string` | | Reason for transfer |
+
+**Example Request**
+
+```bash
+curl -X POST https://api.ratel.security/v1/reports/ftr \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transactionId": "tx_intl_444",
+    "foreignAmount": 10000,
+    "foreignCurrency": "USD",
+    "destinationCountry": "US",
+    "purposeOfTransfer": "School fees payment"
+  }'
+```
+
+**Example Response — 201 Created**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "rep_ftr_003",
+    "type": "FTR",
+    "transactionId": "tx_intl_444",
+    "foreignAmount": 10000,
+    "foreignCurrency": "USD",
+    "destinationCountry": "US",
+    "purposeOfTransfer": "School fees payment",
+    "status": "PENDING_APPROVAL",
+    "createdAt": "2026-05-16T12:00:00Z"
+  }
+}
+```
+
+---
+
+### List Reports
+
+Retrieve generated reports with filtering.
+
+**Query Parameters**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `type` | `string` | — | `SAR`, `CTR`, `FTR` |
+| `status` | `string` | — | `PENDING_APPROVAL`, `APPROVED`, `SUBMITTED` |
+| `page` | `integer` | `1` | Page number |
+| `limit` | `integer` | `20` | Items per page |
+
+**Example Request**
+
+```bash
+curl -X GET "https://api.ratel.security/v1/reports?type=SAR&status=PENDING_APPROVAL&page=1&limit=10" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "reports": [
+      {
+        "id": "rep_sar_001",
+        "type": "SAR",
+        "status": "PENDING_APPROVAL",
+        "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours...",
+        "createdBy": "550e8400-e29b-41d4-a716-446655440000",
+        "createdAt": "2026-05-16T11:00:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 3,
+      "totalPages": 1
+    }
+  }
+}
+```
+
+---
+
+### Get Report XML
+
+Download the CBN-compliant XML representation of a report.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Report UUID |
+
+**Example Request**
+
+```bash
+curl -X GET https://api.ratel.security/v1/reports/rep_sar_001/xml \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Accept: application/xml"
+```
+
+**Example Response — 200 OK**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Report xmlns="http://www.cbn.gov.ng/aml">
+  <ReportType>SAR</ReportType>
+  <ReportId>rep_sar_001</ReportId>
+  <SubmissionDate>2026-05-16</SubmissionDate>
+  <Institution>First Bank of Nigeria</Institution>
+  <Subject>
+    <CustomerId>cust_001</CustomerId>
+    <TransactionIds>
+      <Id>tx_abc123def456</Id>
+      <Id>tx_def789ghi012</Id>
+    </TransactionIds>
+  </Subject>
+  <Narrative>Customer made 4 deposits totaling ₦4.8M in 3 hours...</Narrative>
+</Report>
+```
+
+<Note>
+  The XML format follows CBN regulatory specifications. Approved reports can be submitted directly through the CBN portal.
+</Note>
+
+---
+
+### Approve Report
+
+Mark a report as approved for regulatory submission.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Report UUID |
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `approverNotes` | `string` | | Optional review notes |
+
+**Example Request**
+
+```bash
+curl -X PATCH https://api.ratel.security/v1/reports/rep_sar_001/approve \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "approverNotes": "Verified against case files. Ready for CBN submission."
+  }'
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "rep_sar_001",
+    "status": "APPROVED",
+    "approverId": "550e8400-e29b-41d4-a716-446655440000",
+    "approverNotes": "Verified against case files. Ready for CBN submission.",
+    "xmlUrl": "https://storage.ratel.security/reports/rep_sar_001.xml",
+    "approvedAt": "2026-05-16T14:00:00Z"
+  }
+}
+```
+
+<Warning>
+  Once approved, a report cannot be modified. If errors are discovered, create a new amended report referencing the original.
+</Warning>

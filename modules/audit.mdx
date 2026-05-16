@@ -1,4 +1,111 @@
 ---
-title: 'Module 7'
+title: 'Audit'
+description: 'View immutable audit logs for compliance and regulatory inspection'
 ---
 
+## Overview
+
+The Audit module provides a complete, immutable record of every significant action within your tenant. Every screening event, case update, rule change, and user management action is logged with full context — who did what, when, and from where.
+
+## Common Workflows
+
+**Regulatory inspection:** A CBN examiner requests audit evidence → An `AUDITOR` exports logs for a date range → The logs show every decision, case action, and rule trigger with timestamps and user attribution.
+
+**Internal investigation:** A compliance manager suspects an unauthorized rule change → Queries audit logs for `module: rules` and `action: UPDATE` → Identifies the user and reviews the exact change.
+
+## Permissions
+
+| Action | Who Can Do It |
+|--------|---------------|
+| View audit logs | `BANK_ADMIN`, `COMPLIANCE_OFFICER`, `AUDITOR` |
+
+## Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/audit` | Query audit logs with filters |
+
+---
+
+### List Audit Logs
+
+Retrieve audit trail entries with filtering and pagination.
+
+**Query Parameters**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `module` | `string` | — | `transactions`, `cases`, `rules`, `users`, `reports`, `kyc` |
+| `action` | `string` | — | `CREATE`, `UPDATE`, `DELETE`, `SCREEN`, `APPROVE`, `LOGIN` |
+| `userId` | `string` | — | Filter by acting user |
+| `from` | `string` | — | ISO 8601 start date |
+| `to` | `string` | — | ISO 8601 end date |
+| `page` | `integer` | `1` | Page number |
+| `limit` | `integer` | `50` | Items per page (max 500) |
+
+**Example Request**
+
+```bash
+curl -X GET "https://api.ratel.security/v1/audit?module=cases&action=UPDATE&from=2026-05-01T00:00:00Z&to=2026-05-16T23:59:59Z&page=1&limit=20" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "logs": [
+      {
+        "id": "audit_001",
+        "timestamp": "2026-05-16T14:30:00Z",
+        "module": "cases",
+        "action": "UPDATE",
+        "userId": "550e8400-e29b-41d4-a716-446655440000",
+        "userEmail": "officer@bank.com",
+        "resourceId": "case_12345abcde",
+        "resourceType": "case",
+        "details": {
+          "field": "status",
+          "oldValue": "OPEN",
+          "newValue": "IN_PROGRESS"
+        },
+        "ipAddress": "192.168.1.100",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+      },
+      {
+        "id": "audit_002",
+        "timestamp": "2026-05-16T14:15:00Z",
+        "module": "transactions",
+        "action": "SCREEN",
+        "userId": "system",
+        "userEmail": "system",
+        "resourceId": "tx_abc123def456",
+        "resourceType": "transaction",
+        "details": {
+          "outcome": "ESCALATE",
+          "score": 75,
+          "triggeredRules": ["AML-003"]
+        },
+        "ipAddress": null,
+        "userAgent": "RatelScreeningEngine/1.0"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 145,
+      "totalPages": 8
+    }
+  }
+}
+```
+
+<Note>
+  Audit logs are **immutable** and retained for **7 years** to meet CBN regulatory requirements. They cannot be modified or deleted by any user.
+</Note>
+
+<Warning>
+  For large exports, use `limit=500` and paginate through results. Do not attempt to retrieve more than 90 days of logs in a single request.
+</Warning>

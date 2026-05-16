@@ -1,22 +1,447 @@
 ---
-title: 'Transaction Screening'
+title: "Detection Rules"
+description: "Create, edit, activate, and pause custom detection rules"
 ---
 
-**Purpose**: Submit transactions for real-time AML/CFT screening. This is the core module.
+## Overview
 
-| Action | Endpoint | Who Can Do It |
-|--------|----------|---------------|
-| Screen transaction | `POST /api/v1/transactions/screen` | All authenticated users |
-| List transactions | `GET /api/v1/transactions` | All authenticated users |
-| Get transaction detail | `GET /api/v1/transactions/:id` | All authenticated users |
+Custom rules allow your institution to define institution-specific detection logic beyond the 7 mandatory CBN rules. Rules are evaluated during transaction screening and can trigger `REVIEW`, `ESCALATE`, or `BLOCK` outcomes.
 
-**What you send**: See the [Integration Guide](#integration-guide) above for the full field reference.
+## Common Workflows
 
-**What you get back**: A verdict with `outcome` (APPROVE/REVIEW/ESCALATE/BLOCK), `riskLevel`, `aggregateScore`, `riskBreakdown` per engine category, and `triggeredRules`.
+**New rule rollout:** A compliance officer drafts a rule → Tests it against historical transactions → Activates it → Monitors false positive rate → Tunes thresholds.
 
-**Filtering transactions:**
+**Emergency pause:** A rule starts generating too many false positives during a holiday period → A `BANK_ADMIN` immediately pauses the rule → Investigates and updates thresholds → Re-activates.
+
+## Permissions
+
+| Action | Who Can Do It |
+|--------|---------------|
+| Create, update rules | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Activate, pause, delete | `BANK_ADMIN` |
+| View rules | All authenticated users |
+
+## Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/rules` | Create a custom rule |
+| `GET` | `/api/v1/rules` | List all rules |
+| `GET` | `/api/v1/rules/:id` | Retrieve rule details |
+| `PATCH` | `/api/v1/rules/:id` | Update a rule |
+| `PATCH` | `/api/v1/rules/:id/activate` | Activate a rule |
+| `PATCH` | `/api/v1/rules/:id/pause` | Pause a rule |
+| `DELETE` | `/api/v1/rules/:id` | Delete a custom rule |
+
+> **Note:** CBN mandatory rules (`ruleType: "CBN_BUILTIN"`) cannot be edited, paused, or deleted. They appear in listings for reference.
+
+---
+
+### Create Rule
+
+Define a new custom detection rule with conditions, logic, and actions.
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | `string` | ✅ | Human-readable rule name |
+| `description` | `string` | ✅ | What the rule detects |
+| `ruleType` | `string` | ✅ | Always `"CUSTOM"` for user-created rules |
+| `configuration` | `object` | ✅ | Rule logic (see below) |
+| `scoreModifier` | `number` | ✅ | Risk score to add (0–100) |
+
+**Configuration Object**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `conditions` | `array` | ✅ | List of condition objects |
+| `conditionLogic` | `string` | ✅ | `"AND"` or `"OR"` |
+| `outcome` | `string` | ✅ | `"REVIEW"`, `"ESCALATE"`, or `"BLOCK"` |
+| `riskScore` | `number` | ✅ | Base risk score |
+| `actions` | `string[]` | | Array of actions like `["NOTIFY_OFFICER"]` |
+
+**Condition Object**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `field` | `string` | `amount`, `channel`, `type`, `narration`, `senderName`, `receiverName` |
+| `operator` | `string` | `GREATER_THAN`, `LESS_THAN`, `EQUALS`, `CONTAINS`, `REGEX_MATCH` |
+| `value` | `any` | Value to compare against |
+
+**Example Request**
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.ratel.security/v1/rules \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "High-Value ATM Withdrawal",
+    "description": "Flag ATM withdrawals over ₦500,000",
+    "ruleType": "CUSTOM",
+    "configuration": {
+      "conditions": [
+        { "field": "amount", "operator": "GREATER_THAN", "value": 500000 },
+        { "field": "channel", "operator": "EQUALS", "value": "ATM" }
+      ],
+      "conditionLogic": "AND",
+      "outcome": "REVIEW",
+      "riskScore": 45,
+      "actions": ["NOTIFY_OFFICER"]
+    },
+    "scoreModifier": 45
+  }'
 ```
-GET /api/v1/transactions?outcome=BLOCK&riskLevel=CRITICAL&type=TRANSFER&page=1&limit=20
+
+```javascript Node.js
+const response = await fetch("https://api.ratel.security/v1/rules", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer <access_token>",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    name: "High-Value ATM Withdrawal",
+    description: "Flag ATM withdrawals over ₦500,000",
+    ruleType: "CUSTOM",
+    configuration: {
+      conditions: [
+        { field: "amount", operator: "GREATER_THAN", value: 500000 },
+        { field: "channel", operator: "EQUALS", value: "ATM" }
+      ],
+      conditionLogic: "AND",
+      outcome: "REVIEW",
+      riskScore: 45,
+      actions: ["NOTIFY_OFFICER"]
+    },
+    scoreModifier: 45
+  })
+});
+const result = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.ratel.security/v1/rules",
+    headers={
+        "Authorization": "Bearer <access_token>",
+        "Content-Type": "application/json"
+    },
+    json={
+        "name": "High-Value ATM Withdrawal",
+        "description": "Flag ATM withdrawals over ₦500,000",
+        "ruleType": "CUSTOM",
+        "configuration": {
+            "conditions": [
+                {"field": "amount", "operator": "GREATER_THAN", "value": 500000},
+                {"field": "channel", "operator": "EQUALS", "value": "ATM"}
+            ],
+            "conditionLogic": "AND",
+            "outcome": "REVIEW",
+            "riskScore": 45,
+            "actions": ["NOTIFY_OFFICER"]
+        },
+        "scoreModifier": 45
+    }
+)
+result = response.json()
+```
+</CodeGroup>
+
+**Example Response — 201 Created**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "rule_789xyz",
+    "name": "High-Value ATM Withdrawal",
+    "description": "Flag ATM withdrawals over ₦500,000",
+    "ruleType": "CUSTOM",
+    "configuration": {
+      "conditions": [
+        { "field": "amount", "operator": "GREATER_THAN", "value": 500000 },
+        { "field": "channel", "operator": "EQUALS", "value": "ATM" }
+      ],
+      "conditionLogic": "AND",
+      "outcome": "REVIEW",
+      "riskScore": 45,
+      "actions": ["NOTIFY_OFFICER"]
+    },
+    "scoreModifier": 45,
+    "status": "ACTIVE",
+    "createdBy": "550e8400-e29b-41d4-a716-446655440000",
+    "createdAt": "2026-05-16T10:00:00Z",
+    "updatedAt": "2026-05-16T10:00:00Z"
+  }
+}
 ```
 
 ---
+
+### List Rules
+
+Retrieve all rules including CBN built-ins and custom rules.
+
+**Query Parameters**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `status` | `string` | — | `ACTIVE`, `PAUSED` |
+| `ruleType` | `string` | — | `CUSTOM`, `CBN_BUILTIN` |
+| `page` | `integer` | `1` | Page number |
+| `limit` | `integer` | `20` | Items per page |
+
+**Example Request**
+
+```bash
+curl -X GET "https://api.ratel.security/v1/rules?status=ACTIVE&page=1&limit=20" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "rules": [
+      {
+        "id": "rule_789xyz",
+        "name": "High-Value ATM Withdrawal",
+        "ruleType": "CUSTOM",
+        "status": "ACTIVE",
+        "outcome": "REVIEW",
+        "riskScore": 45,
+        "createdAt": "2026-05-16T10:00:00Z"
+      },
+      {
+        "id": "CBN-001",
+        "name": "Cash Threshold",
+        "ruleType": "CBN_BUILTIN",
+        "status": "ACTIVE",
+        "outcome": "REVIEW",
+        "riskScore": 60,
+        "createdAt": "2024-01-01T00:00:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 8,
+      "totalPages": 1
+    }
+  }
+}
+```
+
+---
+
+### Get Rule Detail
+
+Retrieve the full configuration of a single rule.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Rule UUID or CBN code |
+
+**Example Request**
+
+```bash
+curl -X GET https://api.ratel.security/v1/rules/rule_789xyz \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "rule_789xyz",
+    "name": "High-Value ATM Withdrawal",
+    "description": "Flag ATM withdrawals over ₦500,000",
+    "ruleType": "CUSTOM",
+    "configuration": {
+      "conditions": [
+        { "field": "amount", "operator": "GREATER_THAN", "value": 500000 },
+        { "field": "channel", "operator": "EQUALS", "value": "ATM" }
+      ],
+      "conditionLogic": "AND",
+      "outcome": "REVIEW",
+      "riskScore": 45,
+      "actions": ["NOTIFY_OFFICER"]
+    },
+    "scoreModifier": 45,
+    "status": "ACTIVE",
+    "createdBy": "550e8400-e29b-41d4-a716-446655440000",
+    "createdAt": "2026-05-16T10:00:00Z",
+    "updatedAt": "2026-05-16T10:00:00Z"
+  }
+}
+```
+
+---
+
+### Update Rule
+
+Modify an existing custom rule. CBN built-ins cannot be updated.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Rule UUID |
+
+**Request Body**
+
+All fields optional. Same structure as Create Rule.
+
+**Example Request**
+
+```bash
+curl -X PATCH https://api.ratel.security/v1/rules/rule_789xyz \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "High-Value ATM Withdrawal (Updated)",
+    "configuration": {
+      "conditions": [
+        { "field": "amount", "operator": "GREATER_THAN", "value": 750000 }
+      ],
+      "conditionLogic": "AND",
+      "outcome": "REVIEW",
+      "riskScore": 50,
+      "actions": ["NOTIFY_OFFICER"]
+    },
+    "scoreModifier": 50
+  }'
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "rule_789xyz",
+    "name": "High-Value ATM Withdrawal (Updated)",
+    "configuration": {
+      "conditions": [
+        { "field": "amount", "operator": "GREATER_THAN", "value": 750000 }
+      ],
+      "conditionLogic": "AND",
+      "outcome": "REVIEW",
+      "riskScore": 50,
+      "actions": ["NOTIFY_OFFICER"]
+    },
+    "scoreModifier": 50,
+    "updatedAt": "2026-05-16T11:00:00Z"
+  }
+}
+```
+
+<Warning>
+  Updating an active rule does not automatically pause it. Consider pausing first if the change significantly alters detection logic.
+</Warning>
+
+---
+
+### Activate Rule
+
+Enable a paused custom rule.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Rule UUID |
+
+**Example Request**
+
+```bash
+curl -X PATCH https://api.ratel.security/v1/rules/rule_789xyz/activate \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "rule_789xyz",
+    "status": "ACTIVE",
+    "updatedAt": "2026-05-16T12:00:00Z"
+  }
+}
+```
+
+---
+
+### Pause Rule
+
+Temporarily disable a custom rule without deleting it.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Rule UUID |
+
+**Example Request**
+
+```bash
+curl -X PATCH https://api.ratel.security/v1/rules/rule_789xyz/pause \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "rule_789xyz",
+    "status": "PAUSED",
+    "updatedAt": "2026-05-16T12:05:00Z"
+  }
+}
+```
+
+---
+
+### Delete Rule
+
+Permanently remove a custom rule. This action cannot be undone.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Rule UUID |
+
+**Example Request**
+
+```bash
+curl -X DELETE https://api.ratel.security/v1/rules/rule_789xyz \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 204 No Content**
+
+```json
+{
+  "success": true,
+  "data": null
+}
+```
+
+<Warning>
+  Deleting a rule removes it from all future screenings. Historical transactions screened by this rule retain their original verdicts.
+</Warning>

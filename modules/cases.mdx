@@ -1,4 +1,386 @@
 ---
-title: 'Module 3'
+title: 'Case Management'
+description: 'Investigate flagged transactions and manage compliance case lifecycles'
 ---
 
+## Overview
+
+Cases are the core workflow unit for compliance teams. A case is automatically created whenever a transaction receives a `REVIEW`, `ESCALATE`, or `BLOCK` outcome. Cases can also be created manually by compliance officers for ad-hoc investigations.
+
+## Common Workflows
+
+**Automatic case creation:** A transaction triggers a sanctions hit → The system creates a `SANCTIONS_HIT` case → Compliance officers are notified via email and dashboard → An officer claims the case, investigates, and resolves it.
+
+**Manual investigation:** An analyst notices a pattern → Creates a `REGULATORY_INQUIRY` case → Attaches related transactions → Adds investigation notes → Escalates to a senior officer.
+
+## Permissions
+
+| Action | Who Can Do It |
+|--------|---------------|
+| Create case | `BANK_ADMIN`, `COMPLIANCE_OFFICER`, `ANALYST` |
+| List, view cases | All authenticated users |
+| Update status, assign | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Add notes | All authenticated users |
+
+## Case Lifecycle
+
+```
+OPEN → IN_PROGRESS → PENDING_REVIEW → ESCALATED → RESOLVED_TRUE_POSITIVE / RESOLVED_FALSE_POSITIVE → CLOSED
+```
+
+## Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/cases` | Create a new case |
+| `GET` | `/api/v1/cases` | List cases with filters |
+| `GET` | `/api/v1/cases/:id` | Retrieve case details |
+| `PATCH` | `/api/v1/cases/:id/status` | Update case status |
+| `PATCH` | `/api/v1/cases/:id/assign` | Assign case to a user |
+| `POST` | `/api/v1/cases/:id/notes` | Add a note to a case |
+
+---
+
+### Create Case
+
+Manually create a compliance case. Auto-created cases use the same structure.
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | `string` | ✅ | Case type (see table below) |
+| `priority` | `string` | ✅ | `LOW`, `MEDIUM`, `HIGH`, `CRITICAL` |
+| `title` | `string` | ✅ | Short summary |
+| `description` | `string` | ✅ | Detailed explanation |
+| `relatedTransactionId` | `string` | | UUID of triggering transaction |
+| `tags` | `string[]` | | Labels for categorization |
+
+**Case Types**
+
+| Type | When It's Created |
+|------|------------------|
+| `SUSPICIOUS_TRANSACTION` | Transaction BLOCKED by screening |
+| `AML_ALERT` | Transaction ESCALATED |
+| `SANCTIONS_HIT` | Sanctions list match detected |
+| `PEP_MATCH` | Politically Exposed Person matched |
+| `FRAUD_ALERT` | Behavioral anomaly detected |
+| `KYC_REVIEW` | KYC verification issue |
+| `REGULATORY_INQUIRY` | Manual regulatory investigation |
+| `BEHAVIORAL_ANOMALY` | Device/velocity anomaly flagged |
+
+**Example Request**
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.ratel.security/v1/cases \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "SUSPICIOUS_TRANSACTION",
+    "priority": "HIGH",
+    "title": "Large cash deposit — possible structuring",
+    "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours",
+    "relatedTransactionId": "tx_abc123def456",
+    "tags": ["structuring", "cash"]
+  }'
+```
+
+```javascript Node.js
+const response = await fetch("https://api.ratel.security/v1/cases", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer <access_token>",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    type: "SUSPICIOUS_TRANSACTION",
+    priority: "HIGH",
+    title: "Large cash deposit — possible structuring",
+    description: "Customer made 4 deposits totaling ₦4.8M in 3 hours",
+    relatedTransactionId: "tx_abc123def456",
+    tags: ["structuring", "cash"]
+  })
+});
+const result = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.ratel.security/v1/cases",
+    headers={
+        "Authorization": "Bearer <access_token>",
+        "Content-Type": "application/json"
+    },
+    json={
+        "type": "SUSPICIOUS_TRANSACTION",
+        "priority": "HIGH",
+        "title": "Large cash deposit — possible structuring",
+        "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours",
+        "relatedTransactionId": "tx_abc123def456",
+        "tags": ["structuring", "cash"]
+    }
+)
+result = response.json()
+```
+</CodeGroup>
+
+**Example Response — 201 Created**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "case_12345abcde",
+    "type": "SUSPICIOUS_TRANSACTION",
+    "priority": "HIGH",
+    "title": "Large cash deposit — possible structuring",
+    "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours",
+    "status": "OPEN",
+    "relatedTransactionId": "tx_abc123def456",
+    "tags": ["structuring", "cash"],
+    "assigneeId": null,
+    "createdBy": "550e8400-e29b-41d4-a716-446655440000",
+    "createdAt": "2026-05-16T14:30:00Z",
+    "updatedAt": "2026-05-16T14:30:00Z"
+  }
+}
+```
+
+---
+
+### List Cases
+
+Retrieve cases with powerful filtering options.
+
+**Query Parameters**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `status` | `string` | — | `OPEN`, `IN_PROGRESS`, `PENDING_REVIEW`, `ESCALATED`, `RESOLVED_TRUE_POSITIVE`, `RESOLVED_FALSE_POSITIVE`, `CLOSED` |
+| `type` | `string` | — | Filter by case type |
+| `priority` | `string` | — | `LOW`, `MEDIUM`, `HIGH`, `CRITICAL` |
+| `assigneeId` | `string` | — | Filter by assigned user |
+| `page` | `integer` | `1` | Page number |
+| `limit` | `integer` | `20` | Items per page |
+
+**Example Request**
+
+```bash
+curl -X GET "https://api.ratel.security/v1/cases?status=OPEN&priority=CRITICAL&page=1&limit=20" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "cases": [
+      {
+        "id": "case_12345abcde",
+        "type": "SUSPICIOUS_TRANSACTION",
+        "priority": "HIGH",
+        "title": "Large cash deposit — possible structuring",
+        "status": "OPEN",
+        "assigneeId": null,
+        "createdAt": "2026-05-16T14:30:00Z",
+        "updatedAt": "2026-05-16T14:30:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 15,
+      "totalPages": 1
+    }
+  }
+}
+```
+
+---
+
+### Get Case Detail
+
+Retrieve a case including its full note history.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Case UUID |
+
+**Example Request**
+
+```bash
+curl -X GET https://api.ratel.security/v1/cases/case_12345abcde \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "case_12345abcde",
+    "type": "SUSPICIOUS_TRANSACTION",
+    "priority": "HIGH",
+    "title": "Large cash deposit — possible structuring",
+    "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours",
+    "status": "OPEN",
+    "relatedTransactionId": "tx_abc123def456",
+    "tags": ["structuring", "cash"],
+    "assigneeId": null,
+    "notes": [
+      {
+        "id": "note_001",
+        "content": "Customer contacted. Awaiting documentation.",
+        "createdBy": "550e8400-e29b-41d4-a716-446655440000",
+        "createdAt": "2026-05-16T15:00:00Z"
+      }
+    ],
+    "createdBy": "550e8400-e29b-41d4-a716-446655440000",
+    "createdAt": "2026-05-16T14:30:00Z",
+    "updatedAt": "2026-05-16T15:00:00Z"
+  }
+}
+```
+
+---
+
+### Update Case Status
+
+Move a case through its lifecycle. Include a resolution note when closing.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Case UUID |
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `status` | `string` | ✅ | New status |
+| `resolutionNote` | `string` | | Required when resolving or closing |
+
+**Example Request**
+
+```bash
+curl -X PATCH https://api.ratel.security/v1/cases/case_12345abcde/status \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "IN_PROGRESS",
+    "resolutionNote": "Reviewing customer transaction history"
+  }'
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "case_12345abcde",
+    "status": "IN_PROGRESS",
+    "resolutionNote": "Reviewing customer transaction history",
+    "updatedAt": "2026-05-16T16:00:00Z"
+  }
+}
+```
+
+<Warning>
+  Status transitions are validated. You cannot jump from `OPEN` directly to `CLOSED` without passing through the required intermediate states.
+</Warning>
+
+---
+
+### Assign Case
+
+Assign a case to a specific compliance officer.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Case UUID |
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `assigneeId` | `string` | ✅ | User UUID to assign |
+
+**Example Request**
+
+```bash
+curl -X PATCH https://api.ratel.security/v1/cases/case_12345abcde/assign \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "assigneeId": "550e8400-e29b-41d4-a716-446655440000"
+  }'
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "case_12345abcde",
+    "assigneeId": "550e8400-e29b-41d4-a716-446655440000",
+    "updatedAt": "2026-05-16T16:15:00Z"
+  }
+}
+```
+
+---
+
+### Add Note
+
+Append an investigation note to a case.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Case UUID |
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `content` | `string` | ✅ | Note text |
+
+**Example Request**
+
+```bash
+curl -X POST https://api.ratel.security/v1/cases/case_12345abcde/notes \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "Spoke with customer. Provided source of funds documentation."
+  }'
+```
+
+**Example Response — 201 Created**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "note_002",
+    "caseId": "case_12345abcde",
+    "content": "Spoke with customer. Provided source of funds documentation.",
+    "createdBy": "550e8400-e29b-41d4-a716-446655440000",
+    "createdAt": "2026-05-16T17:00:00Z"
+  }
+}
+```

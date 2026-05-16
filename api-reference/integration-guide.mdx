@@ -281,13 +281,13 @@ Only matches with ≥ 70% composite confidence are flagged.
 
 Each engine produces a risk score (0–100). Scores are aggregated using weighted severity:
 
-| Category                  | Weight   | Rationale                                          |
-| ------------------------- | -------- | -------------------------------------------------- |
-| **Regulatory Compliance** | **1.5×** | Core compliance — highest authority                |
-| **Identity Verification** | **1.3×** | KYC integrity is compliance-critical               |
-| **Custom Rules**          | **1.2×** | Bank-specific logic elevated above generic engines |
-| **Sanctions & PEP**       | **1.0×** | Standard weight — severity via outcome escalation  |
-| **Behavioral Analysis**   | **0.8×** | Supplementary evidence                             |
+| Category                  | Weight   | Rationale                                                 |
+| ------------------------- | -------- | --------------------------------------------------------- |
+| **Regulatory Compliance** | **1.5×** | Core compliance — highest authority                       |
+| **Identity Verification** | **1.3×** | KYC integrity is compliance-critical                      |
+| **Custom Rules**          | **1.2×** | institution-specific logic elevated above generic engines |
+| **Sanctions & PEP**       | **1.0×** | Standard weight — severity via outcome escalation         |
+| **Behavioral Analysis**   | **0.8×** | Supplementary evidence                                    |
 
 **Score Floor Guarantee:** `Final Score = MAX(weighted_average, max_engine_score × 0.8)`
 
@@ -456,4 +456,4 @@ Standard HTTP status codes indicate success or failure:
 
 ---
 
-> **Ratel Security** — Enterprise-grade AML/CFT compliance for African financial institutions. For support, contact [support@ratelsecurity.com](mailto:support@ratelsecurity.com).
+> **Ratel Security** — Enterprise-grade AML/CFT compliance for African financial institutions. For support, contact [support@bevars.com](mailto:adams@bevars.com).

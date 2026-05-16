@@ -1,13 +1,34 @@
 ---
 title: 'Email Notifications'
+description: 'Understand how and when the platform sends email alerts'
 ---
 
-Every transaction that triggers rules (outcome ≠ APPROVE) sends an email alert to all compliance officers.
+## Overview
+
+Ratel Security sends transactional email alerts to keep compliance teams informed of critical events without requiring constant dashboard monitoring.
+
+## Notification Events
 
 | Event | Recipients | Content |
 |-------|-----------|---------|
-| Transaction BLOCK/ESCALATE/REVIEW | All Compliance Officers, Bank Admins, Super Admins | Risk level, score, amount, sender, triggered rules, dashboard link |
-| New user created | The new user | Welcome email with login link |
-| Tenant onboarded | Bank administrator | Onboarding guide |
+| Transaction BLOCK/ESCALATE/REVIEW | Compliance Officers, Bank Admins | Risk level, score, amount, sender, triggered rules, dashboard link |
+| New user created | The new user | Welcome email with temporary login credentials |
+| Case assigned | Assigned officer | Case title, priority, due date, direct link |
+| Report approved | Report creator | Confirmation with XML download link |
+| KYC status change | Applicant | Verification progress updates |
 
-> In development mode (no email API key configured), emails are logged to the console.
+## Configuration
+
+No configuration is required for core alerts. Email addresses are pulled from user profiles.
+
+**In development mode** (no email API key configured), all emails are logged to the console instead of being sent.
+
+## Best Practices
+
+- Ensure user email addresses are kept current in the [Authentication](/modules/auth) module
+- Assign cases promptly to route email notifications to the right officer
+- Use the dashboard for detailed investigation — emails are summaries only
+
+<Warning>
+  Email alerts contain sensitive financial data. Ensure recipient inboxes are secured and comply with your institution's data protection policies.
+</Warning>

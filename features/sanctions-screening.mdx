@@ -1,10 +1,10 @@
 ---
-title: 'Global Sanctions & PEP Screening'
+title: "Global Sanctions & PEP Screening"
 ---
 
 ### Coverage
 
-The platform screens against **1.8 million entities** aggregated from:
+The platform screens against **millions of entities** aggregated from:
 
 - UN Security Council Consolidated List
 - US OFAC SDN + Consolidated Lists
@@ -19,24 +19,24 @@ The platform screens against **1.8 million entities** aggregated from:
 
 The matching engine uses multi-algorithm entity resolution:
 
-| Algorithm | What It Does |
-|-----------|-------------|
-| **Exact Match** | Case-normalized literal comparison |
-| **Jaro-Winkler** | Fuzzy string similarity (handles typos) |
-| **Phonetic Match** | Sound-alike matching (handles transliterations) |
-| **Fingerprint Levenshtein** | Edit distance on normalized name tokens |
-| **Country/DOB Penalty** | Reduces score when demographics don't match |
+| Algorithm                   | What It Does                                    |
+| --------------------------- | ----------------------------------------------- |
+| **Exact Match**             | Case-normalized literal comparison              |
+| **Jaro-Winkler**            | Fuzzy string similarity (handles typos)         |
+| **Phonetic Match**          | Sound-alike matching (handles transliterations) |
+| **Fingerprint Levenshtein** | Edit distance on normalized name tokens         |
+| **Country/DOB Penalty**     | Reduces score when demographics don't match     |
 
 **Threshold**: Only matches with ≥ 70% composite confidence are flagged.
 
 ### Score Assignment
 
-| Match Type | Risk Score | Outcome |
-|-----------|------------|---------|
-| Sanctions list match | **95** | BLOCK |
-| PEP match | **70** | ESCALATE |
-| Other watchlist match | **60** | REVIEW |
-| No match | **0** | APPROVE |
+| Match Type            | Risk Score | Outcome  |
+| --------------------- | ---------- | -------- |
+| Sanctions list match  | **95**     | BLOCK    |
+| PEP match             | **70**     | ESCALATE |
+| Other watchlist match | **60**     | REVIEW   |
+| No match              | **0**      | APPROVE  |
 
 Both **sender** and **receiver** names are screened in parallel. PEP detection from this stage automatically feeds into CBN-004 PEP Screening.
 

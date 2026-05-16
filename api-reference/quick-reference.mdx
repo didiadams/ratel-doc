@@ -1,20 +1,94 @@
 ---
-title: 'API Quick Reference'
+title: "API Quick Reference"
+description: "Concise reference for all Ratel Security API endpoints"
 ---
 
-All endpoints are prefixed with `/api/v1/`. All require `Authorization: Bearer <token>` except login.
+All endpoints are prefixed with `/api/v1/` and require `Authorization: Bearer <token>` except login.
 
-| Module | Endpoints | Methods |
-|--------|-----------|---------|
-| **Auth** | `/auth/login`, `/auth/refresh`, `/auth/me`, `/auth/users` | POST, GET, PATCH, DELETE |
-| **Transactions** | `/transactions/screen`, `/transactions`, `/transactions/:id` | POST, GET |
-| **Cases** | `/cases`, `/cases/:id`, `/cases/:id/status`, `/cases/:id/assign`, `/cases/:id/notes` | POST, GET, PATCH |
-| **Rules** | `/rules`, `/rules/:id`, `/rules/:id/activate`, `/rules/:id/pause` | POST, GET, PATCH, DELETE |
-| **KYC** | `/kyc/applications`, `/kyc/applications/:id/verify-*`, `/kyc/applications/:id/approve` | POST, GET, PATCH |
-| **Reports** | `/reports/sar`, `/reports/ctr`, `/reports/ftr`, `/reports/:id/xml`, `/reports/:id/approve` | POST, GET, PATCH |
-| **Audit** | `/audit` | GET |
-| **Tenants** | `/tenants`, `/tenants/:id` | POST, GET, PATCH |
-| **Health** | `/health` | GET (no auth) |
+## Base URL
+
+```
+https://api.ratel.security/v1
+```
+
+## Endpoints by Module
+
+### Authentication
+| Endpoint | Methods | Description |
+|----------|---------|-------------|
+| `/auth/login` | `POST` | Authenticate and receive tokens |
+| `/auth/refresh` | `POST` | Refresh access token |
+| `/auth/me` | `GET` | Current user profile |
+| `/auth/users` | `POST`, `GET` | Create or list users |
+| `/auth/users/:id` | `PATCH`, `DELETE` | Update or deactivate user |
+
+### Transactions
+| Endpoint | Methods | Description |
+|----------|---------|-------------|
+| `/transactions/screen` | `POST` | Screen a transaction |
+| `/transactions` | `GET` | List transactions |
+| `/transactions/:id` | `GET` | Get transaction details |
+
+### Cases
+| Endpoint | Methods | Description |
+|----------|---------|-------------|
+| `/cases` | `POST`, `GET` | Create or list cases |
+| `/cases/:id` | `GET` | Get case details |
+| `/cases/:id/status` | `PATCH` | Update case status |
+| `/cases/:id/assign` | `PATCH` | Assign case to user |
+| `/cases/:id/notes` | `POST` | Add note to case |
+
+### Rules
+| Endpoint | Methods | Description |
+|----------|---------|-------------|
+| `/rules` | `POST`, `GET` | Create or list rules |
+| `/rules/:id` | `GET`, `PATCH`, `DELETE` | Get, update, or delete rule |
+| `/rules/:id/activate` | `PATCH` | Activate a rule |
+| `/rules/:id/pause` | `PATCH` | Pause a rule |
+
+### KYC
+| Endpoint | Methods | Description |
+|----------|---------|-------------|
+| `/kyc/applications` | `POST`, `GET` | Submit or list applications |
+| `/kyc/applications/:id` | `GET` | Get application details |
+| `/kyc/applications/:id/verify-bvn` | `PATCH` | Verify BVN |
+| `/kyc/applications/:id/verify-nin` | `PATCH` | Verify NIN |
+| `/kyc/applications/:id/approve` | `PATCH` | Approve or reject application |
+
+### Reports
+| Endpoint | Methods | Description |
+|----------|---------|-------------|
+| `/reports/sar` | `POST` | Generate SAR |
+| `/reports/ctr` | `POST` | Generate CTR |
+| `/reports/ftr` | `POST` | Generate FTR |
+| `/reports` | `GET` | List reports |
+| `/reports/:id/xml` | `GET` | Download report XML |
+| `/reports/:id/approve` | `PATCH` | Approve report |
+
+### Audit
+| Endpoint | Methods | Description |
+|----------|---------|-------------|
+| `/audit` | `GET` | Query audit logs |
+
+### System
+| Endpoint | Methods | Description |
+|----------|---------|-------------|
+| `/health` | `GET` | Health check (no auth required) |
+
+## HTTP Status Codes
+
+| Code | Meaning | When It Happens |
+|------|---------|-----------------|
+| `200` | OK | Request succeeded |
+| `201` | Created | Resource created successfully |
+| `204` | No Content | Resource deleted or deactivated |
+| `400` | Bad Request | Validation error — check request body |
+| `401` | Unauthorized | Missing or invalid token |
+| `403` | Forbidden | Insufficient permissions for this action |
+| `404` | Not Found | Resource does not exist |
+| `409` | Conflict | Duplicate or conflicting state |
+| `429` | Too Many Requests | Rate limit exceeded |
+| `500` | Server Error | Unexpected error — retry with backoff |
 
 ---
 

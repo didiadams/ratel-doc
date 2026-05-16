@@ -1,4 +1,377 @@
 ---
-title: 'Module 1'
+title: 'Authentication & User Management'
+description: 'Manage login sessions, user accounts, and role assignments'
 ---
 
+## Overview
+
+The Authentication module handles identity verification for all users and provides user lifecycle management within your tenant. Every API call (except login) requires a valid Bearer token in the `Authorization` header.
+
+## Common Workflows
+
+**New team member onboarding:** A `BANK_ADMIN` creates a user account → The new user receives a welcome email → They log in and begin using the dashboard.
+
+**Session refresh:** When your access token expires (every 15 minutes), use the refresh token to obtain a new pair without prompting for credentials again.
+
+## Permissions
+
+| Action | Who Can Do It |
+|--------|---------------|
+| Login, refresh token, view own profile | Anyone |
+| List, create, update, deactivate users | `BANK_ADMIN` |
+
+## Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/auth/login` | Authenticate and receive tokens |
+| `POST` | `/api/v1/auth/refresh` | Exchange refresh token for new access token |
+| `GET` | `/api/v1/auth/me` | Retrieve current user profile |
+| `GET` | `/api/v1/auth/users` | List all users in tenant |
+| `POST` | `/api/v1/auth/users` | Create a new user |
+| `PATCH` | `/api/v1/auth/users/:id` | Update user details or role |
+| `DELETE` | `/api/v1/auth/users/:id` | Deactivate a user |
+
+---
+
+### Login
+
+Authenticate with email and password to receive an access token and refresh token.
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | `string` | ✅ | User's registered email |
+| `password` | `string` | ✅ | User's password |
+
+**Example Request**
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.ratel.security/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "analyst@bank.com",
+    "password": "SecurePass123!"
+  }'
+```
+
+```javascript Node.js
+const response = await fetch("https://api.ratel.security/v1/auth/login", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    email: "analyst@bank.com",
+    password: "SecurePass123!"
+  })
+});
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.ratel.security/v1/auth/login",
+    headers={"Content-Type": "application/json"},
+    json={
+        "email": "analyst@bank.com",
+        "password": "SecurePass123!"
+    }
+)
+data = response.json()
+```
+</CodeGroup>
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "email": "analyst@bank.com",
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "role": "ANALYST",
+      "tenantId": "660e8400-e29b-41d4-a716-446655440001",
+      "createdAt": "2026-01-15T09:30:00Z"
+    }
+  }
+}
+```
+
+**Example Response — 401 Unauthorized**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_CREDENTIALS",
+    "message": "Email or password is incorrect"
+  }
+}
+```
+
+---
+
+### Refresh Token
+
+Obtain a new access token without re-entering credentials.
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `refreshToken` | `string` | ✅ | The refresh token from login |
+
+**Example Request**
+
+```bash
+curl -X POST https://api.ratel.security/v1/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{ "refreshToken": "eyJhbG..." }'
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+<Note>
+  Access tokens expire after **15 minutes**. Refresh tokens expire after **7 days**.
+</Note>
+
+---
+
+### Get My Profile
+
+Retrieve the currently authenticated user's details.
+
+**Example Request**
+
+```bash
+curl -X GET https://api.ratel.security/v1/auth/me \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "analyst@bank.com",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "role": "ANALYST",
+    "tenantId": "660e8400-e29b-41d4-a716-446655440001",
+    "lastLoginAt": "2026-05-16T10:00:00Z"
+  }
+}
+```
+
+---
+
+### List Users
+
+Retrieve all users within your tenant.
+
+**Query Parameters**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `page` | `integer` | `1` | Page number |
+| `limit` | `integer` | `20` | Items per page (max 100) |
+| `role` | `string` | — | Filter by role |
+
+**Example Request**
+
+```bash
+curl -X GET "https://api.ratel.security/v1/auth/users?page=1&limit=10" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "users": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "email": "analyst@bank.com",
+        "firstName": "Jane",
+        "lastName": "Smith",
+        "role": "ANALYST",
+        "isActive": true,
+        "createdAt": "2026-01-15T09:30:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 42,
+      "totalPages": 5
+    }
+  }
+}
+```
+
+---
+
+### Create User
+
+Add a new user to your tenant. The new user will receive a welcome email with login instructions.
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | `string` | ✅ | Unique email address |
+| `password` | `string` | ✅ | Minimum 8 characters |
+| `firstName` | `string` | ✅ | First name |
+| `lastName` | `string` | ✅ | Last name |
+| `role` | `string` | ✅ | `BANK_ADMIN`, `COMPLIANCE_OFFICER`, `ANALYST`, or `AUDITOR` |
+
+**Example Request**
+
+```bash
+curl -X POST https://api.ratel.security/v1/auth/users \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "new.officer@bank.com",
+    "password": "SecurePass123!",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "role": "COMPLIANCE_OFFICER"
+  }'
+```
+
+**Example Response — 201 Created**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "770e8400-e29b-41d4-a716-446655440002",
+    "email": "new.officer@bank.com",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "role": "COMPLIANCE_OFFICER",
+    "tenantId": "660e8400-e29b-41d4-a716-446655440001",
+    "isActive": true,
+    "createdAt": "2026-05-16T14:20:00Z"
+  }
+}
+```
+
+**Example Response — 409 Conflict**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_ALREADY_EXISTS",
+    "message": "A user with this email already exists"
+  }
+}
+```
+
+---
+
+### Update User
+
+Modify a user's details or role.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | User UUID |
+
+**Request Body**
+
+All fields are optional.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `firstName` | `string` | Updated first name |
+| `lastName` | `string` | Updated last name |
+| `role` | `string` | New role assignment |
+| `isActive` | `boolean` | Activate or deactivate |
+
+**Example Request**
+
+```bash
+curl -X PATCH https://api.ratel.security/v1/auth/users/770e8400-e29b-41d4-a716-446655440002 \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "role": "ANALYST",
+    "isActive": true
+  }'
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "770e8400-e29b-41d4-a716-446655440002",
+    "email": "new.officer@bank.com",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "role": "ANALYST",
+    "isActive": true,
+    "updatedAt": "2026-05-16T15:00:00Z"
+  }
+}
+```
+
+---
+
+### Deactivate User
+
+Soft-delete a user by deactivating their account.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | User UUID |
+
+**Example Request**
+
+```bash
+curl -X DELETE https://api.ratel.security/v1/auth/users/770e8400-e29b-41d4-a716-446655440002 \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Example Response — 204 No Content**
+
+```json
+{
+  "success": true,
+  "data": null
+}
+```
+
+<Warning>
+  Deactivated users cannot log in but their audit history and case contributions are preserved for compliance.
+</Warning>

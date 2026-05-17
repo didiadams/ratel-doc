@@ -1,6 +1,6 @@
 ---
-title: 'Reports'
-description: 'Generate and manage regulatory reports required by the Central Bank of Nigeria'
+title: "Reports"
+description: "Generate and manage regulatory reports required by the Central Bank of Nigeria"
 ---
 
 ## Overview
@@ -15,42 +15,42 @@ The Reports module automates the creation of regulatory filings required under t
 
 ## Permissions
 
-| Action | Who Can Do It |
-|--------|---------------|
-| Generate reports | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
-| List, view reports | All authenticated users |
+| Action                | Who Can Do It                      |
+| --------------------- | ---------------------------------- |
+| Generate reports      | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| List, view reports    | All authenticated users            |
 | Approve, file reports | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
 
 ## Report Types
 
-| Type | Trigger | Filing Threshold |
-|------|---------|------------------|
-| **SAR** | Suspicious activity (structuring, sanctions, fraud) | Any suspicious pattern |
-| **CTR** | Large cash transaction | Cash ≥ ₦5,000,000 |
-| **FTR** | International transfer | Receiver country ≠ `NG` |
+| Type    | Trigger                                             | Filing Threshold        |
+| ------- | --------------------------------------------------- | ----------------------- |
+| **SAR** | Suspicious activity (structuring, sanctions, fraud) | Any suspicious pattern  |
+| **CTR** | Large cash transaction                              | Cash ≥ ₦5,000,000       |
+| **FTR** | International transfer                              | Receiver country ≠ `NG` |
 
 ## Report Statuses
 
-| Status | Meaning |
-|--------|---------|
-| `DRAFT` | Auto-generated, awaiting review |
-| `PENDING_REVIEW` | Submitted for officer approval |
-| `APPROVED` | Approved for CBN submission |
-| `FILED` | Submitted to CBN |
-| `REJECTED` | Rejected, needs revision |
+| Status           | Meaning                         |
+| ---------------- | ------------------------------- |
+| `DRAFT`          | Auto-generated, awaiting review |
+| `PENDING_REVIEW` | Submitted for officer approval  |
+| `APPROVED`       | Approved for CBN submission     |
+| `FILED`          | Submitted to CBN                |
+| `REJECTED`       | Rejected, needs revision        |
 
 ## Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/v1/reports/sar` | Generate a Suspicious Activity Report |
-| `POST` | `/api/v1/reports/ctr` | Generate a Currency Transaction Report |
-| `POST` | `/api/v1/reports/ftr` | Generate a Foreign Transaction Report |
-| `GET` | `/api/v1/reports` | List generated reports |
-| `GET` | `/api/v1/reports/:id` | Retrieve report details |
-| `GET` | `/api/v1/reports/:id/xml` | Download report as CBN XML |
-| `PATCH` | `/api/v1/reports/:id/approve` | Approve report for submission |
-| `PATCH` | `/api/v1/reports/:id/file` | Mark report as filed with CBN |
+| Method  | Endpoint                      | Description                            |
+| ------- | ----------------------------- | -------------------------------------- |
+| `POST`  | `/api/v1/reports/sar`         | Generate a Suspicious Activity Report  |
+| `POST`  | `/api/v1/reports/ctr`         | Generate a Currency Transaction Report |
+| `POST`  | `/api/v1/reports/ftr`         | Generate a Foreign Transaction Report  |
+| `GET`   | `/api/v1/reports`             | List generated reports                 |
+| `GET`   | `/api/v1/reports/:id`         | Retrieve report details                |
+| `GET`   | `/api/v1/reports/:id/xml`     | Download report as CBN XML             |
+| `PATCH` | `/api/v1/reports/:id/approve` | Approve report for submission          |
+| `PATCH` | `/api/v1/reports/:id/file`    | Mark report as filed with CBN          |
 
 ---
 
@@ -60,17 +60,17 @@ Create a Suspicious Activity Report for investigated cases.
 
 **Request Body**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `caseId` | `string` | ✅ | Related case UUID |
-| `title` | `string` | ✅ | Report title |
-| `description` | `string` | ✅ | Narrative of suspicious activity |
-| `suspicionType` | `string` | | `STRUCTURING`, `SANCTIONS`, `FRAUD`, `OTHER` |
+| Field           | Type     | Required | Description                                  |
+| --------------- | -------- | -------- | -------------------------------------------- |
+| `caseId`        | `string` | ✅       | Related case UUID                            |
+| `title`         | `string` | ✅       | Report title                                 |
+| `description`   | `string` | ✅       | Narrative of suspicious activity             |
+| `suspicionType` | `string` |          | `STRUCTURING`, `SANCTIONS`, `FRAUD`, `OTHER` |
 
 **Example Request**
 
 ```bash
-curl -X POST https://api.ratel.security/v1/reports/sar \
+curl -X POST /v1/reports/sar \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -113,19 +113,19 @@ Create a Currency Transaction Report for large cash transactions.
 
 **Request Body**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `transactionId` | `string` | ✅ | Triggering transaction UUID |
-| `title` | `string` | ✅ | Report title |
-| `amount` | `number` | ✅ | Transaction amount |
-| `currency` | `string` | | Defaults to `NGN` |
-| `customerId` | `string` | ✅ | Customer UUID |
-| `branchCode` | `string` | | Branch where transaction occurred |
+| Field           | Type     | Required | Description                       |
+| --------------- | -------- | -------- | --------------------------------- |
+| `transactionId` | `string` | ✅       | Triggering transaction UUID       |
+| `title`         | `string` | ✅       | Report title                      |
+| `amount`        | `number` | ✅       | Transaction amount                |
+| `currency`      | `string` |          | Defaults to `NGN`                 |
+| `customerId`    | `string` | ✅       | Customer UUID                     |
+| `branchCode`    | `string` |          | Branch where transaction occurred |
 
 **Example Request**
 
 ```bash
-curl -X POST https://api.ratel.security/v1/reports/ctr \
+curl -X POST /v1/reports/ctr \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -167,19 +167,19 @@ Create a Foreign Transaction Report for cross-border transfers.
 
 **Request Body**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `transactionId` | `string` | ✅ | Triggering transaction UUID |
-| `title` | `string` | ✅ | Report title |
-| `foreignAmount` | `number` | ✅ | Amount in foreign currency |
-| `foreignCurrency` | `string` | ✅ | Foreign currency code |
-| `destinationCountry` | `string` | ✅ | ISO 3166-1 alpha-2 code |
-| `purposeOfTransfer` | `string` | | Reason for transfer |
+| Field                | Type     | Required | Description                 |
+| -------------------- | -------- | -------- | --------------------------- |
+| `transactionId`      | `string` | ✅       | Triggering transaction UUID |
+| `title`              | `string` | ✅       | Report title                |
+| `foreignAmount`      | `number` | ✅       | Amount in foreign currency  |
+| `foreignCurrency`    | `string` | ✅       | Foreign currency code       |
+| `destinationCountry` | `string` | ✅       | ISO 3166-1 alpha-2 code     |
+| `purposeOfTransfer`  | `string` |          | Reason for transfer         |
 
 **Example Request**
 
 ```bash
-curl -X POST https://api.ratel.security/v1/reports/ftr \
+curl -X POST /v1/reports/ftr \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -221,17 +221,17 @@ Retrieve generated reports with filtering. The list view excludes `xmlContent` a
 
 **Query Parameters**
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `type` | `string` | — | `SAR`, `CTR`, `FTR` |
-| `status` | `string` | — | `DRAFT`, `PENDING_REVIEW`, `APPROVED`, `FILED`, `REJECTED` |
-| `page` | `integer` | `1` | Page number |
-| `limit` | `integer` | `20` | Items per page |
+| Parameter | Type      | Default | Description                                                |
+| --------- | --------- | ------- | ---------------------------------------------------------- |
+| `type`    | `string`  | —       | `SAR`, `CTR`, `FTR`                                        |
+| `status`  | `string`  | —       | `DRAFT`, `PENDING_REVIEW`, `APPROVED`, `FILED`, `REJECTED` |
+| `page`    | `integer` | `1`     | Page number                                                |
+| `limit`   | `integer` | `20`    | Items per page                                             |
 
 **Example Request**
 
 ```bash
-curl -X GET "https://api.ratel.security/v1/reports?type=SAR&status=DRAFT&page=1&limit=10" \
+curl -X GET "/v1/reports?type=SAR&status=DRAFT&page=1&limit=10" \
   -H "Authorization: Bearer <access_token>"
 ```
 
@@ -271,14 +271,14 @@ Retrieve the full report including XML content and structured JSON data.
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `string` | Report UUID |
+| Parameter | Type     | Description |
+| --------- | -------- | ----------- |
+| `id`      | `string` | Report UUID |
 
 **Example Request**
 
 ```bash
-curl -X GET https://api.ratel.security/v1/reports/rep_001 \
+curl -X GET /v1/reports/rep_001 \
   -H "Authorization: Bearer <access_token>"
 ```
 
@@ -318,14 +318,14 @@ Download the CBN-compliant XML representation of a report.
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `string` | Report UUID |
+| Parameter | Type     | Description |
+| --------- | -------- | ----------- |
+| `id`      | `string` | Report UUID |
 
 **Example Request**
 
 ```bash
-curl -X GET https://api.ratel.security/v1/reports/rep_001/xml \
+curl -X GET /v1/reports/rep_001/xml \
   -H "Authorization: Bearer <access_token>" \
   -H "Accept: application/xml"
 ```
@@ -351,7 +351,8 @@ curl -X GET https://api.ratel.security/v1/reports/rep_001/xml \
 ```
 
 <Note>
-  The XML format follows CBN regulatory specifications. Approved reports can be submitted directly through the CBN portal.
+  The XML format follows CBN regulatory specifications. Approved reports can be
+  submitted directly through the CBN portal.
 </Note>
 
 ---
@@ -362,20 +363,20 @@ Mark a report as approved for regulatory submission.
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `string` | Report UUID |
+| Parameter | Type     | Description |
+| --------- | -------- | ----------- |
+| `id`      | `string` | Report UUID |
 
 **Request Body**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `approverNotes` | `string` | | Optional review notes |
+| Field           | Type     | Required | Description           |
+| --------------- | -------- | -------- | --------------------- |
+| `approverNotes` | `string` |          | Optional review notes |
 
 **Example Request**
 
 ```bash
-curl -X PATCH https://api.ratel.security/v1/reports/rep_001/approve \
+curl -X PATCH /v1/reports/rep_001/approve \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -398,7 +399,8 @@ curl -X PATCH https://api.ratel.security/v1/reports/rep_001/approve \
 ```
 
 <Warning>
-  Once approved, a report cannot be modified. If errors are discovered, create a new amended report referencing the original.
+  Once approved, a report cannot be modified. If errors are discovered, create a
+  new amended report referencing the original.
 </Warning>
 
 ---
@@ -409,14 +411,14 @@ Mark a report as officially filed with the CBN.
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `string` | Report UUID |
+| Parameter | Type     | Description |
+| --------- | -------- | ----------- |
+| `id`      | `string` | Report UUID |
 
 **Example Request**
 
 ```bash
-curl -X PATCH https://api.ratel.security/v1/reports/rep_001/file \
+curl -X PATCH /v1/reports/rep_001/file \
   -H "Authorization: Bearer <access_token>"
 ```
 

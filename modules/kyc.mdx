@@ -1,6 +1,6 @@
 ---
-title: 'KYC'
-description: 'Manage Know Your Customer and Know Your Business verification applications'
+title: "KYC"
+description: "Manage Know Your Customer and Know Your Business verification applications"
 ---
 
 ## Overview
@@ -17,38 +17,38 @@ The KYC module handles identity verification for your customers. Applications fl
 
 ## Permissions
 
-| Action | Who Can Do It |
-|--------|---------------|
-| Submit, list, view applications | All authenticated users |
-| Verify BVN/NIN | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
-| Approve/reject KYC | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
-| Create KYB application | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Action                                         | Who Can Do It                      |
+| ---------------------------------------------- | ---------------------------------- |
+| Submit, list, view applications                | All authenticated users            |
+| Verify BVN/NIN                                 | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Approve/reject KYC                             | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Create KYB application                         | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
 | Run CAC lookup / verify directors / screen BOs | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
-| Approve/reject KYB | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Approve/reject KYB                             | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
 
 ## KYC Statuses
 
-| Status | Meaning | Risk Impact |
-|--------|---------|-------------|
-| `PENDING` | Submitted, awaiting document upload | No KYC record found — score 40, `REVIEW` |
-| `DOCUMENT_UPLOADED` | ID documents uploaded | Awaiting verification |
-| `NIN_VERIFIED` | NIN check passed | Partially verified |
-| `BVN_VERIFIED` | BVN check passed | Partially verified |
-| `LIVENESS_PASSED` | Biometric liveness check passed | Partially verified |
-| `APPROVED` | Fully verified | Score 0, `APPROVE` |
-| `REJECTED` | Failed verification | Score 70, `ESCALATE` |
-| `EXPIRED` | Verification expired | Score 50, `REVIEW` |
+| Status              | Meaning                             | Risk Impact                              |
+| ------------------- | ----------------------------------- | ---------------------------------------- |
+| `PENDING`           | Submitted, awaiting document upload | No KYC record found — score 40, `REVIEW` |
+| `DOCUMENT_UPLOADED` | ID documents uploaded               | Awaiting verification                    |
+| `NIN_VERIFIED`      | NIN check passed                    | Partially verified                       |
+| `BVN_VERIFIED`      | BVN check passed                    | Partially verified                       |
+| `LIVENESS_PASSED`   | Biometric liveness check passed     | Partially verified                       |
+| `APPROVED`          | Fully verified                      | Score 0, `APPROVE`                       |
+| `REJECTED`          | Failed verification                 | Score 70, `ESCALATE`                     |
+| `EXPIRED`           | Verification expired                | Score 50, `REVIEW`                       |
 
 ## KYB Statuses
 
-| Status | Meaning | Risk Impact |
-|--------|---------|-------------|
-| `PENDING` | Application submitted, awaiting CAC lookup | Score 40, `REVIEW` |
-| `CAC_VERIFIED` | CAC lookup successful | Score 40, `REVIEW` |
-| `DIRECTORS_VERIFIED` | Directors identity verified | Score 40, `REVIEW` |
-| `BOS_VERIFIED` | Beneficial owners screened | Score 10, `APPROVE` |
-| `APPROVED` | Fully verified | Score 0, `APPROVE` |
-| `REJECTED` | Failed verification or sanctions hit | Score 85, `BLOCK` |
+| Status               | Meaning                                    | Risk Impact         |
+| -------------------- | ------------------------------------------ | ------------------- |
+| `PENDING`            | Application submitted, awaiting CAC lookup | Score 40, `REVIEW`  |
+| `CAC_VERIFIED`       | CAC lookup successful                      | Score 40, `REVIEW`  |
+| `DIRECTORS_VERIFIED` | Directors identity verified                | Score 40, `REVIEW`  |
+| `BOS_VERIFIED`       | Beneficial owners screened                 | Score 10, `APPROVE` |
+| `APPROVED`           | Fully verified                             | Score 0, `APPROVE`  |
+| `REJECTED`           | Failed verification or sanctions hit       | Score 85, `BLOCK`   |
 
 ## Per-Tenant KYC Provider Configuration
 
@@ -56,10 +56,10 @@ Each tenant can independently configure how identity verification is performed.
 
 ### Provider Modes
 
-| Mode | Description |
-|------|-------------|
+| Mode       | Description                                                                              |
+| ---------- | ---------------------------------------------------------------------------------------- |
 | `EMBEDDED` | Uses platform-managed providers (Prembly → Dojah fallback). Default for all new tenants. |
-| `BYOL` | Uses the tenant's own KYC provider API, configured via JSON. |
+| `BYOL`     | Uses the tenant's own KYC provider API, configured via JSON.                             |
 
 ### Switching Provider Mode
 
@@ -84,7 +84,11 @@ The configuration is stored as JSON in `Tenant.kycProviderConfig`:
   "providerName": "SmileIdentity",
   "baseUrl": "https://api.smileidentity.com/v1",
   "headers": { "Authorization": "Bearer sk_xxx" },
-  "endpoints": { "nin": "/id_verification", "bvn": "/id_verification", "liveness": "/biometric" },
+  "endpoints": {
+    "nin": "/id_verification",
+    "bvn": "/id_verification",
+    "liveness": "/biometric"
+  },
   "methods": { "nin": "POST", "bvn": "POST" },
   "requestMapping": {
     "nin": { "id_number": "nin", "id_type": "'NIN'" },
@@ -100,34 +104,34 @@ The configuration is stored as JSON in `Tenant.kycProviderConfig`:
 
 ## KYC Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/v1/kyc/applications` | Submit a KYC application |
-| `GET` | `/api/v1/kyc/applications` | List applications |
-| `GET` | `/api/v1/kyc/applications/:id` | Retrieve application details |
-| `POST` | `/api/v1/kyc/applications/:id/verify-bvn` | Verify applicant BVN |
-| `POST` | `/api/v1/kyc/applications/:id/verify-nin` | Verify applicant NIN |
-| `POST` | `/api/v1/kyc/applications/:id/liveness-check` | Run biometric liveness check |
-| `PATCH` | `/api/v1/kyc/applications/:id/approve` | Approve application |
-| `PATCH` | `/api/v1/kyc/applications/:id/reject` | Reject application |
+| Method  | Endpoint                                      | Description                  |
+| ------- | --------------------------------------------- | ---------------------------- |
+| `POST`  | `/api/v1/kyc/applications`                    | Submit a KYC application     |
+| `GET`   | `/api/v1/kyc/applications`                    | List applications            |
+| `GET`   | `/api/v1/kyc/applications/:id`                | Retrieve application details |
+| `POST`  | `/api/v1/kyc/applications/:id/verify-bvn`     | Verify applicant BVN         |
+| `POST`  | `/api/v1/kyc/applications/:id/verify-nin`     | Verify applicant NIN         |
+| `POST`  | `/api/v1/kyc/applications/:id/liveness-check` | Run biometric liveness check |
+| `PATCH` | `/api/v1/kyc/applications/:id/approve`        | Approve application          |
+| `PATCH` | `/api/v1/kyc/applications/:id/reject`         | Reject application           |
 
 ## KYB Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/v1/kyc/kyb/applications` | Create a KYB application |
-| `GET` | `/api/v1/kyc/kyb/applications` | List KYB applications |
-| `GET` | `/api/v1/kyc/kyb/applications/:id` | Get KYB application details |
-| `POST` | `/api/v1/kyc/kyb/applications/:id/verify-cac` | Run CAC lookup by RC number |
-| `POST` | `/api/v1/kyc/kyb/applications/:id/verify-directors` | Verify all directors via KYC |
-| `POST` | `/api/v1/kyc/kyb/applications/:id/screen-beneficial-owners` | Screen BOs against sanctions |
-| `PATCH` | `/api/v1/kyc/kyb/applications/:id/approve` | Approve KYB application |
-| `PATCH` | `/api/v1/kyc/kyb/applications/:id/reject` | Reject KYB application |
+| Method  | Endpoint                                                    | Description                  |
+| ------- | ----------------------------------------------------------- | ---------------------------- |
+| `POST`  | `/api/v1/kyc/kyb/applications`                              | Create a KYB application     |
+| `GET`   | `/api/v1/kyc/kyb/applications`                              | List KYB applications        |
+| `GET`   | `/api/v1/kyc/kyb/applications/:id`                          | Get KYB application details  |
+| `POST`  | `/api/v1/kyc/kyb/applications/:id/verify-cac`               | Run CAC lookup by RC number  |
+| `POST`  | `/api/v1/kyc/kyb/applications/:id/verify-directors`         | Verify all directors via KYC |
+| `POST`  | `/api/v1/kyc/kyb/applications/:id/screen-beneficial-owners` | Screen BOs against sanctions |
+| `PATCH` | `/api/v1/kyc/kyb/applications/:id/approve`                  | Approve KYB application      |
+| `PATCH` | `/api/v1/kyc/kyb/applications/:id/reject`                   | Reject KYB application       |
 
 ## Tenant Configuration Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
+| Method  | Endpoint             | Description                                                              |
+| ------- | -------------------- | ------------------------------------------------------------------------ |
 | `PATCH` | `/api/v1/tenants/me` | Update tenant config including `kycProviderMode` and `kycProviderConfig` |
 
 ---
@@ -138,22 +142,21 @@ Create a new KYC application for a customer.
 
 **Request Body**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `entityType` | `string` | ✅ | `INDIVIDUAL` or `BUSINESS` |
-| `firstName` | `string` | ✅ | Applicant first name |
-| `lastName` | `string` | ✅ | Applicant last name |
-| `bvn` | `string` | | Bank Verification Number |
-| `nin` | `string` | | National Identity Number |
-| `phone` | `string` | ✅ | Mobile number |
-| `email` | `string` | | Email address |
-| `address` | `string` | | Residential address |
-| `dateOfBirth` | `string` | | ISO 8601 date |
+| Field         | Type     | Required | Description                |
+| ------------- | -------- | -------- | -------------------------- |
+| `entityType`  | `string` | ✅       | `INDIVIDUAL` or `BUSINESS` |
+| `firstName`   | `string` | ✅       | Applicant first name       |
+| `lastName`    | `string` | ✅       | Applicant last name        |
+| `bvn`         | `string` |          | Bank Verification Number   |
+| `nin`         | `string` |          | National Identity Number   |
+| `phone`       | `string` |          | Mobile number with country code |
+| `email`       | `string` |          | Email address              |
+| `dateOfBirth` | `string` |          | ISO 8601 date (e.g. `"1990-03-15"`) |
 
 **Example Request**
 
 ```bash
-curl -X POST https://api.ratel.security/v1/kyc/applications \
+curl -X POST /v1/kyc/applications \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -164,7 +167,6 @@ curl -X POST https://api.ratel.security/v1/kyc/applications \
     "nin": "12345678901",
     "phone": "+2348012345678",
     "email": "chinedu.obi@email.com",
-    "address": "12 Lagos Street, Lagos",
     "dateOfBirth": "1990-03-15"
   }'
 ```
@@ -184,7 +186,6 @@ curl -X POST https://api.ratel.security/v1/kyc/applications \
     "nin": "12345678901",
     "phone": "+2348012345678",
     "email": "chinedu.obi@email.com",
-    "address": "12 Lagos Street, Lagos",
     "dateOfBirth": "1990-03-15T00:00:00Z",
     "status": "PENDING",
     "riskLevel": null,
@@ -204,24 +205,44 @@ Create a new KYB application for a corporate entity.
 
 **Request Body**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `companyName` | `string` | ✅ | Registered company name |
-| `rcNumber` | `string` | ✅ | CAC registration number |
-| `tin` | `string` | | Tax Identification Number |
-| `address` | `string` | | Registered business address |
+| Field         | Type     | Required | Description                 |
+| ------------- | -------- | -------- | --------------------------- |
+| `companyName` | `string` | ✅       | Registered company name     |
+| `rcNumber`    | `string` |          | CAC registration number     |
+| `tin`         | `string` |          | Tax Identification Number   |
+| `address`     | `string` |          | Registered business address |
+| `incorporationDate` | `string` |    | ISO 8601 date               |
+| `directors`   | `array`  |          | Array of director objects   |
+| `directors[].name` | `string` | ✅   | Director full name          |
+| `directors[].bvn` | `string` |      | Director BVN                |
+| `directors[].nin` | `string` |      | Director NIN                |
+| `directors[].email` | `string` |    | Director email              |
+| `directors[].phone` | `string` |    | Director phone              |
+| `directors[].nationality` | `string` | | Director nationality       |
+| `beneficialOwners` | `array` |       | Array of beneficial owner objects |
+| `beneficialOwners[].name` | `string` | ✅ | Owner full name          |
+| `beneficialOwners[].percentage` | `number` | ✅ | Ownership percentage  |
+| `beneficialOwners[].bvn` | `string` |   | Owner BVN                 |
+| `beneficialOwners[].nin` | `string` |   | Owner NIN                 |
 
 **Example Request**
 
 ```bash
-curl -X POST https://api.ratel.security/v1/kyc/kyb/applications \
+curl -X POST /v1/kyc/kyb/applications \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
     "companyName": "Acme Nigeria Ltd",
     "rcNumber": "RC123456",
     "tin": "12345678-0001",
-    "address": "15 Broad Street, Lagos"
+    "address": "15 Broad Street, Lagos",
+    "incorporationDate": "2015-06-12",
+    "directors": [
+      { "name": "John Doe", "bvn": "22012345678", "email": "john@acme.ng" }
+    ],
+    "beneficialOwners": [
+      { "name": "Jane Smith", "percentage": 75, "bvn": "22087654321" }
+    ]
   }'
 ```
 
@@ -233,20 +254,20 @@ Run a CAC lookup for a KYB application.
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `string` | KYB Application UUID |
+| Parameter | Type     | Description          |
+| --------- | -------- | -------------------- |
+| `id`      | `string` | KYB Application UUID |
 
 **Request Body**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `rcNumber` | `string` | ✅ | CAC registration number to look up |
+| Field      | Type     | Required | Description                        |
+| ---------- | -------- | -------- | ---------------------------------- |
+| `rcNumber` | `string` | ✅       | CAC registration number to look up |
 
 **Example Request**
 
 ```bash
-curl -X POST https://api.ratel.security/v1/kyc/kyb/applications/kyb_abc123/verify-cac \
+curl -X POST /v1/kyc/kyb/applications/kyb_abc123/verify-cac \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -264,12 +285,8 @@ curl -X POST https://api.ratel.security/v1/kyc/kyb/applications/kyb_abc123/verif
     "status": "CAC_VERIFIED",
     "companyName": "Acme Nigeria Ltd",
     "rcNumber": "RC123456",
-    "directors": [
-      { "name": "John Doe", "role": "Director" }
-    ],
-    "beneficialOwners": [
-      { "name": "Jane Smith", "percentage": 75 }
-    ],
+    "directors": [{ "name": "John Doe", "role": "Director" }],
+    "beneficialOwners": [{ "name": "Jane Smith", "percentage": 75 }],
     "updatedAt": "2026-05-16T09:00:00Z"
   }
 }
@@ -281,16 +298,16 @@ curl -X POST https://api.ratel.security/v1/kyc/kyb/applications/kyb_abc123/verif
 
 **Query Parameters**
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `status` | `string` | — | Filter by status |
-| `page` | `integer` | `1` | Page number |
-| `limit` | `integer` | `20` | Items per page |
+| Parameter | Type      | Default | Description      |
+| --------- | --------- | ------- | ---------------- |
+| `status`  | `string`  | —       | Filter by status |
+| `page`    | `integer` | `1`     | Page number      |
+| `limit`   | `integer` | `20`    | Items per page   |
 
 **Example Request**
 
 ```bash
-curl -X GET "https://api.ratel.security/v1/kyc/applications?status=PENDING&page=1&limit=10" \
+curl -X GET "/v1/kyc/applications?status=PENDING&page=1&limit=10" \
   -H "Authorization: Bearer <access_token>"
 ```
 
@@ -329,7 +346,7 @@ Retrieve a KYC application with full verification results and uploaded documents
 **Example Request**
 
 ```bash
-curl -X GET https://api.ratel.security/v1/kyc/applications/kyc_abc123 \
+curl -X GET /v1/kyc/applications/kyc_abc123 \
   -H "Authorization: Bearer <access_token>"
 ```
 
@@ -349,7 +366,6 @@ curl -X GET https://api.ratel.security/v1/kyc/applications/kyc_abc123 \
     "nin": "12345678901",
     "phone": "+2348012345678",
     "email": "chinedu.obi@email.com",
-    "address": "12 Lagos Street, Lagos",
     "dateOfBirth": "1990-03-15T00:00:00Z",
     "riskLevel": null,
     "assignedTo": null,
@@ -393,24 +409,30 @@ Trigger BVN verification against the identity provider.
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `string` | Application UUID |
+| Parameter | Type     | Description      |
+| --------- | -------- | ---------------- |
+| `id`      | `string` | Application UUID |
 
 **Request Body**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `bvn` | `string` | ✅ | BVN to verify |
+| Field         | Type     | Required | Description               |
+| ------------- | -------- | -------- | ------------------------- |
+| `bvn`         | `string` | ✅       | BVN to verify (11 digits) |
+| `firstName`   | `string` | ✅       | First name for cross-match |
+| `lastName`    | `string` | ✅       | Last name for cross-match |
+| `dateOfBirth` | `string` | ✅       | Date of birth for cross-match |
 
 **Example Request**
 
 ```bash
-curl -X POST https://api.ratel.security/v1/kyc/applications/kyc_abc123/verify-bvn \
+curl -X POST /v1/kyc/applications/kyc_abc123/verify-bvn \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "bvn": "22012345678"
+    "bvn": "22012345678",
+    "firstName": "Chinedu",
+    "lastName": "Obi",
+    "dateOfBirth": "1990-03-15"
   }'
 ```
 
@@ -436,24 +458,30 @@ Trigger NIN verification.
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `string` | Application UUID |
+| Parameter | Type     | Description      |
+| --------- | -------- | ---------------- |
+| `id`      | `string` | Application UUID |
 
 **Request Body**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `nin` | `string` | ✅ | NIN to verify |
+| Field         | Type     | Required | Description               |
+| ------------- | -------- | -------- | ------------------------- |
+| `nin`         | `string` | ✅       | NIN to verify (11 digits) |
+| `firstName`   | `string` | ✅       | First name for cross-match |
+| `lastName`    | `string` | ✅       | Last name for cross-match |
+| `dateOfBirth` | `string` | ✅       | Date of birth for cross-match |
 
 **Example Request**
 
 ```bash
-curl -X POST https://api.ratel.security/v1/kyc/applications/kyc_abc123/verify-nin \
+curl -X POST /v1/kyc/applications/kyc_abc123/verify-nin \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "nin": "12345678901"
+    "nin": "12345678901",
+    "firstName": "Chinedu",
+    "lastName": "Obi",
+    "dateOfBirth": "1990-03-15"
   }'
 ```
 
@@ -479,15 +507,27 @@ Run a biometric liveness and face-match check.
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `string` | Application UUID |
+| Parameter | Type     | Description      |
+| --------- | -------- | ---------------- |
+| `id`      | `string` | Application UUID |
+
+**Request Body**
+
+| Field                  | Type     | Required | Description                              |
+| ---------------------- | -------- | -------- | ---------------------------------------- |
+| `selfieImageBase64`    | `string` | ✅       | Base64-encoded selfie image (JPEG/PNG)   |
+| `documentImageBase64`  | `string` |          | Base64-encoded ID document for face-match |
 
 **Example Request**
 
 ```bash
-curl -X POST https://api.ratel.security/v1/kyc/applications/kyc_abc123/liveness-check \
-  -H "Authorization: Bearer <access_token>"
+curl -X POST /v1/kyc/applications/kyc_abc123/liveness-check \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "selfieImageBase64": "/9j/4AAQSkZJRgABAQEASABIAAD...",
+    "documentImageBase64": "/9j/4AAQSkZJRgABAQEASABIAAD..."
+  }'
 ```
 
 **Example Response — 200 OK**
@@ -514,20 +554,20 @@ Final approval of a KYC application.
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `string` | Application UUID |
+| Parameter | Type     | Description      |
+| --------- | -------- | ---------------- |
+| `id`      | `string` | Application UUID |
 
 **Request Body**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `notes` | `string` | | Officer notes |
+| Field   | Type     | Required | Description   |
+| ------- | -------- | -------- | ------------- |
+| `notes` | `string` |          | Officer notes |
 
 **Example Request**
 
 ```bash
-curl -X PATCH https://api.ratel.security/v1/kyc/applications/kyc_abc123/approve \
+curl -X PATCH /v1/kyc/applications/kyc_abc123/approve \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -551,7 +591,8 @@ curl -X PATCH https://api.ratel.security/v1/kyc/applications/kyc_abc123/approve 
 ```
 
 <Note>
-  Approving a KYC application updates the customer's risk profile. Future transactions from this customer will reflect the `APPROVED` status.
+  Approving a KYC application updates the customer's risk profile. Future
+  transactions from this customer will reflect the `APPROVED` status.
 </Note>
 
 ---
@@ -562,24 +603,24 @@ Reject a KYC application that fails verification.
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `string` | Application UUID |
+| Parameter | Type     | Description      |
+| --------- | -------- | ---------------- |
+| `id`      | `string` | Application UUID |
 
 **Request Body**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `notes` | `string` | | Reason for rejection |
+| Field   | Type     | Required | Description          |
+| ------- | -------- | -------- | -------------------- |
+| `reason` | `string` | ✅       | Reason for rejection |
 
 **Example Request**
 
 ```bash
-curl -X PATCH https://api.ratel.security/v1/kyc/applications/kyc_abc123/reject \
+curl -X PATCH /v1/kyc/applications/kyc_abc123/reject \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "notes": "BVN name mismatch. Uploaded document appears fraudulent."
+    "reason": "BVN name mismatch. Uploaded document appears fraudulent."
   }'
 ```
 
@@ -593,6 +634,179 @@ curl -X PATCH https://api.ratel.security/v1/kyc/applications/kyc_abc123/reject \
     "status": "REJECTED",
     "riskLevel": "HIGH",
     "notes": "BVN name mismatch. Uploaded document appears fraudulent.",
+    "updatedAt": "2026-05-16T10:00:00Z"
+  }
+}
+```
+
+---
+
+### Verify Directors
+
+Verify each director's identity via BVN/NIN against identity providers.
+
+**Path Parameters**
+
+| Parameter | Type     | Description          |
+| --------- | -------- | -------------------- |
+| `id`      | `string` | KYB Application UUID |
+
+**Request Body**
+
+| Field                     | Type     | Required | Description                     |
+| ------------------------- | -------- | -------- | ------------------------------- |
+| `directors`               | `array`  | ✅       | Array of director objects       |
+| `directors[].name`        | `string` | ✅       | Director full name              |
+| `directors[].nin`         | `string` |          | Director NIN                    |
+| `directors[].bvn`         | `string` |          | Director BVN                    |
+| `directors[].verified`    | `boolean`|          | Pre-verified flag               |
+
+**Example Request**
+
+```bash
+curl -X POST /v1/kyc/kyb/applications/kyb_abc123/verify-directors \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "directors": [
+      { "name": "John Doe", "nin": "12345678901", "bvn": "22012345678", "verified": true }
+    ]
+  }'
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "allVerified": true,
+    "directors": [
+      { "name": "John Doe", "nin": "12345678901", "bvn": "22012345678", "verified": true }
+    ],
+    "newStatus": "DIRECTORS_VERIFIED"
+  }
+}
+```
+
+---
+
+### Screen Beneficial Owners
+
+Screen beneficial owners against global sanctions and PEP watchlists.
+
+**Path Parameters**
+
+| Parameter | Type     | Description          |
+| --------- | -------- | -------------------- |
+| `id`      | `string` | KYB Application UUID |
+
+**Request Body**
+
+| Field                          | Type     | Required | Description                  |
+| ------------------------------ | -------- | -------- | ---------------------------- |
+| `beneficialOwners`             | `array`  | ✅       | Array of BO objects          |
+| `beneficialOwners[].name`      | `string` | ✅       | Owner full name              |
+| `beneficialOwners[].clean`     | `boolean`| ✅       | Pre-screened clean flag      |
+| `beneficialOwners[].hits`      | `array`  |          | Watchlist hits if not clean  |
+
+**Example Request**
+
+```bash
+curl -X POST /v1/kyc/kyb/applications/kyb_abc123/screen-beneficial-owners \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "beneficialOwners": [
+      { "name": "Jane Smith", "clean": true, "hits": [] }
+    ]
+  }'
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "allClean": true,
+    "beneficialOwners": [
+      { "name": "Jane Smith", "clean": true, "hits": [] }
+    ],
+    "newStatus": "BOS_VERIFIED"
+  }
+}
+```
+
+---
+
+### Approve KYB Application
+
+Final approval of a KYB application. Requires `BANK_ADMIN` or `COMPLIANCE_OFFICER` role.
+
+**Path Parameters**
+
+| Parameter | Type     | Description          |
+| --------- | -------- | -------------------- |
+| `id`      | `string` | KYB Application UUID |
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "kyb_abc123",
+    "status": "APPROVED",
+    "riskLevel": "LOW",
+    "updatedAt": "2026-05-16T10:00:00Z"
+  }
+}
+```
+
+<Note>
+  Approving a KYB application updates the business entity's risk profile. Future transactions from this entity will reflect the `APPROVED` status (score 0, no KYB-related risk).
+</Note>
+
+---
+
+### Reject KYB Application
+
+Reject a KYB application that fails verification. Requires `BANK_ADMIN` or `COMPLIANCE_OFFICER` role.
+
+**Path Parameters**
+
+| Parameter | Type     | Description          |
+| --------- | -------- | -------------------- |
+| `id`      | `string` | KYB Application UUID |
+
+**Request Body**
+
+| Field    | Type     | Required | Description          |
+| -------- | -------- | -------- | -------------------- |
+| `reason` | `string` | ✅       | Reason for rejection |
+
+**Example Request**
+
+```bash
+curl -X PATCH /v1/kyc/kyb/applications/kyb_abc123/reject \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reason": "Sanctions hit on beneficial owner Jane Smith."
+  }'
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "kyb_abc123",
+    "status": "REJECTED",
+    "riskLevel": "HIGH",
+    "notes": "Sanctions hit on beneficial owner Jane Smith.",
     "updatedAt": "2026-05-16T10:00:00Z"
   }
 }

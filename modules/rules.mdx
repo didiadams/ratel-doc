@@ -15,32 +15,32 @@ Custom rules allow your institution to define institution-specific detection log
 
 ## Permissions
 
-| Action | Who Can Do It |
-|--------|---------------|
-| Create, update rules | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
-| Activate, pause, delete | `BANK_ADMIN` |
-| View rules | All authenticated users |
+| Action                  | Who Can Do It                      |
+| ----------------------- | ---------------------------------- |
+| Create, update rules    | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Activate, pause, delete | `BANK_ADMIN`                       |
+| View rules              | All authenticated users            |
 
 ## Rule Statuses
 
-| Status | Meaning |
-|--------|---------|
-| `DRAFT` | Created but not yet active |
-| `ACTIVE` | Currently evaluating transactions |
-| `PAUSED` | Temporarily disabled |
-| `ARCHIVED` | Permanently retired |
+| Status     | Meaning                           |
+| ---------- | --------------------------------- |
+| `DRAFT`    | Created but not yet active        |
+| `ACTIVE`   | Currently evaluating transactions |
+| `PAUSED`   | Temporarily disabled              |
+| `ARCHIVED` | Permanently retired               |
 
 ## Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/v1/rules` | Create a custom rule |
-| `GET` | `/api/v1/rules` | List all rules |
-| `GET` | `/api/v1/rules/:id` | Retrieve rule details |
-| `PATCH` | `/api/v1/rules/:id` | Update a rule |
-| `PATCH` | `/api/v1/rules/:id/activate` | Activate a rule |
-| `PATCH` | `/api/v1/rules/:id/pause` | Pause a rule |
-| `DELETE` | `/api/v1/rules/:id` | Delete a custom rule |
+| Method   | Endpoint                     | Description           |
+| -------- | ---------------------------- | --------------------- |
+| `POST`   | `/api/v1/rules`              | Create a custom rule  |
+| `GET`    | `/api/v1/rules`              | List all rules        |
+| `GET`    | `/api/v1/rules/:id`          | Retrieve rule details |
+| `PATCH`  | `/api/v1/rules/:id`          | Update a rule         |
+| `PATCH`  | `/api/v1/rules/:id/activate` | Activate a rule       |
+| `PATCH`  | `/api/v1/rules/:id/pause`    | Pause a rule          |
+| `DELETE` | `/api/v1/rules/:id`          | Delete a custom rule  |
 
 > **Note:** CBN mandatory rules (`ruleType: "CBN_BUILTIN"`) cannot be edited, paused, or deleted. They appear in listings for reference.
 
@@ -52,37 +52,37 @@ Define a new custom detection rule with conditions, logic, and actions.
 
 **Request Body**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `name` | `string` | ✅ | Human-readable rule name |
-| `description` | `string` | ✅ | What the rule detects |
-| `ruleType` | `string` | ✅ | Always `"CUSTOM"` for user-created rules |
-| `configuration` | `object` | ✅ | Rule logic (see below) |
-| `scoreModifier` | `number` | ✅ | Risk score to add (0–100) |
+| Field           | Type     | Required | Description                              |
+| --------------- | -------- | -------- | ---------------------------------------- |
+| `name`          | `string` | ✅       | Human-readable rule name                 |
+| `description`   | `string` | ✅       | What the rule detects                    |
+| `ruleType`      | `string` | ✅       | Always `"CUSTOM"` for user-created rules |
+| `configuration` | `object` | ✅       | Rule logic (see below)                   |
+| `scoreModifier` | `number` | ✅       | Risk score to add (0–100)                |
 
 **Configuration Object**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `conditions` | `array` | ✅ | List of condition objects |
-| `conditionLogic` | `string` | ✅ | `"AND"` or `"OR"` |
-| `outcome` | `string` | ✅ | `"REVIEW"`, `"ESCALATE"`, or `"BLOCK"` |
-| `riskScore` | `number` | ✅ | Base risk score |
-| `actions` | `string[]` | | Array of actions like `["NOTIFY_OFFICER"]` |
+| Field            | Type       | Required | Description                                |
+| ---------------- | ---------- | -------- | ------------------------------------------ |
+| `conditions`     | `array`    | ✅       | List of condition objects                  |
+| `conditionLogic` | `string`   | ✅       | `"AND"` or `"OR"`                          |
+| `outcome`        | `string`   | ✅       | `"REVIEW"`, `"ESCALATE"`, or `"BLOCK"`     |
+| `riskScore`      | `number`   | ✅       | Base risk score                            |
+| `actions`        | `string[]` |          | Array of actions like `["NOTIFY_OFFICER"]` |
 
 **Condition Object**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `field` | `string` | `amount`, `channel`, `type`, `narration`, `senderName`, `receiverName` |
-| `operator` | `string` | `GREATER_THAN`, `LESS_THAN`, `EQUALS`, `CONTAINS`, `REGEX_MATCH` |
-| `value` | `any` | Value to compare against |
+| Field      | Type     | Description                                                            |
+| ---------- | -------- | ---------------------------------------------------------------------- |
+| `field`    | `string` | `amount`, `channel`, `type`, `narration`, `senderName`, `receiverName` |
+| `operator` | `string` | `GREATER_THAN`, `LESS_THAN`, `EQUALS`, `CONTAINS`, `REGEX_MATCH`       |
+| `value`    | `any`    | Value to compare against                                               |
 
 **Example Request**
 
 <CodeGroup>
 ```bash cURL
-curl -X POST https://api.ratel.security/v1/rules \
+curl -X POST /v1/rules \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -104,11 +104,11 @@ curl -X POST https://api.ratel.security/v1/rules \
 ```
 
 ```javascript Node.js
-const response = await fetch("https://api.ratel.security/v1/rules", {
+const response = await fetch("/v1/rules", {
   method: "POST",
   headers: {
-    "Authorization": "Bearer <access_token>",
-    "Content-Type": "application/json"
+    Authorization: "Bearer <access_token>",
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
     name: "High-Value ATM Withdrawal",
@@ -117,15 +117,15 @@ const response = await fetch("https://api.ratel.security/v1/rules", {
     configuration: {
       conditions: [
         { field: "amount", operator: "GREATER_THAN", value: 500000 },
-        { field: "channel", operator: "EQUALS", value: "ATM" }
+        { field: "channel", operator: "EQUALS", value: "ATM" },
       ],
       conditionLogic: "AND",
       outcome: "REVIEW",
       riskScore: 45,
-      actions: ["NOTIFY_OFFICER"]
+      actions: ["NOTIFY_OFFICER"],
     },
-    scoreModifier: 45
-  })
+    scoreModifier: 45,
+  }),
 });
 const result = await response.json();
 ```
@@ -134,7 +134,7 @@ const result = await response.json();
 import requests
 
 response = requests.post(
-    "https://api.ratel.security/v1/rules",
+    "/v1/rules",
     headers={
         "Authorization": "Bearer <access_token>",
         "Content-Type": "application/json"
@@ -158,6 +158,7 @@ response = requests.post(
 )
 result = response.json()
 ```
+
 </CodeGroup>
 
 **Example Response — 201 Created**
@@ -201,17 +202,17 @@ Retrieve all rules including CBN built-ins and custom rules.
 
 **Query Parameters**
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `status` | `string` | — | `DRAFT`, `ACTIVE`, `PAUSED`, `ARCHIVED` |
-| `ruleType` | `string` | — | `CUSTOM`, `CBN_BUILTIN` |
-| `page` | `integer` | `1` | Page number |
-| `limit` | `integer` | `20` | Items per page |
+| Parameter  | Type      | Default | Description                             |
+| ---------- | --------- | ------- | --------------------------------------- |
+| `status`   | `string`  | —       | `DRAFT`, `ACTIVE`, `PAUSED`, `ARCHIVED` |
+| `ruleType` | `string`  | —       | `CUSTOM`, `CBN_BUILTIN`                 |
+| `page`     | `integer` | `1`     | Page number                             |
+| `limit`    | `integer` | `20`    | Items per page                          |
 
 **Example Request**
 
 ```bash
-curl -X GET "https://api.ratel.security/v1/rules?status=ACTIVE&page=1&limit=20" \
+curl -X GET "/v1/rules?status=ACTIVE&page=1&limit=20" \
   -H "Authorization: Bearer <access_token>"
 ```
 
@@ -255,14 +256,14 @@ Retrieve the full configuration of a single rule.
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `string` | Rule UUID or CBN code |
+| Parameter | Type     | Description           |
+| --------- | -------- | --------------------- |
+| `id`      | `string` | Rule UUID or CBN code |
 
 **Example Request**
 
 ```bash
-curl -X GET https://api.ratel.security/v1/rules/rule_789xyz \
+curl -X GET /v1/rules/rule_789xyz \
   -H "Authorization: Bearer <access_token>"
 ```
 
@@ -307,9 +308,9 @@ Modify an existing custom rule. CBN built-ins cannot be updated.
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `string` | Rule UUID |
+| Parameter | Type     | Description |
+| --------- | -------- | ----------- |
+| `id`      | `string` | Rule UUID   |
 
 **Request Body**
 
@@ -318,7 +319,7 @@ All fields optional. Same structure as Create Rule.
 **Example Request**
 
 ```bash
-curl -X PATCH https://api.ratel.security/v1/rules/rule_789xyz \
+curl -X PATCH /v1/rules/rule_789xyz \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -361,7 +362,8 @@ curl -X PATCH https://api.ratel.security/v1/rules/rule_789xyz \
 ```
 
 <Warning>
-  Updating an active rule does not automatically pause it. Consider pausing first if the change significantly alters detection logic.
+  Updating an active rule does not automatically pause it. Consider pausing
+  first if the change significantly alters detection logic.
 </Warning>
 
 ---
@@ -372,14 +374,14 @@ Enable a drafted or paused custom rule.
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `string` | Rule UUID |
+| Parameter | Type     | Description |
+| --------- | -------- | ----------- |
+| `id`      | `string` | Rule UUID   |
 
 **Example Request**
 
 ```bash
-curl -X PATCH https://api.ratel.security/v1/rules/rule_789xyz/activate \
+curl -X PATCH /v1/rules/rule_789xyz/activate \
   -H "Authorization: Bearer <access_token>"
 ```
 
@@ -405,14 +407,14 @@ Temporarily disable an active rule without deleting it.
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `string` | Rule UUID |
+| Parameter | Type     | Description |
+| --------- | -------- | ----------- |
+| `id`      | `string` | Rule UUID   |
 
 **Example Request**
 
 ```bash
-curl -X PATCH https://api.ratel.security/v1/rules/rule_789xyz/pause \
+curl -X PATCH /v1/rules/rule_789xyz/pause \
   -H "Authorization: Bearer <access_token>"
 ```
 
@@ -437,14 +439,14 @@ Permanently remove a custom rule. This action cannot be undone.
 
 **Path Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `string` | Rule UUID |
+| Parameter | Type     | Description |
+| --------- | -------- | ----------- |
+| `id`      | `string` | Rule UUID   |
 
 **Example Request**
 
 ```bash
-curl -X DELETE https://api.ratel.security/v1/rules/rule_789xyz \
+curl -X DELETE /v1/rules/rule_789xyz \
   -H "Authorization: Bearer <access_token>"
 ```
 
@@ -461,5 +463,6 @@ curl -X DELETE https://api.ratel.security/v1/rules/rule_789xyz \
 ```
 
 <Warning>
-  Deleting a rule removes it from all future screenings. Historical transactions screened by this rule retain their original verdicts.
+  Deleting a rule removes it from all future screenings. Historical transactions
+  screened by this rule retain their original verdicts.
 </Warning>

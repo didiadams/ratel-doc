@@ -8,110 +8,120 @@ All endpoints are prefixed with `/api/v1/` and require `Authorization: Bearer <t
 ## Base URL
 
 ```
-https://api.ratel.security/v1
+/v1
 ```
 
 ## Endpoints by Module
 
 ### Authentication
-| Endpoint | Methods | Description |
-|----------|---------|-------------|
-| `/auth/login` | `POST` | Authenticate and receive tokens |
-| `/auth/refresh` | `POST` | Refresh access token |
-| `/auth/me` | `GET` | Current user profile |
-| `/auth/users` | `POST`, `GET` | Create or list users |
-| `/auth/users/:id` | `PATCH`, `DELETE` | Update or deactivate user |
-| `/auth/api-keys` | `POST`, `GET` | Create or list API keys |
+
+| Endpoint          | Methods           | Description                     |
+| ----------------- | ----------------- | ------------------------------- |
+| `/auth/login`     | `POST`            | Authenticate and receive tokens |
+| `/auth/refresh`   | `POST`            | Refresh access token            |
+| `/auth/me`        | `GET`             | Current user profile            |
+| `/auth/users`     | `POST`, `GET`     | Create or list users            |
+| `/auth/users/:id` | `PATCH`, `DELETE` | Update or deactivate user       |
+| `/auth/api-keys`  | `POST`, `GET`     | Create or list API keys         |
 
 ### Transactions
-| Endpoint | Methods | Description |
-|----------|---------|-------------|
-| `/transactions/screen` | `POST` | Screen a transaction |
-| `/transactions` | `GET` | List transactions |
-| `/transactions/:id` | `GET` | Get transaction details |
+
+| Endpoint               | Methods | Description             |
+| ---------------------- | ------- | ----------------------- |
+| `/transactions/screen` | `POST`  | Screen a transaction    |
+| `/transactions`        | `GET`   | List transactions       |
+| `/transactions/:id`    | `GET`   | Get transaction details |
 
 ### Cases
-| Endpoint | Methods | Description |
-|----------|---------|-------------|
-| `/cases` | `POST`, `GET` | Create or list cases |
-| `/cases/:id` | `GET` | Get case details |
-| `/cases/:id/status` | `PATCH` | Update case status |
-| `/cases/:id/assign` | `PATCH` | Assign case to user |
-| `/cases/:id/notes` | `POST` | Add note to case |
+
+| Endpoint            | Methods       | Description          |
+| ------------------- | ------------- | -------------------- |
+| `/cases`            | `POST`, `GET` | Create or list cases |
+| `/cases/:id`        | `GET`         | Get case details     |
+| `/cases/:id/status` | `PATCH`       | Update case status   |
+| `/cases/:id/assign` | `PATCH`       | Assign case to user  |
+| `/cases/:id/notes`  | `POST`        | Add note to case     |
 
 ### Rules
-| Endpoint | Methods | Description |
-|----------|---------|-------------|
-| `/rules` | `POST`, `GET` | Create or list rules |
-| `/rules/:id` | `GET`, `PATCH`, `DELETE` | Get, update, or delete rule |
-| `/rules/:id/activate` | `PATCH` | Activate a rule |
-| `/rules/:id/pause` | `PATCH` | Pause a rule |
+
+| Endpoint              | Methods                  | Description                 |
+| --------------------- | ------------------------ | --------------------------- |
+| `/rules`              | `POST`, `GET`            | Create or list rules        |
+| `/rules/:id`          | `GET`, `PATCH`, `DELETE` | Get, update, or delete rule |
+| `/rules/:id/activate` | `PATCH`                  | Activate a rule             |
+| `/rules/:id/pause`    | `PATCH`                  | Pause a rule                |
 
 ### KYC
-| Endpoint | Methods | Description |
-|----------|---------|-------------|
-| `/kyc/applications` | `POST`, `GET` | Submit or list applications |
-| `/kyc/applications/:id` | `GET` | Get application details |
-| `/kyc/applications/:id/verify-bvn` | `POST` | Verify BVN |
-| `/kyc/applications/:id/verify-nin` | `POST` | Verify NIN |
-| `/kyc/applications/:id/liveness-check` | `POST` | Run liveness check |
-| `/kyc/applications/:id/approve` | `PATCH` | Approve application |
-| `/kyc/applications/:id/reject` | `PATCH` | Reject application |
+
+| Endpoint                               | Methods       | Description                 |
+| -------------------------------------- | ------------- | --------------------------- |
+| `/kyc/applications`                    | `POST`, `GET` | Submit or list applications |
+| `/kyc/applications/:id`                | `GET`         | Get application details     |
+| `/kyc/applications/:id/verify-bvn`     | `POST`        | Verify BVN                  |
+| `/kyc/applications/:id/verify-nin`     | `POST`        | Verify NIN                  |
+| `/kyc/applications/:id/liveness-check` | `POST`        | Run liveness check          |
+| `/kyc/applications/:id/approve`        | `PATCH`       | Approve application         |
+| `/kyc/applications/:id/reject`         | `PATCH`       | Reject application          |
 
 ### KYB
-| Endpoint | Methods | Description |
-|----------|---------|-------------|
-| `/kyc/kyb/applications` | `POST`, `GET` | Create or list KYB applications |
-| `/kyc/kyb/applications/:id` | `GET` | Get KYB application details |
-| `/kyc/kyb/applications/:id/verify-cac` | `POST` | Run CAC lookup by RC number |
-| `/kyc/kyb/applications/:id/verify-directors` | `POST` | Verify all directors via KYC |
-| `/kyc/kyb/applications/:id/screen-beneficial-owners` | `POST` | Screen BOs against sanctions |
-| `/kyc/kyb/applications/:id/approve` | `PATCH` | Approve KYB application |
-| `/kyc/kyb/applications/:id/reject` | `PATCH` | Reject KYB application |
+
+| Endpoint                                             | Methods       | Description                     |
+| ---------------------------------------------------- | ------------- | ------------------------------- |
+| `/kyc/kyb/applications`                              | `POST`, `GET` | Create or list KYB applications |
+| `/kyc/kyb/applications/:id`                          | `GET`         | Get KYB application details     |
+| `/kyc/kyb/applications/:id/verify-cac`               | `POST`        | Run CAC lookup by RC number     |
+| `/kyc/kyb/applications/:id/verify-directors`         | `POST`        | Verify all directors via KYC    |
+| `/kyc/kyb/applications/:id/screen-beneficial-owners` | `POST`        | Screen BOs against sanctions    |
+| `/kyc/kyb/applications/:id/approve`                  | `PATCH`       | Approve KYB application         |
+| `/kyc/kyb/applications/:id/reject`                   | `PATCH`       | Reject KYB application          |
 
 ### Tenant Configuration
-| Endpoint | Methods | Description |
-|----------|---------|-------------|
+
+| Endpoint      | Methods        | Description                                           |
+| ------------- | -------------- | ----------------------------------------------------- |
 | `/tenants/me` | `GET`, `PATCH` | Get or update tenant config (incl. KYC provider mode) |
 
 ### Reports
-| Endpoint | Methods | Description |
-|----------|---------|-------------|
-| `/reports/sar` | `POST` | Generate SAR |
-| `/reports/ctr` | `POST` | Generate CTR |
-| `/reports/ftr` | `POST` | Generate FTR |
-| `/reports` | `GET` | List reports |
-| `/reports/:id` | `GET` | Get report details |
-| `/reports/:id/xml` | `GET` | Download report XML |
-| `/reports/:id/approve` | `PATCH` | Approve report |
-| `/reports/:id/file` | `PATCH` | Mark report as filed |
+
+| Endpoint               | Methods | Description          |
+| ---------------------- | ------- | -------------------- |
+| `/reports/sar`         | `POST`  | Generate SAR         |
+| `/reports/ctr`         | `POST`  | Generate CTR         |
+| `/reports/ftr`         | `POST`  | Generate FTR         |
+| `/reports`             | `GET`   | List reports         |
+| `/reports/:id`         | `GET`   | Get report details   |
+| `/reports/:id/xml`     | `GET`   | Download report XML  |
+| `/reports/:id/approve` | `PATCH` | Approve report       |
+| `/reports/:id/file`    | `PATCH` | Mark report as filed |
 
 ### Audit
-| Endpoint | Methods | Description |
-|----------|---------|-------------|
-| `/audit/events` | `GET` | Query audit logs |
-| `/audit/verify` | `GET` | Verify audit chain integrity |
+
+| Endpoint        | Methods | Description                  |
+| --------------- | ------- | ---------------------------- |
+| `/audit/events` | `GET`   | Query audit logs             |
+| `/audit/verify` | `GET`   | Verify audit chain integrity |
 
 ### System
-| Endpoint | Methods | Description |
-|----------|---------|-------------|
-| `/health` | `GET` | Health check (no auth required) |
-| `/engines/health` | `GET` | Engine health status |
+
+| Endpoint          | Methods | Description                     |
+| ----------------- | ------- | ------------------------------- |
+| `/health`         | `GET`   | Health check (no auth required) |
+| `/engines/health` | `GET`   | Engine health status            |
 
 ## HTTP Status Codes
 
-| Code | Meaning | When It Happens |
-|------|---------|-----------------|
-| `200` | OK | Request succeeded |
-| `201` | Created | Resource created successfully |
-| `204` | No Content | Resource deleted or deactivated |
-| `400` | Bad Request | Validation error — check request body |
-| `401` | Unauthorized | Missing or invalid token |
-| `403` | Forbidden | Insufficient permissions for this action |
-| `404` | Not Found | Resource does not exist |
-| `409` | Conflict | Duplicate or conflicting state |
-| `429` | Too Many Requests | Rate limit exceeded |
-| `500` | Server Error | Unexpected error — retry with backoff |
+| Code  | Meaning           | When It Happens                          |
+| ----- | ----------------- | ---------------------------------------- |
+| `200` | OK                | Request succeeded                        |
+| `201` | Created           | Resource created successfully            |
+| `204` | No Content        | Resource deleted or deactivated          |
+| `400` | Bad Request       | Validation error — check request body    |
+| `401` | Unauthorized      | Missing or invalid token                 |
+| `403` | Forbidden         | Insufficient permissions for this action |
+| `404` | Not Found         | Resource does not exist                  |
+| `409` | Conflict          | Duplicate or conflicting state           |
+| `429` | Too Many Requests | Rate limit exceeded                      |
+| `500` | Server Error      | Unexpected error — retry with backoff    |
 
 ---
 

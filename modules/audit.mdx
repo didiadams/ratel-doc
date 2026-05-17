@@ -1,6 +1,6 @@
 ---
-title: 'Audit'
-description: 'View immutable audit logs for compliance and regulatory inspection'
+title: "Audit"
+description: "View immutable audit logs for compliance and regulatory inspection"
 ---
 
 ## Overview
@@ -15,16 +15,16 @@ The Audit module provides a complete, immutable record of every significant acti
 
 ## Permissions
 
-| Action | Who Can Do It |
-|--------|---------------|
+| Action          | Who Can Do It                                 |
+| --------------- | --------------------------------------------- |
 | View audit logs | `BANK_ADMIN`, `COMPLIANCE_OFFICER`, `AUDITOR` |
 
 ## Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/audit/events` | Query audit logs with filters |
-| `GET` | `/api/v1/audit/verify` | Verify audit chain integrity |
+| Method | Endpoint               | Description                   |
+| ------ | ---------------------- | ----------------------------- |
+| `GET`  | `/api/v1/audit/events` | Query audit logs with filters |
+| `GET`  | `/api/v1/audit/verify` | Verify audit chain integrity  |
 
 ---
 
@@ -34,20 +34,20 @@ Retrieve audit trail entries with filtering and pagination. The list view exclud
 
 **Query Parameters**
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `resourceType` | `string` | — | `transactions`, `cases`, `rules`, `users`, `reports`, `kyc`, `api_keys` |
-| `action` | `string` | — | `CREATE`, `UPDATE`, `DELETE`, `SCREEN`, `APPROVE`, `LOGIN`, `VERIFY` |
-| `actorEmail` | `string` | — | Filter by acting user email |
-| `from` | `string` | — | ISO 8601 start date |
-| `to` | `string` | — | ISO 8601 end date |
-| `page` | `integer` | `1` | Page number |
-| `limit` | `integer` | `50` | Items per page (max 500) |
+| Parameter      | Type      | Default | Description                                                             |
+| -------------- | --------- | ------- | ----------------------------------------------------------------------- |
+| `resourceType` | `string`  | —       | `transactions`, `cases`, `rules`, `users`, `reports`, `kyc`, `api_keys` |
+| `action`       | `string`  | —       | `CREATE`, `UPDATE`, `DELETE`, `SCREEN`, `APPROVE`, `LOGIN`, `VERIFY`    |
+| `actorEmail`   | `string`  | —       | Filter by acting user email                                             |
+| `from`         | `string`  | —       | ISO 8601 start date                                                     |
+| `to`           | `string`  | —       | ISO 8601 end date                                                       |
+| `page`         | `integer` | `1`     | Page number                                                             |
+| `limit`        | `integer` | `50`    | Items per page (max 500)                                                |
 
 **Example Request**
 
 ```bash
-curl -X GET "https://api.ratel.security/v1/audit/events?resourceType=cases&action=UPDATE&from=2026-05-01T00:00:00Z&to=2026-05-16T23:59:59Z&page=1&limit=20" \
+curl -X GET "/v1/audit/events?resourceType=cases&action=UPDATE&from=2026-05-01T00:00:00Z&to=2026-05-16T23:59:59Z&page=1&limit=20" \
   -H "Authorization: Bearer <access_token>"
 ```
 
@@ -88,11 +88,14 @@ curl -X GET "https://api.ratel.security/v1/audit/events?resourceType=cases&actio
 ```
 
 <Note>
-  Audit logs are **immutable** and retained for **7 years** to meet CBN regulatory requirements. Each entry includes a SHA-256 hash forming a cryptographic chain.
+  Audit logs are **immutable** and retained for **7 years** to meet CBN
+  regulatory requirements. Each entry includes a SHA-256 hash forming a
+  cryptographic chain.
 </Note>
 
 <Warning>
-  For large exports, use `limit=500` and paginate through results. Do not attempt to retrieve more than 90 days of logs in a single request.
+  For large exports, use `limit=500` and paginate through results. Do not
+  attempt to retrieve more than 90 days of logs in a single request.
 </Warning>
 
 ---
@@ -104,7 +107,7 @@ Verify the cryptographic integrity of the audit trail. This checks that no logs 
 **Example Request**
 
 ```bash
-curl -X GET https://api.ratel.security/v1/audit/verify \
+curl -X GET /v1/audit/verify \
   -H "Authorization: Bearer <access_token>"
 ```
 

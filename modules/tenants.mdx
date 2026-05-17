@@ -1,6 +1,6 @@
 ---
 title: 'Tenant Management'
-description: 'Understand multi-tenant data isolation and configuration'
+description: 'Understand multi-tenant data isolation, configuration, and deployment'
 ---
 
 ## Overview
@@ -20,6 +20,7 @@ A tenant represents your organization within Ratel Security. All your transactio
 | **Dedicated Admins** | Every tenant has `BANK_ADMIN` users who manage day-to-day operations |
 | **Engine Configuration** | Risk weights and thresholds can be tuned per tenant |
 | **Auto-Seeded Rules** | New tenants automatically receive the 7 CBN mandatory rules |
+| **KYC Provider Selection** | Each tenant chooses between embedded providers or BYOL (Bring Your Own License) |
 
 ## Data Boundaries
 
@@ -29,8 +30,73 @@ The following data is scoped to your tenant and never shared:
 - Compliance cases and notes
 - Custom detection rules
 - KYC applications and verification results
+- KYB applications and corporate verification data
 - Regulatory reports
 - Audit logs
 - User accounts and roles
 
-> **Note:** Tenant-level configuration changes are handled by platform administrators. Contact your account manager if you need engine weight adjustments or tenant-level feature flags.
+## KYC Provider Configuration
+
+Each tenant independently controls how customer identity verification is performed.
+
+### Provider Modes
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| `EMBEDDED` | Platform-managed providers (Prembly → Dojah fallback) | Default — no setup required |
+| `BYOL` | Tenant provides their own KYC API credentials | Institutions with existing provider contracts |
+
+### Configuring BYOL
+
+`BANK_ADMIN` users can configure BYOL from **Dashboard → Settings → KYC Provider**:
+
+1. Select **BYOL** from the mode dropdown.
+2. Enter your provider details:
+   - **Provider Name** — e.g., "Smile Identity"
+   - **Base URL** — Your provider's API root
+   - **API Key / App ID** — Authentication credentials
+   - **Endpoints** — Paths for NIN, BVN, and Liveness checks
+   - **Response Mapping** — JSON paths to extract first/last names
+   - **Match Confidence** — Threshold for name match success (0–100)
+3. Save — new verifications immediately use your provider.
+
+The configuration is stored securely as JSON in `Tenant.kycProviderConfig` and is never exposed to other tenants.
+
+## Automated VPS Provisioning
+
+For institutions requiring a dedicated deployment, Ratel includes an automated VPS provisioning script.
+
+### What It Does
+
+`scripts/provision-bank-vps.sh` creates a fully configured single-tenant deployment:
+
+- Generates secure secrets (JWT, DB, MinIO)
+- Installs Nginx with SSL via Certbot (auto-renewal)
+- Creates a systemd service (`ratel-{slug}.service`)
+- Configures log rotation at `/var/log/ratel-{slug}/`
+- Hardens UFW firewall (exposes only 22, 80, 443)
+- Optionally installs compliance engines (Marble, Tirreno)
+
+### Usage
+
+```bash
+./scripts/provision-bank-vps.sh \
+  --bank-name "First Bank of Nigeria" \
+  --slug "firstbank" \
+  --domain "compliance.firstbank.ng" \
+  --admin-email "admin@firstbank.ng" \
+  --with-engines
+```
+
+### Arguments
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--bank-name` | ✅ | Full institution name |
+| `--slug` | ✅ | Short identifier for services/files |
+| `--domain` | ✅ | Primary domain for the deployment |
+| `--admin-email` | ✅ | Admin email for SSL notifications |
+| `--with-engines` | | Also provision Marble + Tirreno engines |
+| `--skip-ssl` | | Skip Certbot SSL (use for internal deployments) |
+
+> **Note:** Tenant-level configuration changes for engine weights or feature flags are handled by platform administrators. Contact your account manager if you need adjustments beyond KYC provider selection.

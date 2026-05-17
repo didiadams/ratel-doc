@@ -1,9 +1,9 @@
 ---
 title: 'Platform Modules Overview'
-description: 'Understand the 8 core modules of Ratel Security and how they work together'
+description: 'Understand the core modules of Ratel Security and how they work together'
 ---
 
-Ratel Security is organized into **8 user-facing modules**. Each module is accessible via REST API and the compliance dashboard.
+Ratel Security is organized into **user-facing modules**. Each module is accessible via REST API and the compliance dashboard.
 
 ## Module Directory
 
@@ -13,17 +13,17 @@ Ratel Security is organized into **8 user-facing modules**. Each module is acces
 | [Transactions](/modules/transactions) | Submit and review transactions | Real-time screening, history |
 | [Cases](/modules/cases) | Investigate flagged activity | Lifecycle management, notes, assignment |
 | [Rules](/modules/rules) | Custom detection logic | Create, activate, pause rules |
-| [KYC](/modules/kyc) | Identity verification | BVN/NIN verification, approvals |
+| [KYC](/modules/kyc) | Identity verification | BVN/NIN verification, KYB/CAC corporate lookup, per-tenant provider selection |
 | [Reports](/modules/reports) | Regulatory filing | SAR, CTR, FTR generation |
 | [Audit](/modules/audit) | Compliance logging | Immutable audit trail |
-| [Tenants](/modules/tenants) | Multi-tenant configuration | Isolated data and configuration |
+| [Tenants](/modules/tenants) | Multi-tenant configuration | Isolated data, KYC provider mode, automated VPS provisioning |
 
 ## Roles & Permissions
 
 | Role | Access Level |
 |------|-------------|
-| `BANK_ADMIN` | Full access within their tenant — users, rules, cases, reports |
-| `COMPLIANCE_OFFICER` | Case management, reporting, transaction review, rule management |
+| `BANK_ADMIN` | Full access within their tenant — users, rules, cases, reports, KYC/KYB configuration |
+| `COMPLIANCE_OFFICER` | Case management, reporting, transaction review, rule management, KYC/KYB verification |
 | `ANALYST` | Read access to transactions, cases, and reports. Can create cases and add notes. |
 | `AUDITOR` | Read-only access to audit logs, transactions, and reports |
 

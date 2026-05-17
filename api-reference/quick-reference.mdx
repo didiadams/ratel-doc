@@ -58,6 +58,22 @@ https://api.ratel.security/v1
 | `/kyc/applications/:id/approve` | `PATCH` | Approve application |
 | `/kyc/applications/:id/reject` | `PATCH` | Reject application |
 
+### KYB
+| Endpoint | Methods | Description |
+|----------|---------|-------------|
+| `/kyc/kyb/applications` | `POST`, `GET` | Create or list KYB applications |
+| `/kyc/kyb/applications/:id` | `GET` | Get KYB application details |
+| `/kyc/kyb/applications/:id/verify-cac` | `POST` | Run CAC lookup by RC number |
+| `/kyc/kyb/applications/:id/verify-directors` | `POST` | Verify all directors via KYC |
+| `/kyc/kyb/applications/:id/screen-beneficial-owners` | `POST` | Screen BOs against sanctions |
+| `/kyc/kyb/applications/:id/approve` | `PATCH` | Approve KYB application |
+| `/kyc/kyb/applications/:id/reject` | `PATCH` | Reject KYB application |
+
+### Tenant Configuration
+| Endpoint | Methods | Description |
+|----------|---------|-------------|
+| `/tenants/me` | `GET`, `PATCH` | Get or update tenant config (incl. KYC provider mode) |
+
 ### Reports
 | Endpoint | Methods | Description |
 |----------|---------|-------------|

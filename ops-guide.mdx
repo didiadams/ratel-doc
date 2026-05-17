@@ -1,0 +1,353 @@
+---
+title: "Production Operations Guide"
+description: "How to deploy, manage, and troubleshoot Ratel Security in production"
+---
+
+This guide is for the person responsible for running and maintaining Ratel Security in production. All commands assume you are working from `/opt/ratel-security` on your VPS.
+
+---
+
+## Daily Operations
+
+### Check System Health
+
+```bash
+# View all running containers
+docker compose ps
+
+# Check resource usage per container
+docker stats --no-stream
+
+# API health check
+curl http://localhost:3001/api/v1/health
+
+# Watchman health check
+curl http://localhost:8084/ping
+```
+
+Expected output of `docker compose ps` — all should show `running`:
+
+| Container | Public Port(s) | Notes |
+| --------- | -------------- | ----- |
+| `ratel-app` | 3001 (API), 4000 (dashboard) | Main app |
+| `ratel-postgres` | 5432 (localhost only) | Primary DB |
+| `ratel-redis` | 6379 (localhost only) | Cache / queues |
+| `ratel-minio` | 9000, 9001 (localhost only) | Object storage |
+| `ratel-marble` | 8080 (internal) | Decision engine |
+| `ratel-tirreno` | 8585 (internal) | Fraud analytics |
+| `ratel-ciso-assistant` | 8443 (internal) | GRC engine |
+| `ratel-watchman` | 8084 (internal) | Global sanctions screening |
+
+---
+
+## Deployment
+
+### Standard Deployment (SaaS Multi-Tenant)
+
+```bash
+# 1. SSH into the VPS
+ssh root@your-vps-ip
+cd /opt/ratel-security
+
+# 2. Pull latest code
+git pull origin main
+
+# 3. Rebuild the app image
+docker compose build ratel-app
+
+# 4. Restart (migrations run automatically via start.sh)
+docker compose up -d ratel-app
+```
+
+### What Happens During Startup
+
+The `start.sh` entrypoint inside the container now runs this sequence automatically:
+
+1. **`prisma migrate deploy`** — Applies any committed migration files
+2. **`prisma db push`** — Syncs any schema changes that lack migration files (safety net)
+3. **`prisma db seed`** — Seeds default data if fresh database
+4. **Start Next.js dashboard** (background, port 4000)
+5. **Start NestJS API** (foreground, port 3001)
+
+> **Note:** The old `start.sh` had a bug where `db push` never ran if `migrate deploy` returned exit code 0. This has been fixed — both commands now run unconditionally.
+
+---
+
+## Logs & Debugging
+
+### Read App Logs
+
+```bash
+# Live log stream
+docker compose logs -f ratel-app
+
+# Last 100 lines
+docker compose logs --tail=100 ratel-app
+
+# Filter for errors only
+docker compose logs ratel-app 2>&1 | grep -i 'error\|exception\|fatal'
+
+# Logs since a specific time
+docker compose logs --since="2026-05-17T10:00:00" ratel-app
+```
+
+### Read Database Logs
+
+```bash
+docker compose logs -f ratel-postgres
+```
+
+### Open a Database Shell
+
+```bash
+docker compose exec ratel-postgres psql -U ratel -d ratel_security
+```
+
+Useful psql commands:
+
+```sql
+\dt                          -- list all tables
+\d users                     -- describe users table
+SELECT * FROM tenants;       -- list all tenants
+SELECT email, role, is_active FROM users WHERE role = 'SUPER_ADMIN';
+\q                           -- exit
+```
+
+---
+
+## Database Management
+
+### Run Migrations Manually
+
+If you ever need to apply migrations manually (e.g., `start.sh` was bypassed):
+
+```bash
+docker compose exec ratel-app \
+  npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma
+```
+
+### Check Migration Status
+
+```bash
+docker compose exec ratel-app \
+  npx prisma migrate status --schema=packages/db/prisma/schema.prisma
+```
+
+### Backup the Database
+
+```bash
+docker compose exec ratel-postgres \
+  pg_dump -U ratel ratel_security > /opt/ratel-security/backups/manual_$(date +%Y%m%d_%H%M%S).sql
+```
+
+### Restore from Backup
+
+```bash
+docker compose exec -T ratel-postgres \
+  psql -U ratel ratel_security < /opt/ratel-security/backups/manual_20260517_120000.sql
+```
+
+### Re-seed the Database
+
+The seed script is idempotent — it skips existing records:
+
+```bash
+docker compose exec ratel-app \
+  npx prisma db seed --schema=packages/db/prisma/schema.prisma
+```
+
+---
+
+## User Management
+
+### List All Users
+
+```bash
+docker compose exec ratel-postgres psql -U ratel -d ratel_security \
+  -c "SELECT id, email, role, is_active, created_at FROM users ORDER BY created_at;"
+```
+
+### Activate / Deactivate a User
+
+```bash
+# Deactivate
+docker compose exec ratel-postgres psql -U ratel -d ratel_security \
+  -c "UPDATE users SET is_active = false WHERE email = 'user@example.com';"
+
+# Reactivate
+docker compose exec ratel-postgres psql -U ratel -d ratel_security \
+  -c "UPDATE users SET is_active = true WHERE email = 'user@example.com';"
+```
+
+### Change a User's Role
+
+```bash
+docker compose exec ratel-postgres psql -U ratel -d ratel_security \
+  -c "UPDATE users SET role = 'COMPLIANCE_OFFICER' WHERE email = 'user@example.com';"
+```
+
+Valid roles: `SUPER_ADMIN`, `BANK_ADMIN`, `COMPLIANCE_OFFICER`, `ANALYST`, `AUDITOR`
+
+---
+
+## Restarting Services
+
+```bash
+# Restart just the app (fastest, no data loss)
+docker compose restart ratel-app
+
+# Restart database (connections drop briefly)
+docker compose restart ratel-postgres
+
+# Restart everything
+docker compose restart
+
+# Full stop then start (after .env changes)
+docker compose down
+docker compose up -d
+
+# Force recreate app container (picks up .env changes)
+docker compose up -d --force-recreate ratel-app
+```
+
+---
+
+## Environment Variables
+
+Edit `/opt/ratel-security/.env` to change configuration. After any change:
+
+```bash
+docker compose up -d --force-recreate ratel-app
+```
+
+| Variable | What It Does |
+| -------------------------- | ------------------------------------------------------------------ |
+| `NEXT_PUBLIC_API_URL` | Browser-facing API URL — must match your public IP or domain |
+| `DASHBOARD_URL` | Allowed CORS origin for the API |
+| `DEFAULT_ADMIN_EMAIL` | Email used when seeding the super admin |
+| `DEFAULT_ADMIN_PASSWORD` | Password used when seeding the super admin |
+| `JWT_SECRET` | Signs access tokens — never change on a live system |
+| `JWT_REFRESH_SECRET` | Signs refresh tokens — never change on a live system |
+| `DATABASE_PASSWORD` | Postgres password |
+| `LOG_LEVEL` | `info` (default) · `debug` · `trace` |
+| `RESEND_API_KEY` | Email delivery via Resend |
+| `PREMBLY_API_KEY` | Identity verification (NIN/BVN) — embedded mode |
+| `DOJAH_API_KEY` | Fallback identity verification |
+| `CAC_API_KEY` | Corporate Affairs Commission lookup — set for live KYB |
+| `WATCHMAN_API_URL` | Moov Watchman internal URL (default: `http://ratel-watchman:8084`) |
+| `WATCHMAN_MATCH_THRESHOLD` | Fuzzy match threshold 0–1 (default: `0.85`) |
+| `USE_MARBLE` | Enable Marble decision engine (`true`/`false`) |
+
+---
+
+## Watchlist & Sanctions
+
+### Check Watchman Health
+
+```bash
+curl http://localhost:8084/ping
+# Expected: HTTP 200
+```
+
+### Test a Name Search
+
+```bash
+curl "http://localhost:8084/search?name=Osama+Bin+Laden&limit=3" | jq '.'
+```
+
+### Update Watchman Lists
+
+Lists are bundled in the Docker image. To update:
+
+```bash
+docker compose pull ratel-watchman
+docker compose up -d ratel-watchman
+```
+
+### Run NiGSAC Scraper Manually
+
+```bash
+docker compose exec ratel-app python3 /app/scripts/nigsac_scraper.py
+```
+
+### Check Scraper Log
+
+```bash
+docker compose exec ratel-postgres psql -U ratel -d ratel_security \
+  -c "SELECT status, entries_found, entries_loaded, error_msg, ran_at \
+      FROM scraper_log ORDER BY ran_at DESC LIMIT 10;"
+```
+
+---
+
+## Troubleshooting
+
+### App Won't Start
+
+```bash
+# 1. Check if all containers started
+docker compose ps
+
+# 2. Read the last 100 app log lines
+docker compose logs --tail=100 ratel-app
+
+# 3. Check Postgres is healthy
+docker compose exec ratel-postgres pg_isready -U ratel
+
+# 4. Check database connection URL in .env
+grep DATABASE_URL /opt/ratel-security/.env
+
+# 5. Check Redis is reachable
+docker compose exec ratel-redis redis-cli ping
+# Should return: PONG
+
+# 6. Force a clean rebuild
+docker compose down
+docker compose build --no-cache ratel-app
+docker compose up -d
+```
+
+### Database Schema Errors (500 on auth/me)
+
+If you see `The column X does not exist in the current database`, the schema is out of sync:
+
+```bash
+# Fix: push schema directly
+docker compose exec ratel-app \
+  npx prisma db push --schema=packages/db/prisma/schema.prisma --accept-data-loss
+
+# Then restart
+docker compose restart ratel-app
+```
+
+### Network Still In Use After `docker compose down`
+
+If other services (Marble, Tirreno) are running, the shared network persists:
+
+```bash
+# Stop everything in the compose project
+docker compose down
+
+# Or stop specific services only
+docker compose stop ratel-app ratel-postgres ratel-redis
+```
+
+---
+
+## Quick Reference Card
+
+| Task | Command |
+| --------------------- | --------------------------------------------------------------------------------------------------- |
+| View live logs | `docker compose logs -f ratel-app` |
+| Restart app | `docker compose restart ratel-app` |
+| Open DB shell | `docker compose exec ratel-postgres psql -U ratel -d ratel_security` |
+| Change admin password | Generate hash → UPDATE users SET password_hash (see User Management) |
+| Re-seed database | `docker compose exec ratel-app npx prisma db seed --schema=packages/db/prisma/schema.prisma` |
+| Run migrations | `docker compose exec ratel-app npx prisma migrate deploy --schema=packages/db/prisma/schema.prisma` |
+| Push schema | `docker compose exec ratel-app npx prisma db push --schema=packages/db/prisma/schema.prisma` |
+| Health check | `curl http://localhost:3001/api/v1/health` |
+| Update code | `git pull && docker compose build ratel-app && docker compose up -d ratel-app` |
+| Backup DB | `docker compose exec ratel-postgres pg_dump -U ratel ratel_security > backup.sql` |
+| Apply .env changes | `docker compose up -d --force-recreate ratel-app` |
+| Watchman health | `curl http://localhost:8084/ping` |
+| Run NiGSAC scraper | `docker compose exec ratel-app python3 /app/scripts/nigsac_scraper.py` |

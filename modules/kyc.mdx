@@ -1,6 +1,6 @@
 ---
 title: 'KYC'
-description: 'Manage Know Your Customer verification applications'
+description: 'Manage Know Your Customer and Know Your Business verification applications'
 ---
 
 ## Overview
@@ -13,13 +13,18 @@ The KYC module handles identity verification for your customers. Applications fl
 
 **Re-verification:** A customer's KYC expires → They submit updated documents → Officer verifies and approves → KYC status updates to `APPROVED`.
 
+**Business onboarding (KYB):** Officer creates KYB application → CAC lookup fetches company details → Directors verified via NIN/BVN → Beneficial owners screened against sanctions → Officer approves → Business can transact without KYB risk flags.
+
 ## Permissions
 
 | Action | Who Can Do It |
 |--------|---------------|
 | Submit, list, view applications | All authenticated users |
 | Verify BVN/NIN | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
-| Approve/reject | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Approve/reject KYC | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Create KYB application | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Run CAC lookup / verify directors / screen BOs | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Approve/reject KYB | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
 
 ## KYC Statuses
 
@@ -34,7 +39,66 @@ The KYC module handles identity verification for your customers. Applications fl
 | `REJECTED` | Failed verification | Score 70, `ESCALATE` |
 | `EXPIRED` | Verification expired | Score 50, `REVIEW` |
 
-## Endpoints
+## KYB Statuses
+
+| Status | Meaning | Risk Impact |
+|--------|---------|-------------|
+| `PENDING` | Application submitted, awaiting CAC lookup | Score 40, `REVIEW` |
+| `CAC_VERIFIED` | CAC lookup successful | Score 40, `REVIEW` |
+| `DIRECTORS_VERIFIED` | Directors identity verified | Score 40, `REVIEW` |
+| `BOS_VERIFIED` | Beneficial owners screened | Score 10, `APPROVE` |
+| `APPROVED` | Fully verified | Score 0, `APPROVE` |
+| `REJECTED` | Failed verification or sanctions hit | Score 85, `BLOCK` |
+
+## Per-Tenant KYC Provider Configuration
+
+Each tenant can independently configure how identity verification is performed.
+
+### Provider Modes
+
+| Mode | Description |
+|------|-------------|
+| `EMBEDDED` | Uses platform-managed providers (Prembly → Dojah fallback). Default for all new tenants. |
+| `BYOL` | Uses the tenant's own KYC provider API, configured via JSON. |
+
+### Switching Provider Mode
+
+`BANK_ADMIN` users can switch modes from **Dashboard → Settings → KYC Provider**:
+
+1. Select **Embedded** or **BYOL** from the dropdown.
+2. If BYOL, fill in the configuration form:
+   - Provider Name
+   - Base URL
+   - API Key / App ID
+   - Endpoint paths for NIN, BVN, and Liveness
+   - Request/response field mappings
+   - Match confidence threshold
+3. Save — the change takes effect immediately for all new verifications.
+
+### BYOL Configuration Format
+
+The configuration is stored as JSON in `Tenant.kycProviderConfig`:
+
+```json
+{
+  "providerName": "SmileIdentity",
+  "baseUrl": "https://api.smileidentity.com/v1",
+  "headers": { "Authorization": "Bearer sk_xxx" },
+  "endpoints": { "nin": "/id_verification", "bvn": "/id_verification", "liveness": "/biometric" },
+  "methods": { "nin": "POST", "bvn": "POST" },
+  "requestMapping": {
+    "nin": { "id_number": "nin", "id_type": "'NIN'" },
+    "bvn": { "id_number": "bvn", "id_type": "'BVN'" }
+  },
+  "responseMapping": {
+    "firstNamePath": "result.first_name",
+    "lastNamePath": "result.last_name"
+  },
+  "matchConfidence": 92
+}
+```
+
+## KYC Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -46,6 +110,25 @@ The KYC module handles identity verification for your customers. Applications fl
 | `POST` | `/api/v1/kyc/applications/:id/liveness-check` | Run biometric liveness check |
 | `PATCH` | `/api/v1/kyc/applications/:id/approve` | Approve application |
 | `PATCH` | `/api/v1/kyc/applications/:id/reject` | Reject application |
+
+## KYB Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/kyc/kyb/applications` | Create a KYB application |
+| `GET` | `/api/v1/kyc/kyb/applications` | List KYB applications |
+| `GET` | `/api/v1/kyc/kyb/applications/:id` | Get KYB application details |
+| `POST` | `/api/v1/kyc/kyb/applications/:id/verify-cac` | Run CAC lookup by RC number |
+| `POST` | `/api/v1/kyc/kyb/applications/:id/verify-directors` | Verify all directors via KYC |
+| `POST` | `/api/v1/kyc/kyb/applications/:id/screen-beneficial-owners` | Screen BOs against sanctions |
+| `PATCH` | `/api/v1/kyc/kyb/applications/:id/approve` | Approve KYB application |
+| `PATCH` | `/api/v1/kyc/kyb/applications/:id/reject` | Reject KYB application |
+
+## Tenant Configuration Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `PATCH` | `/api/v1/tenants/me` | Update tenant config including `kycProviderMode` and `kycProviderConfig` |
 
 ---
 
@@ -109,6 +192,85 @@ curl -X POST https://api.ratel.security/v1/kyc/applications \
     "notes": null,
     "createdAt": "2026-05-16T08:00:00Z",
     "updatedAt": "2026-05-16T08:00:00Z"
+  }
+}
+```
+
+---
+
+### Create KYB Application
+
+Create a new KYB application for a corporate entity.
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `companyName` | `string` | ✅ | Registered company name |
+| `rcNumber` | `string` | ✅ | CAC registration number |
+| `tin` | `string` | | Tax Identification Number |
+| `address` | `string` | | Registered business address |
+
+**Example Request**
+
+```bash
+curl -X POST https://api.ratel.security/v1/kyc/kyb/applications \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "companyName": "Acme Nigeria Ltd",
+    "rcNumber": "RC123456",
+    "tin": "12345678-0001",
+    "address": "15 Broad Street, Lagos"
+  }'
+```
+
+---
+
+### Verify CAC
+
+Run a CAC lookup for a KYB application.
+
+**Path Parameters**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | KYB Application UUID |
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `rcNumber` | `string` | ✅ | CAC registration number to look up |
+
+**Example Request**
+
+```bash
+curl -X POST https://api.ratel.security/v1/kyc/kyb/applications/kyb_abc123/verify-cac \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rcNumber": "RC123456"
+  }'
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "kyb_abc123",
+    "status": "CAC_VERIFIED",
+    "companyName": "Acme Nigeria Ltd",
+    "rcNumber": "RC123456",
+    "directors": [
+      { "name": "John Doe", "role": "Director" }
+    ],
+    "beneficialOwners": [
+      { "name": "Jane Smith", "percentage": 75 }
+    ],
+    "updatedAt": "2026-05-16T09:00:00Z"
   }
 }
 ```
@@ -227,7 +389,7 @@ curl -X GET https://api.ratel.security/v1/kyc/applications/kyc_abc123 \
 
 ### Verify BVN
 
-Trigger BVN verification against the national identity provider.
+Trigger BVN verification against the identity provider.
 
 **Path Parameters**
 

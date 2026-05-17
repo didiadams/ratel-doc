@@ -7,7 +7,54 @@ Every transaction checks the sender's KYC verification status using their BVN. T
 
 ## Identity Verification Providers
 
+### Embedded Providers (Default)
+
 BVN, NIN, and vNIN verification calls are made through integrated providers (Prembly, Dojah). When you trigger `verify-bvn` or `verify-nin`, the platform calls the provider's API with the ID number and cross-references the returned name against the applicant's name (including swapped name order, which is common in Nigeria). Liveness checks use face-match and liveness detection APIs.
+
+### Bring Your Own License (BYOL)
+
+Tenants can switch to **BYOL mode** and plug in their own KYC provider via a JSON configuration. This is useful when your institution already has a direct contract with an identity verification provider (e.g., Smile Identity, VerifyMe, Prembly enterprise).
+
+**How it works:**
+
+| Mode | Provider | Configuration |
+|------|----------|---------------|
+| `EMBEDDED` | Platform-managed (Prembly → Dojah fallback) | None required |
+| `BYOL` | Tenant-managed via `CustomProvider` | JSON config stored per-tenant |
+
+**BYOL Configuration JSON** (stored in `Tenant.kycProviderConfig`):
+
+```json
+{
+  "providerName": "SmileIdentity",
+  "baseUrl": "https://api.smileidentity.com/v1",
+  "headers": { "Authorization": "Bearer sk_xxx" },
+  "endpoints": {
+    "nin": "/id_verification",
+    "bvn": "/id_verification",
+    "liveness": "/biometric"
+  },
+  "methods": { "nin": "POST" },
+  "requestMapping": {
+    "nin": { "id_number": "nin", "id_type": "'NIN'" }
+  },
+  "responseMapping": {
+    "firstNamePath": "result.first_name",
+    "lastNamePath": "result.last_name"
+  },
+  "matchConfidence": 92
+}
+```
+
+**Key mapping fields:**
+
+| Field | Purpose |
+|-------|---------|
+| `requestMapping` | Maps internal field names to provider API fields. Use `{{nin}}` for dynamic values or `'NIN'` for literals. |
+| `responseMapping` | JSON paths to extract `firstName` and `lastName` from the provider response. |
+| `matchConfidence` | Minimum confidence (0–100) to consider a name match successful. |
+
+Bank admins can switch modes and edit the BYOL config from **Dashboard → Settings → KYC Provider**.
 
 ## KYC Application Statuses
 

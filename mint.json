@@ -35,6 +35,7 @@
           "features/cbn-rules",
           "features/sanctions-screening",
           "features/kyc-verification",
+          "features/kyb-verification",
           "features/behavioral-analysis",
           "features/custom-rules",
           "features/email-notifications"
@@ -52,6 +53,13 @@
           "modules/reports",
           "modules/audit",
           "modules/tenants"
+        ]
+      },
+      {
+        "group": "Operations",
+        "pages": [
+          "ops-guide",
+          "scaling-guide"
         ]
       },
       {

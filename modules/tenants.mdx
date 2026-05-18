@@ -1,26 +1,26 @@
 ---
-title: 'Tenant Management'
-description: 'Understand multi-tenant data isolation, configuration, and deployment'
+title: "Tenant Management"
+description: "Understand multi-tenant data isolation, configuration, and deployment"
 ---
 
 ## Overview
 
-Ratel Security operates as a multi-tenant platform. Each bank or financial institution operates within its own tenant, with complete data isolation from other institutions.
+Verifow operates as a multi-tenant platform. Each bank or financial institution operates within its own tenant, with complete data isolation from other institutions.
 
 ## What Is a Tenant?
 
-A tenant represents your organization within Ratel Security. All your transactions, cases, rules, reports, and users exist within your tenant boundary.
+A tenant represents your organization within Verifow. All your transactions, cases, rules, reports, and users exist within your tenant boundary.
 
 ## Tenant Characteristics
 
-| Feature | Description |
-|---------|-------------|
-| **Data Isolation** | Transaction data, cases, and user records are completely isolated from other tenants |
-| **Independent Rules** | Each tenant maintains its own custom rules alongside the shared CBN mandatory rules |
-| **Dedicated Admins** | Every tenant has `BANK_ADMIN` users who manage day-to-day operations |
-| **Engine Configuration** | Risk weights and thresholds can be tuned per tenant |
-| **Auto-Seeded Rules** | New tenants automatically receive the 7 CBN mandatory rules |
-| **KYC Provider Selection** | Each tenant chooses between embedded providers or BYOL (Bring Your Own License) |
+| Feature                    | Description                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------ |
+| **Data Isolation**         | Transaction data, cases, and user records are completely isolated from other tenants |
+| **Independent Rules**      | Each tenant maintains its own custom rules alongside the shared CBN mandatory rules  |
+| **Dedicated Admins**       | Every tenant has `BANK_ADMIN` users who manage day-to-day operations                 |
+| **Engine Configuration**   | Risk weights and thresholds can be tuned per tenant                                  |
+| **Auto-Seeded Rules**      | New tenants automatically receive the 7 CBN mandatory rules                          |
+| **KYC Provider Selection** | Each tenant chooses between embedded providers or BYOL (Bring Your Own License)      |
 
 ## Data Boundaries
 
@@ -41,10 +41,10 @@ Each tenant independently controls how customer identity verification is perform
 
 ### Provider Modes
 
-| Mode | Description | Use Case |
-|------|-------------|----------|
-| `EMBEDDED` | Platform-managed providers (Prembly → Dojah fallback) | Default — no setup required |
-| `BYOL` | Tenant provides their own KYC API credentials | Institutions with existing provider contracts |
+| Mode       | Description                                           | Use Case                                      |
+| ---------- | ----------------------------------------------------- | --------------------------------------------- |
+| `EMBEDDED` | Platform-managed providers (Prembly → Dojah fallback) | Default — no setup required                   |
+| `BYOL`     | Tenant provides their own KYC API credentials         | Institutions with existing provider contracts |
 
 ### Configuring BYOL
 
@@ -90,13 +90,13 @@ For institutions requiring a dedicated deployment, Ratel includes an automated V
 
 ### Arguments
 
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--bank-name` | ✅ | Full institution name |
-| `--slug` | ✅ | Short identifier for services/files |
-| `--domain` | ✅ | Primary domain for the deployment |
-| `--admin-email` | ✅ | Admin email for SSL notifications |
-| `--with-engines` | | Also provision Marble + Tirreno engines |
-| `--skip-ssl` | | Skip Certbot SSL (use for internal deployments) |
+| Flag             | Required | Description                                     |
+| ---------------- | -------- | ----------------------------------------------- |
+| `--bank-name`    | ✅       | Full institution name                           |
+| `--slug`         | ✅       | Short identifier for services/files             |
+| `--domain`       | ✅       | Primary domain for the deployment               |
+| `--admin-email`  | ✅       | Admin email for SSL notifications               |
+| `--with-engines` |          | Also provision Marble + Tirreno engines         |
+| `--skip-ssl`     |          | Skip Certbot SSL (use for internal deployments) |
 
 > **Note:** Tenant-level configuration changes for engine weights or feature flags are handled by platform administrators. Contact your account manager if you need adjustments beyond KYC provider selection.

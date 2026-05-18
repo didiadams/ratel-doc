@@ -1,13 +1,13 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Ratel Security",
+  "name": "Verifow",
   "branding": false,
   "logo": {
-    "light": "/logo.png",
-    "dark": "/logo-black.png"
+    "light": "/logo-light.svg",
+    "dark": "/logo-dark.svg"
   },
-  "favicon": "/logo.png",
+  "favicon": "/fav.png",
   "colors": {
     "primary": "#0F172A",
     "light": "#334155",

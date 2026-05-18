@@ -1,6 +1,6 @@
 ---
 title: "Infrastructure Scaling Guide"
-description: "How to scale Ratel Security for SaaS multi-tenant and dedicated VPS deployments"
+description: "How to scale Verifow for SaaS multi-tenant and dedicated VPS deployments"
 ---
 
 This guide covers scaling strategies for both deployment models: **SaaS (multi-tenant)** and **Dedicated VPS (single-tenant)**. Choose the model that fits your customer's security requirements and budget.
@@ -9,15 +9,15 @@ This guide covers scaling strategies for both deployment models: **SaaS (multi-t
 
 ## Deployment Models Overview
 
-| Factor | SaaS Multi-Tenant | Dedicated VPS (Single-Tenant) |
-| ------ | ----------------- | ------------------------------ |
-| **Tenants per server** | 10–100+ banks | 1 bank |
-| **Infrastructure cost** | Shared across tenants | Paid by individual customer |
-| **Data isolation** | Logical (row-level) | Physical (separate server) |
-| **Onboarding time** | 5 minutes | 2–3 hours |
-| **Monthly price to customer** | ₦50K–₦500K | ₦500K–₦2M+ |
-| **Best for** | Most banks & fintechs | Tier-1 banks, government agencies |
-| **Compliance level** | CBN compliant + ISO 27001 | CBN compliant + air-gapped option |
+| Factor                        | SaaS Multi-Tenant         | Dedicated VPS (Single-Tenant)     |
+| ----------------------------- | ------------------------- | --------------------------------- |
+| **Tenants per server**        | 10–100+ banks             | 1 bank                            |
+| **Infrastructure cost**       | Shared across tenants     | Paid by individual customer       |
+| **Data isolation**            | Logical (row-level)       | Physical (separate server)        |
+| **Onboarding time**           | 5 minutes                 | 2–3 hours                         |
+| **Monthly price to customer** | ₦50K–₦500K                | ₦500K–₦2M+                        |
+| **Best for**                  | Most banks & fintechs     | Tier-1 banks, government agencies |
+| **Compliance level**          | CBN compliant + ISO 27001 | CBN compliant + air-gapped option |
 
 **Recommendation:** Start with **SaaS**. Offer Dedicated VPS as an **Enterprise tier** once you have 5–10 paying customers.
 
@@ -46,6 +46,7 @@ This guide covers scaling strategies for both deployment models: **SaaS (multi-t
 **Handles:** ~100 transactions/second, ~50 concurrent dashboard users
 
 **Docker Compose services on one host:**
+
 - `ratel-app` (API + dashboard)
 - `ratel-postgres`
 - `ratel-redis`
@@ -73,6 +74,7 @@ When CPU or RAM consistently exceeds 70%:
 ```
 
 **Changes:**
+
 - Move Postgres to its own VPS
 - Connect via private network (DigitalOcean VPC)
 - Update `DATABASE_URL` in `.env` to point to the DB VPS private IP
@@ -111,6 +113,7 @@ DATABASE_URL="postgresql://ratel:PASSWORD@10.124.0.3:5432/ratel_security"
 ```
 
 **Changes:**
+
 - Run 2–3 app servers behind a load balancer
 - Use **sticky sessions** (dashboard uses JWT, so stateless — any server works)
 - Add Postgres read replica for analytics/reporting queries
@@ -122,12 +125,12 @@ DATABASE_URL="postgresql://ratel:PASSWORD@10.124.0.3:5432/ratel_security"
 
 Replace self-hosted components with managed services:
 
-| Component | Self-Hosted | Managed Alternative | Why Switch |
-| --------- | ----------- | ------------------- | ---------- |
-| **Postgres** | `ratel-postgres` | DigitalOcean Managed Postgres | Automated backups, failover, scaling |
-| **Redis** | `ratel-redis` | Upstash Redis | Serverless, global replication |
-| **Object Storage** | `ratel-minio` | AWS S3 / DigitalOcean Spaces | Infinite scale, CDN integration |
-| **Queue** | BullMQ on Redis | AWS SQS / RabbitMQ | Better observability, DLQ handling |
+| Component          | Self-Hosted      | Managed Alternative           | Why Switch                           |
+| ------------------ | ---------------- | ----------------------------- | ------------------------------------ |
+| **Postgres**       | `ratel-postgres` | DigitalOcean Managed Postgres | Automated backups, failover, scaling |
+| **Redis**          | `ratel-redis`    | Upstash Redis                 | Serverless, global replication       |
+| **Object Storage** | `ratel-minio`    | AWS S3 / DigitalOcean Spaces  | Infinite scale, CDN integration      |
+| **Queue**          | BullMQ on Redis  | AWS SQS / RabbitMQ            | Better observability, DLQ handling   |
 
 **Architecture at scale:**
 
@@ -188,17 +191,20 @@ For enterprise customers who demand their own server, use the automated provisio
 If one bank outgrows their VPS:
 
 **Option A: Vertical Scaling (easiest)**
+
 ```bash
 # Resize the droplet via DigitalOcean UI or CLI
 doctl compute droplet-action resize <droplet-id> --size s-4vcpu-8gb
 ```
 
 **Option B: Split Services (same as SaaS Phase 2)**
+
 - Move Postgres to a separate managed database
 - Keep app + Redis + Watchman on the original VPS
 - Update `DATABASE_URL` to point to the managed DB
 
 **Option C: High Availability**
+
 - 2 app servers + 1 managed DB + DigitalOcean Load Balancer
 - This is essentially the SaaS architecture, but isolated to one customer
 
@@ -233,12 +239,12 @@ Are you just starting out?
 
 These are conservative estimates on DigitalOcean droplets:
 
-| Droplet | vCPU | RAM | Transactions/sec | Concurrent Users | Tenants (SaaS) |
-| ------- | ---- | --- | ---------------- | ---------------- | -------------- |
-| Basic | 2 | 4 GB | ~30 | 20 | 5–10 |
-| General | 4 | 8 GB | ~100 | 50 | 10–50 |
-| General | 8 | 16 GB | ~250 | 150 | 50–150 |
-| CPU-Optimized | 8 | 16 GB | ~500 | 300 | 150–300 |
+| Droplet       | vCPU | RAM   | Transactions/sec | Concurrent Users | Tenants (SaaS) |
+| ------------- | ---- | ----- | ---------------- | ---------------- | -------------- |
+| Basic         | 2    | 4 GB  | ~30              | 20               | 5–10           |
+| General       | 4    | 8 GB  | ~100             | 50               | 10–50          |
+| General       | 8    | 16 GB | ~250             | 150              | 50–150         |
+| CPU-Optimized | 8    | 16 GB | ~500             | 300              | 150–300        |
 
 > **Note:** Actual throughput depends on rule complexity, sanctions list size, and whether Marble/Tirreno engines are enabled.
 
@@ -277,18 +283,19 @@ For 50+ customers, ship logs to a central service:
 
 ### SaaS Security
 
-| Layer | Implementation |
-| ----- | -------------- |
-| **Network** | UFW firewall, VPC private networking |
-| **Database** | Row-level tenant isolation, encrypted at rest |
-| **API** | Rate limiting per tenant, JWT auth, API key rotation |
-| **Dashboard** | Role-based access control (RBAC), session expiry |
-| **Files** | MinIO/S3 with signed URLs, no public buckets |
-| **Audit** | Immutable audit chain with SHA-256 hashing |
+| Layer         | Implementation                                       |
+| ------------- | ---------------------------------------------------- |
+| **Network**   | UFW firewall, VPC private networking                 |
+| **Database**  | Row-level tenant isolation, encrypted at rest        |
+| **API**       | Rate limiting per tenant, JWT auth, API key rotation |
+| **Dashboard** | Role-based access control (RBAC), session expiry     |
+| **Files**     | MinIO/S3 with signed URLs, no public buckets         |
+| **Audit**     | Immutable audit chain with SHA-256 hashing           |
 
 ### Dedicated VPS Security
 
 Same as SaaS, plus:
+
 - **Physical isolation** — no shared server with other tenants
 - **Custom domain + SSL** — bank-branded compliance portal
 - **IP whitelisting** — restrict dashboard access to bank office IPs
@@ -300,31 +307,31 @@ Same as SaaS, plus:
 
 ### SaaS Single Server (Phase 1)
 
-| Component | Cost |
-| --------- | ---- |
-| DigitalOcean droplet (4vCPU/8GB) | $48 |
-| Backups (20% of droplet) | $10 |
-| Domain + SSL (Let's Encrypt) | $0 |
-| **Total** | **~$58** |
+| Component                        | Cost     |
+| -------------------------------- | -------- |
+| DigitalOcean droplet (4vCPU/8GB) | $48      |
+| Backups (20% of droplet)         | $10      |
+| Domain + SSL (Let's Encrypt)     | $0       |
+| **Total**                        | **~$58** |
 
 ### Dedicated VPS (per customer)
 
-| Component | Cost |
-| --------- | ---- |
-| DigitalOcean droplet (4vCPU/8GB) | $48 |
-| Managed Postgres (optional) | $15 |
-| Backups | $10 |
-| Domain + SSL | $0 |
-| **Total** | **~$73** |
+| Component                        | Cost     |
+| -------------------------------- | -------- |
+| DigitalOcean droplet (4vCPU/8GB) | $48      |
+| Managed Postgres (optional)      | $15      |
+| Backups                          | $10      |
+| Domain + SSL                     | $0       |
+| **Total**                        | **~$73** |
 
 **Your pricing should be 5–10× infrastructure cost** to cover support, engineering, and profit.
 
-| Plan | Your Monthly Price | Infra Cost | Margin |
-|------|-------------------|------------|--------|
-| SaaS Starter | ₦50,000 (~$33) | $5 (shared) | High |
-| SaaS Growth | ₦150,000 (~$100) | $15 (shared) | High |
-| SaaS Enterprise | ₦500,000 (~$333) | $50 (shared) | High |
-| Dedicated VPS | ₦1,000,000 (~$667) | $73 | ~9× |
+| Plan            | Your Monthly Price | Infra Cost   | Margin |
+| --------------- | ------------------ | ------------ | ------ |
+| SaaS Starter    | ₦50,000 (~$33)     | $5 (shared)  | High   |
+| SaaS Growth     | ₦150,000 (~$100)   | $15 (shared) | High   |
+| SaaS Enterprise | ₦500,000 (~$333)   | $50 (shared) | High   |
+| Dedicated VPS   | ₦1,000,000 (~$667) | $73          | ~9×    |
 
 ---
 

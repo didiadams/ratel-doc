@@ -14,34 +14,28 @@ The platform screens against **millions of entities** aggregated from:
 - FATF Blacklist / Greylist entities
 - 40+ additional international sources
 
-<Note>
-  **EU Consolidated Financial Sanctions** is temporarily excluded from the default
-  Watchman configuration. To re-enable it, obtain an `EU_CSL_TOKEN` from the
-  European Commission and add `eu_csl` to the `INCLUDED_LISTS` environment variable.
-</Note>
-
 ### How Names Are Matched
 
 The matching engine uses multi-algorithm entity resolution:
 
-| Algorithm | What It Does |
+| Algorithm                   | What It Does                                    |
 | --------------------------- | ----------------------------------------------- |
-| **Exact Match** | Case-normalized literal comparison |
-| **Jaro-Winkler** | Fuzzy string similarity (handles typos) |
-| **Phonetic Match** | Sound-alike matching (handles transliterations) |
-| **Fingerprint Levenshtein** | Edit distance on normalized name tokens |
-| **Country/DOB Penalty** | Reduces score when demographics don't match |
+| **Exact Match**             | Case-normalized literal comparison              |
+| **Jaro-Winkler**            | Fuzzy string similarity (handles typos)         |
+| **Phonetic Match**          | Sound-alike matching (handles transliterations) |
+| **Fingerprint Levenshtein** | Edit distance on normalized name tokens         |
+| **Country/DOB Penalty**     | Reduces score when demographics don't match     |
 
 **Threshold**: Only matches with ≥ 70% composite confidence are flagged.
 
 ### Score Assignment
 
-| Match Type | Risk Score | Outcome |
+| Match Type            | Risk Score | Outcome  |
 | --------------------- | ---------- | -------- |
-| Sanctions list match | **95** | BLOCK |
-| PEP match | **70** | ESCALATE |
-| Other watchlist match | **60** | REVIEW |
-| No match | **0** | APPROVE |
+| Sanctions list match  | **95**     | BLOCK    |
+| PEP match             | **70**     | ESCALATE |
+| Other watchlist match | **60**     | REVIEW   |
+| No match              | **0**      | APPROVE  |
 
 Both **sender** and **receiver** names are screened in parallel. PEP detection from this stage automatically feeds into CBN-004 PEP Screening.
 

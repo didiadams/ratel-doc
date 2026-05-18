@@ -9,27 +9,14 @@ Verifow sends transactional email alerts to keep compliance teams informed of cr
 
 ## Notification Events
 
-| Event                             | Recipients                       | Content                                                            |
-| --------------------------------- | -------------------------------- | ------------------------------------------------------------------ |
-| Transaction BLOCK/ESCALATE/REVIEW | Compliance Officers, Bank Admins | Risk level, score, amount, sender, triggered rules, dashboard link |
-| New user created                  | The new user                     | Welcome email with temporary login credentials                     |
-| Case assigned                     | Assigned officer                 | Case title, priority, due date, direct link                        |
-| Report approved                   | Report creator                   | Confirmation with XML download link                                |
-| KYC status change                 | Applicant                        | Verification progress updates                                      |
+| Event                             | Recipients                  | Content                                                            |
+| --------------------------------- | --------------------------- | ------------------------------------------------------------------ |
+| Transaction BLOCK/ESCALATE/REVIEW | Compliance Officers, Admins | Risk level, score, amount, sender, triggered rules, dashboard link |
+| New user created                  | The new user                | Welcome email with temporary login credentials                     |
+| Case assigned                     | Assigned officer            | Case title, priority, due date, direct link                        |
+| Report approved                   | Report creator              | Confirmation with XML download link                                |
+| KYC status change                 | Applicant                   | Verification progress updates                                      |
 
 ## Configuration
 
 No configuration is required for core alerts. Email addresses are pulled from user profiles.
-
-**In development mode** (no email API key configured), all emails are logged to the console instead of being sent.
-
-## Best Practices
-
-- Ensure user email addresses are kept current in the [Authentication](/modules/auth) module
-- Assign cases promptly to route email notifications to the right officer
-- Use the dashboard for detailed investigation — emails are summaries only
-
-<Warning>
-  Email alerts contain sensitive financial data. Ensure recipient inboxes are
-  secured and comply with your institution's data protection policies.
-</Warning>

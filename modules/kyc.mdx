@@ -56,10 +56,10 @@ Each tenant can independently configure how identity verification is performed.
 
 ### Provider Modes
 
-| Mode       | Description                                                                              |
-| ---------- | ---------------------------------------------------------------------------------------- |
-| `EMBEDDED` | Uses platform-managed providers (Prembly → Dojah fallback). Default for all new tenants. |
-| `BYOL`     | Uses the tenant's own KYC provider API, configured via JSON.                             |
+| Mode       | Description                                                   |
+| ---------- | ------------------------------------------------------------- |
+| `EMBEDDED` | Uses platform-managed providers. Default for all new tenants. |
+| `BYOL`     | Uses the tenant's own KYC provider API, configured via JSON.  |
 
 ### Switching Provider Mode
 
@@ -142,15 +142,15 @@ Create a new KYC application for a customer.
 
 **Request Body**
 
-| Field         | Type     | Required | Description                |
-| ------------- | -------- | -------- | -------------------------- |
-| `entityType`  | `string` | ✅       | `INDIVIDUAL` or `BUSINESS` |
-| `firstName`   | `string` | ✅       | Applicant first name       |
-| `lastName`    | `string` | ✅       | Applicant last name        |
-| `bvn`         | `string` |          | Bank Verification Number   |
-| `nin`         | `string` |          | National Identity Number   |
-| `phone`       | `string` |          | Mobile number with country code |
-| `email`       | `string` |          | Email address              |
+| Field         | Type     | Required | Description                         |
+| ------------- | -------- | -------- | ----------------------------------- |
+| `entityType`  | `string` | ✅       | `INDIVIDUAL` or `BUSINESS`          |
+| `firstName`   | `string` | ✅       | Applicant first name                |
+| `lastName`    | `string` | ✅       | Applicant last name                 |
+| `bvn`         | `string` |          | Bank Verification Number            |
+| `nin`         | `string` |          | National Identity Number            |
+| `phone`       | `string` |          | Mobile number with country code     |
+| `email`       | `string` |          | Email address                       |
 | `dateOfBirth` | `string` |          | ISO 8601 date (e.g. `"1990-03-15"`) |
 
 **Example Request**
@@ -205,25 +205,25 @@ Create a new KYB application for a corporate entity.
 
 **Request Body**
 
-| Field         | Type     | Required | Description                 |
-| ------------- | -------- | -------- | --------------------------- |
-| `companyName` | `string` | ✅       | Registered company name     |
-| `rcNumber`    | `string` |          | CAC registration number     |
-| `tin`         | `string` |          | Tax Identification Number   |
-| `address`     | `string` |          | Registered business address |
-| `incorporationDate` | `string` |    | ISO 8601 date               |
-| `directors`   | `array`  |          | Array of director objects   |
-| `directors[].name` | `string` | ✅   | Director full name          |
-| `directors[].bvn` | `string` |      | Director BVN                |
-| `directors[].nin` | `string` |      | Director NIN                |
-| `directors[].email` | `string` |    | Director email              |
-| `directors[].phone` | `string` |    | Director phone              |
-| `directors[].nationality` | `string` | | Director nationality       |
-| `beneficialOwners` | `array` |       | Array of beneficial owner objects |
-| `beneficialOwners[].name` | `string` | ✅ | Owner full name          |
-| `beneficialOwners[].percentage` | `number` | ✅ | Ownership percentage  |
-| `beneficialOwners[].bvn` | `string` |   | Owner BVN                 |
-| `beneficialOwners[].nin` | `string` |   | Owner NIN                 |
+| Field                           | Type     | Required | Description                       |
+| ------------------------------- | -------- | -------- | --------------------------------- |
+| `companyName`                   | `string` | ✅       | Registered company name           |
+| `rcNumber`                      | `string` |          | CAC registration number           |
+| `tin`                           | `string` |          | Tax Identification Number         |
+| `address`                       | `string` |          | Registered business address       |
+| `incorporationDate`             | `string` |          | ISO 8601 date                     |
+| `directors`                     | `array`  |          | Array of director objects         |
+| `directors[].name`              | `string` | ✅       | Director full name                |
+| `directors[].bvn`               | `string` |          | Director BVN                      |
+| `directors[].nin`               | `string` |          | Director NIN                      |
+| `directors[].email`             | `string` |          | Director email                    |
+| `directors[].phone`             | `string` |          | Director phone                    |
+| `directors[].nationality`       | `string` |          | Director nationality              |
+| `beneficialOwners`              | `array`  |          | Array of beneficial owner objects |
+| `beneficialOwners[].name`       | `string` | ✅       | Owner full name                   |
+| `beneficialOwners[].percentage` | `number` | ✅       | Ownership percentage              |
+| `beneficialOwners[].bvn`        | `string` |          | Owner BVN                         |
+| `beneficialOwners[].nin`        | `string` |          | Owner NIN                         |
 
 **Example Request**
 
@@ -415,11 +415,11 @@ Trigger BVN verification against the identity provider.
 
 **Request Body**
 
-| Field         | Type     | Required | Description               |
-| ------------- | -------- | -------- | ------------------------- |
-| `bvn`         | `string` | ✅       | BVN to verify (11 digits) |
-| `firstName`   | `string` | ✅       | First name for cross-match |
-| `lastName`    | `string` | ✅       | Last name for cross-match |
+| Field         | Type     | Required | Description                   |
+| ------------- | -------- | -------- | ----------------------------- |
+| `bvn`         | `string` | ✅       | BVN to verify (11 digits)     |
+| `firstName`   | `string` | ✅       | First name for cross-match    |
+| `lastName`    | `string` | ✅       | Last name for cross-match     |
 | `dateOfBirth` | `string` | ✅       | Date of birth for cross-match |
 
 **Example Request**
@@ -464,11 +464,11 @@ Trigger NIN verification.
 
 **Request Body**
 
-| Field         | Type     | Required | Description               |
-| ------------- | -------- | -------- | ------------------------- |
-| `nin`         | `string` | ✅       | NIN to verify (11 digits) |
-| `firstName`   | `string` | ✅       | First name for cross-match |
-| `lastName`    | `string` | ✅       | Last name for cross-match |
+| Field         | Type     | Required | Description                   |
+| ------------- | -------- | -------- | ----------------------------- |
+| `nin`         | `string` | ✅       | NIN to verify (11 digits)     |
+| `firstName`   | `string` | ✅       | First name for cross-match    |
+| `lastName`    | `string` | ✅       | Last name for cross-match     |
 | `dateOfBirth` | `string` | ✅       | Date of birth for cross-match |
 
 **Example Request**
@@ -513,10 +513,10 @@ Run a biometric liveness and face-match check.
 
 **Request Body**
 
-| Field                  | Type     | Required | Description                              |
-| ---------------------- | -------- | -------- | ---------------------------------------- |
-| `selfieImageBase64`    | `string` | ✅       | Base64-encoded selfie image (JPEG/PNG)   |
-| `documentImageBase64`  | `string` |          | Base64-encoded ID document for face-match |
+| Field                 | Type     | Required | Description                               |
+| --------------------- | -------- | -------- | ----------------------------------------- |
+| `selfieImageBase64`   | `string` | ✅       | Base64-encoded selfie image (JPEG/PNG)    |
+| `documentImageBase64` | `string` |          | Base64-encoded ID document for face-match |
 
 **Example Request**
 
@@ -609,8 +609,8 @@ Reject a KYC application that fails verification.
 
 **Request Body**
 
-| Field   | Type     | Required | Description          |
-| ------- | -------- | -------- | -------------------- |
+| Field    | Type     | Required | Description          |
+| -------- | -------- | -------- | -------------------- |
 | `reason` | `string` | ✅       | Reason for rejection |
 
 **Example Request**
@@ -653,13 +653,13 @@ Verify each director's identity via BVN/NIN against identity providers.
 
 **Request Body**
 
-| Field                     | Type     | Required | Description                     |
-| ------------------------- | -------- | -------- | ------------------------------- |
-| `directors`               | `array`  | ✅       | Array of director objects       |
-| `directors[].name`        | `string` | ✅       | Director full name              |
-| `directors[].nin`         | `string` |          | Director NIN                    |
-| `directors[].bvn`         | `string` |          | Director BVN                    |
-| `directors[].verified`    | `boolean`|          | Pre-verified flag               |
+| Field                  | Type      | Required | Description               |
+| ---------------------- | --------- | -------- | ------------------------- |
+| `directors`            | `array`   | ✅       | Array of director objects |
+| `directors[].name`     | `string`  | ✅       | Director full name        |
+| `directors[].nin`      | `string`  |          | Director NIN              |
+| `directors[].bvn`      | `string`  |          | Director BVN              |
+| `directors[].verified` | `boolean` |          | Pre-verified flag         |
 
 **Example Request**
 
@@ -682,7 +682,12 @@ curl -X POST /v1/kyc/kyb/applications/kyb_abc123/verify-directors \
   "data": {
     "allVerified": true,
     "directors": [
-      { "name": "John Doe", "nin": "12345678901", "bvn": "22012345678", "verified": true }
+      {
+        "name": "John Doe",
+        "nin": "12345678901",
+        "bvn": "22012345678",
+        "verified": true
+      }
     ],
     "newStatus": "DIRECTORS_VERIFIED"
   }
@@ -703,12 +708,12 @@ Screen beneficial owners against global sanctions and PEP watchlists.
 
 **Request Body**
 
-| Field                          | Type     | Required | Description                  |
-| ------------------------------ | -------- | -------- | ---------------------------- |
-| `beneficialOwners`             | `array`  | ✅       | Array of BO objects          |
-| `beneficialOwners[].name`      | `string` | ✅       | Owner full name              |
-| `beneficialOwners[].clean`     | `boolean`| ✅       | Pre-screened clean flag      |
-| `beneficialOwners[].hits`      | `array`  |          | Watchlist hits if not clean  |
+| Field                      | Type      | Required | Description                 |
+| -------------------------- | --------- | -------- | --------------------------- |
+| `beneficialOwners`         | `array`   | ✅       | Array of BO objects         |
+| `beneficialOwners[].name`  | `string`  | ✅       | Owner full name             |
+| `beneficialOwners[].clean` | `boolean` | ✅       | Pre-screened clean flag     |
+| `beneficialOwners[].hits`  | `array`   |          | Watchlist hits if not clean |
 
 **Example Request**
 
@@ -730,9 +735,7 @@ curl -X POST /v1/kyc/kyb/applications/kyb_abc123/screen-beneficial-owners \
   "success": true,
   "data": {
     "allClean": true,
-    "beneficialOwners": [
-      { "name": "Jane Smith", "clean": true, "hits": [] }
-    ],
+    "beneficialOwners": [{ "name": "Jane Smith", "clean": true, "hits": [] }],
     "newStatus": "BOS_VERIFIED"
   }
 }
@@ -765,7 +768,9 @@ Final approval of a KYB application. Requires `BANK_ADMIN` or `COMPLIANCE_OFFICE
 ```
 
 <Note>
-  Approving a KYB application updates the business entity's risk profile. Future transactions from this entity will reflect the `APPROVED` status (score 0, no KYB-related risk).
+  Approving a KYB application updates the business entity's risk profile. Future
+  transactions from this entity will reflect the `APPROVED` status (score 0, no
+  KYB-related risk).
 </Note>
 
 ---

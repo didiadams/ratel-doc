@@ -1,6 +1,6 @@
 ---
-title: 'KYC Verification'
-description: 'How KYC status affects transaction screening and risk scoring'
+title: "KYC Verification"
+description: "How KYC status affects transaction screening and risk scoring"
 ---
 
 Every transaction checks the sender's KYC verification status using their BVN. The result feeds directly into the screening pipeline's KYC Verification engine.
@@ -17,10 +17,10 @@ Tenants can switch to **BYOL mode** and plug in their own KYC provider via a JSO
 
 **How it works:**
 
-| Mode | Provider | Configuration |
-|------|----------|---------------|
-| `EMBEDDED` | Platform-managed (Prembly → Dojah fallback) | None required |
-| `BYOL` | Tenant-managed via `CustomProvider` | JSON config stored per-tenant |
+| Mode       | Provider                                    | Configuration                 |
+| ---------- | ------------------------------------------- | ----------------------------- |
+| `EMBEDDED` | Platform-managed (Prembly → Dojah fallback) | None required                 |
+| `BYOL`     | Tenant-managed via `CustomProvider`         | JSON config stored per-tenant |
 
 **BYOL Configuration JSON** (stored in `Tenant.kycProviderConfig`):
 
@@ -48,40 +48,40 @@ Tenants can switch to **BYOL mode** and plug in their own KYC provider via a JSO
 
 **Key mapping fields:**
 
-| Field | Purpose |
-|-------|---------|
-| `requestMapping` | Maps internal field names to provider API fields. Use `{{nin}}` for dynamic values or `'NIN'` for literals. |
-| `responseMapping` | JSON paths to extract `firstName` and `lastName` from the provider response. |
-| `matchConfidence` | Minimum confidence (0–100) to consider a name match successful. |
+| Field             | Purpose                                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------------------------- |
+| `requestMapping`  | Maps internal field names to provider API fields. Use `{{nin}}` for dynamic values or `'NIN'` for literals. |
+| `responseMapping` | JSON paths to extract `firstName` and `lastName` from the provider response.                                |
+| `matchConfidence` | Minimum confidence (0–100) to consider a name match successful.                                             |
 
-Bank admins can switch modes and edit the BYOL config from **Dashboard → Settings → KYC Provider**.
+Admins can switch modes and edit the BYOL config from **Dashboard → Settings → KYC Provider**.
 
 ## KYC Application Statuses
 
 Applications progress through the following statuses during verification:
 
-| Status | Meaning |
-|--------|---------|
-| `PENDING` | Submitted, awaiting document upload |
-| `DOCUMENT_UPLOADED` | ID documents uploaded |
-| `NIN_VERIFIED` | NIN check passed against provider |
-| `BVN_VERIFIED` | BVN check passed against provider |
-| `LIVENESS_PASSED` | Biometric liveness and face-match passed |
-| `APPROVED` | Fully verified by compliance officer |
-| `REJECTED` | Failed verification or fraudulent documents |
-| `EXPIRED` | Verification expired, re-verification required |
+| Status              | Meaning                                        |
+| ------------------- | ---------------------------------------------- |
+| `PENDING`           | Submitted, awaiting document upload            |
+| `DOCUMENT_UPLOADED` | ID documents uploaded                          |
+| `NIN_VERIFIED`      | NIN check passed against provider              |
+| `BVN_VERIFIED`      | BVN check passed against provider              |
+| `LIVENESS_PASSED`   | Biometric liveness and face-match passed       |
+| `APPROVED`          | Fully verified by compliance officer           |
+| `REJECTED`          | Failed verification or fraudulent documents    |
+| `EXPIRED`           | Verification expired, re-verification required |
 
 ## Screening Impact
 
 When a transaction is screened, the KYC Verification engine evaluates the sender's status. If no KYC application exists, the engine flags it accordingly.
 
-| Condition | Score | Outcome | What Happens |
-|-----------|-------|---------|--------------|
-| **No KYC record** | 40 | `REVIEW` | Officer notified, customer prompted to complete KYC |
-| **PENDING / DOCUMENT_UPLOADED** | 20 | `APPROVE` | Application in progress — transaction proceeds |
-| **NIN_VERIFIED / BVN_VERIFIED / LIVENESS_PASSED** | 0 | `APPROVE` | Partially verified — no risk contribution |
-| **APPROVED** | 0 | `APPROVE` | Fully verified — no risk contribution |
-| **EXPIRED** | 50 | `REVIEW` | Officer notified, re-verification required |
-| **REJECTED** | 70 | `ESCALATE` | Case created, officer notified, enhanced due diligence required |
+| Condition                                         | Score | Outcome    | What Happens                                                    |
+| ------------------------------------------------- | ----- | ---------- | --------------------------------------------------------------- |
+| **No KYC record**                                 | 40    | `REVIEW`   | Officer notified, customer prompted to complete KYC             |
+| **PENDING / DOCUMENT_UPLOADED**                   | 20    | `APPROVE`  | Application in progress — transaction proceeds                  |
+| **NIN_VERIFIED / BVN_VERIFIED / LIVENESS_PASSED** | 0     | `APPROVE`  | Partially verified — no risk contribution                       |
+| **APPROVED**                                      | 0     | `APPROVE`  | Fully verified — no risk contribution                           |
+| **EXPIRED**                                       | 50    | `REVIEW`   | Officer notified, re-verification required                      |
+| **REJECTED**                                      | 70    | `ESCALATE` | Case created, officer notified, enhanced due diligence required |
 
 > **Note**: If `senderBvn` is not provided in the request, KYC status defaults to "No KYC record" (score 40, `REVIEW`). Always include the sender's BVN for accurate KYC risk scoring.

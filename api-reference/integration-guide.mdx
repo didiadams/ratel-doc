@@ -1314,30 +1314,29 @@ Every webhook includes an `X-Ratel-Signature` header — an HMAC-SHA256 hash of 
 const crypto = require('crypto');
 
 app.post('/ratel/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
-const signature = req.headers['x-ratel-signature'];
-const hash = crypto
-.createHmac('sha256', process.env.RATEL_WEBHOOK_SECRET)
-.update(req.body)
-.digest('hex');
+  const signature = req.headers['x-ratel-signature'];
+  const hash = crypto
+    .createHmac('sha256', process.env.RATEL_WEBHOOK_SECRET)
+    .update(req.body)
+    .digest('hex');
 
-if (`sha256=${hash}` !== signature) {
-return res.status(401).send('Invalid signature');
-}
+  if (`sha256=${hash}` !== signature) {
+    return res.status(401).send('Invalid signature');
+  }
 
-const event = JSON.parse(req.body);
+  const event = JSON.parse(req.body);
 
-if (event.event === 'case.resolved') {
-if (event.data.status === 'RESOLVED_FALSE_POSITIVE') {
-// Unfreeze the transaction in your system
-} else if (event.data.status === 'RESOLVED_TRUE_POSITIVE') {
-// Permanently block and escalate
-}
-}
+  if (event.event === 'case.resolved') {
+    if (event.data.status === 'RESOLVED_FALSE_POSITIVE') {
+      // Unfreeze the transaction in your system
+    } else if (event.data.status === 'RESOLVED_TRUE_POSITIVE') {
+      // Permanently block and escalate
+    }
+  }
 
-res.status(200).send('OK');
+  res.status(200).send('OK');
 });
-
-````
+```
 
 ```python Python (Flask)
 import hmac
@@ -1370,7 +1369,7 @@ def handle_webhook():
             pass
 
     return 'OK', 200
-````
+```
 
 </CodeGroup>
 

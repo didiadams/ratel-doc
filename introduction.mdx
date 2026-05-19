@@ -15,7 +15,7 @@ Verifow processes every financial transaction through a **multi-layer screening 
 | ------------------------- | ----------------------------------------------------------------------------------------- |
 | **Fail-Open**             | If the sanctions engine is unavailable, transactions proceed (logged for audit)           |
 | **Highest-Severity-Wins** | If ANY engine says BLOCK, final outcome is BLOCK                                          |
-| **Regulatory Override**   | CBN rules carry 1.5× weight — cannot be disabled                                          |
+| **Regulatory Override**   | CBN rules carry 1.5× weight -cannot be disabled                                          |
 | **Async Side-Effects**    | Email, case creation, and reports never block the API response                            |
 | **Immutable Audit Trail** | Every screening event is logged with full context for CBN inspection                      |
 | **Per-Tenant KYC**        | Each bank chooses embedded providers or BYOL (Bring Your Own License)                     |
@@ -27,7 +27,7 @@ Verifow processes every financial transaction through a **multi-layer screening 
 | ----------------------------- | ------------------------------------------------------------------------------- |
 | **Regulatory Compliance**     | 7 mandatory CBN AML/CFT rules (always active, cannot be disabled)               |
 | **Sanctions & PEP Screening** | Real-time screening against entities from UN, OFAC, UK, Interpol                |
-| **KYC Verification**          | Validates sender's KYC status — flags rejected/expired/missing verification     |
+| **KYC Verification**          | Validates sender's KYC status -flags rejected/expired/missing verification     |
 | **KYB Verification**          | Validates corporate sender's CAC registration, directors, and beneficial owners |
 | **Custom Rules**              | Configurable detection rules (amount, name, pattern matching)                   |
 | **Decision Engine**           | Scenario-based ML risk scoring                                                  |

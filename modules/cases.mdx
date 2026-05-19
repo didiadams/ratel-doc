@@ -80,7 +80,7 @@ curl -X POST /v1/cases \
   -d '{
     "type": "SUSPICIOUS_TRANSACTION",
     "priority": "HIGH",
-    "title": "Large cash deposit — possible structuring",
+    "title": "Large cash deposit -possible structuring",
     "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours",
     "relatedTransactionId": "fae50ecb-d997-4700-bae7-49650678bb06",
     "tags": ["structuring", "cash"]
@@ -97,7 +97,7 @@ const response = await fetch("/v1/cases", {
   body: JSON.stringify({
     type: "SUSPICIOUS_TRANSACTION",
     priority: "HIGH",
-    title: "Large cash deposit — possible structuring",
+    title: "Large cash deposit -possible structuring",
     description: "Customer made 4 deposits totaling ₦4.8M in 3 hours",
     relatedTransactionId: "fae50ecb-d997-4700-bae7-49650678bb06",
     tags: ["structuring", "cash"],
@@ -118,7 +118,7 @@ response = requests.post(
     json={
         "type": "SUSPICIOUS_TRANSACTION",
         "priority": "HIGH",
-        "title": "Large cash deposit — possible structuring",
+        "title": "Large cash deposit -possible structuring",
         "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours",
         "relatedTransactionId": "fae50ecb-d997-4700-bae7-49650678bb06",
         "tags": ["structuring", "cash"]
@@ -129,7 +129,7 @@ result = response.json()
 
 </CodeGroup>
 
-**Example Response — 201 Created**
+**Example Response -201 Created**
 
 ```json
 {
@@ -139,7 +139,7 @@ result = response.json()
     "caseNumber": "CASE-2026-00001",
     "type": "SUSPICIOUS_TRANSACTION",
     "priority": "HIGH",
-    "title": "Large cash deposit — possible structuring",
+    "title": "Large cash deposit -possible structuring",
     "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours",
     "status": "OPEN",
     "assignedTo": null,
@@ -163,10 +163,10 @@ Retrieve cases with powerful filtering options.
 
 | Parameter    | Type      | Default | Description                                                                                                         |
 | ------------ | --------- | ------- | ------------------------------------------------------------------------------------------------------------------- |
-| `status`     | `string`  | —       | `OPEN`, `IN_PROGRESS`, `PENDING_REVIEW`, `ESCALATED`, `RESOLVED_TRUE_POSITIVE`, `RESOLVED_FALSE_POSITIVE`, `CLOSED` |
-| `type`       | `string`  | —       | Filter by case type                                                                                                 |
-| `priority`   | `string`  | —       | `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`                                                                                 |
-| `assigneeId` | `string`  | —       | Filter by assigned user                                                                                             |
+| `status`     | `string`  | -      | `OPEN`, `IN_PROGRESS`, `PENDING_REVIEW`, `ESCALATED`, `RESOLVED_TRUE_POSITIVE`, `RESOLVED_FALSE_POSITIVE`, `CLOSED` |
+| `type`       | `string`  | -      | Filter by case type                                                                                                 |
+| `priority`   | `string`  | -      | `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`                                                                                 |
+| `assigneeId` | `string`  | -      | Filter by assigned user                                                                                             |
 | `page`       | `integer` | `1`     | Page number                                                                                                         |
 | `limit`      | `integer` | `20`    | Items per page                                                                                                      |
 
@@ -177,7 +177,7 @@ curl -X GET "/v1/cases?status=OPEN&priority=CRITICAL&page=1&limit=20" \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -189,7 +189,7 @@ curl -X GET "/v1/cases?status=OPEN&priority=CRITICAL&page=1&limit=20" \
         "caseNumber": "CASE-2026-00001",
         "type": "SUSPICIOUS_TRANSACTION",
         "priority": "HIGH",
-        "title": "Large cash deposit — possible structuring",
+        "title": "Large cash deposit -possible structuring",
         "status": "OPEN",
         "assignedTo": null,
         "tags": ["structuring", "cash"],
@@ -226,7 +226,7 @@ curl -X GET /v1/cases/case_12345abcde \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -236,7 +236,7 @@ curl -X GET /v1/cases/case_12345abcde \
     "caseNumber": "CASE-2026-00001",
     "type": "SUSPICIOUS_TRANSACTION",
     "priority": "HIGH",
-    "title": "Large cash deposit — possible structuring",
+    "title": "Large cash deposit -possible structuring",
     "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours",
     "status": "OPEN",
     "assignedTo": null,
@@ -313,7 +313,7 @@ curl -X PATCH /v1/cases/case_12345abcde/status \
   }'
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -323,7 +323,7 @@ curl -X PATCH /v1/cases/case_12345abcde/status \
     "caseNumber": "CASE-2026-00001",
     "type": "SUSPICIOUS_TRANSACTION",
     "priority": "HIGH",
-    "title": "Large cash deposit — possible structuring",
+    "title": "Large cash deposit -possible structuring",
     "status": "IN_PROGRESS",
     "assignedTo": null,
     "relatedTransactionId": "fae50ecb-d997-4700-bae7-49650678bb06",
@@ -370,7 +370,7 @@ curl -X PATCH /v1/cases/case_12345abcde/assign \
   }'
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -380,7 +380,7 @@ curl -X PATCH /v1/cases/case_12345abcde/assign \
     "caseNumber": "CASE-2026-00001",
     "type": "SUSPICIOUS_TRANSACTION",
     "priority": "HIGH",
-    "title": "Large cash deposit — possible structuring",
+    "title": "Large cash deposit -possible structuring",
     "status": "OPEN",
     "assignedTo": "550e8400-e29b-41d4-a716-446655440000",
     "relatedTransactionId": "fae50ecb-d997-4700-bae7-49650678bb06",
@@ -422,7 +422,7 @@ curl -X POST /v1/cases/case_12345abcde/notes \
   }'
 ```
 
-**Example Response — 201 Created**
+**Example Response -201 Created**
 
 ```json
 {

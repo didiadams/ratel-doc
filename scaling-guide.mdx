@@ -115,7 +115,7 @@ DATABASE_URL="postgresql://ratel:PASSWORD@10.124.0.3:5432/ratel_security"
 **Changes:**
 
 - Run 2–3 app servers behind a load balancer
-- Use **sticky sessions** (dashboard uses JWT, so stateless — any server works)
+- Use **sticky sessions** (dashboard uses JWT, so stateless -any server works)
 - Add Postgres read replica for analytics/reporting queries
 - Redis stays on each app server (caches are independent) or move to Redis Cloud / Upstash
 
@@ -296,10 +296,10 @@ For 50+ customers, ship logs to a central service:
 
 Same as SaaS, plus:
 
-- **Physical isolation** — no shared server with other tenants
-- **Custom domain + SSL** — bank-branded compliance portal
-- **IP whitelisting** — restrict dashboard access to bank office IPs
-- **Air-gapped option** — no internet egress except for sanctions list updates
+- **Physical isolation** -no shared server with other tenants
+- **Custom domain + SSL** -bank-branded compliance portal
+- **IP whitelisting** -restrict dashboard access to bank office IPs
+- **Air-gapped option** -no internet egress except for sanctions list updates
 
 ---
 

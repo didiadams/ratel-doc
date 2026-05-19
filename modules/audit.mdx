@@ -5,7 +5,7 @@ description: "View immutable audit logs for compliance and regulatory inspection
 
 ## Overview
 
-The Audit module provides a complete, immutable record of every significant action within your tenant. Every screening event, case update, rule change, and user management action is logged with full context — who did what, when, and from where.
+The Audit module provides a complete, immutable record of every significant action within your tenant. Every screening event, case update, rule change, and user management action is logged with full context -who did what, when, and from where.
 
 ## Common Workflows
 
@@ -36,11 +36,11 @@ Retrieve audit trail entries with filtering and pagination. The list view exclud
 
 | Parameter      | Type      | Default | Description                                                             |
 | -------------- | --------- | ------- | ----------------------------------------------------------------------- |
-| `resourceType` | `string`  | —       | `transactions`, `cases`, `rules`, `users`, `reports`, `kyc`, `api_keys` |
-| `action`       | `string`  | —       | `CREATE`, `UPDATE`, `DELETE`, `SCREEN`, `APPROVE`, `LOGIN`, `VERIFY`    |
-| `actorEmail`   | `string`  | —       | Filter by acting user email                                             |
-| `from`         | `string`  | —       | ISO 8601 start date                                                     |
-| `to`           | `string`  | —       | ISO 8601 end date                                                       |
+| `resourceType` | `string`  | -      | `transactions`, `cases`, `rules`, `users`, `reports`, `kyc`, `api_keys` |
+| `action`       | `string`  | -      | `CREATE`, `UPDATE`, `DELETE`, `SCREEN`, `APPROVE`, `LOGIN`, `VERIFY`    |
+| `actorEmail`   | `string`  | -      | Filter by acting user email                                             |
+| `from`         | `string`  | -      | ISO 8601 start date                                                     |
+| `to`           | `string`  | -      | ISO 8601 end date                                                       |
 | `page`         | `integer` | `1`     | Page number                                                             |
 | `limit`        | `integer` | `50`    | Items per page (max 500)                                                |
 
@@ -51,7 +51,7 @@ curl -X GET "/v1/audit/events?resourceType=cases&action=UPDATE&from=2026-05-01T0
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -111,7 +111,7 @@ curl -X GET /v1/audit/verify \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -124,7 +124,7 @@ curl -X GET /v1/audit/verify \
 }
 ```
 
-**Example Response — Chain Broken**
+**Example Response -Chain Broken**
 
 ```json
 {

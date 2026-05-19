@@ -75,13 +75,13 @@ curl -X POST /v1/reports/sar \
   -H "Content-Type: application/json" \
   -d '{
     "caseId": "case_12345abcde",
-    "title": "Structuring Pattern — 4 Deposits in 3 Hours",
+    "title": "Structuring Pattern -4 Deposits in 3 Hours",
     "description": "Customer made 4 deposits totaling ₦4.8M in 3 hours, just below the CTR threshold.",
     "suspicionType": "STRUCTURING"
   }'
 ```
 
-**Example Response — 201 Created**
+**Example Response -201 Created**
 
 ```json
 {
@@ -91,7 +91,7 @@ curl -X POST /v1/reports/sar \
     "tenantId": "660e8400-e29b-41d4-a716-446655440001",
     "reportType": "SAR",
     "reportNumber": "SAR-2026-00001",
-    "title": "Structuring Pattern — 4 Deposits in 3 Hours",
+    "title": "Structuring Pattern -4 Deposits in 3 Hours",
     "status": "DRAFT",
     "xmlContent": null,
     "jsonData": null,
@@ -130,7 +130,7 @@ curl -X POST /v1/reports/ctr \
   -H "Content-Type: application/json" \
   -d '{
     "transactionId": "tx_cash_999",
-    "title": "Cash Deposit ₦5M — CTR Filing",
+    "title": "Cash Deposit ₦5M -CTR Filing",
     "amount": 5000000,
     "currency": "NGN",
     "customerId": "cust_001",
@@ -138,7 +138,7 @@ curl -X POST /v1/reports/ctr \
   }'
 ```
 
-**Example Response — 201 Created**
+**Example Response -201 Created**
 
 ```json
 {
@@ -147,7 +147,7 @@ curl -X POST /v1/reports/ctr \
     "id": "rep_002",
     "reportType": "CTR",
     "reportNumber": "CTR-2026-00001",
-    "title": "Cash Deposit ₦5M — CTR Filing",
+    "title": "Cash Deposit ₦5M -CTR Filing",
     "status": "DRAFT",
     "relatedCaseId": null,
     "generatedBy": "550e8400-e29b-41d4-a716-446655440000",
@@ -184,7 +184,7 @@ curl -X POST /v1/reports/ftr \
   -H "Content-Type: application/json" \
   -d '{
     "transactionId": "tx_intl_444",
-    "title": "International Transfer — School Fees",
+    "title": "International Transfer -School Fees",
     "foreignAmount": 10000,
     "foreignCurrency": "USD",
     "destinationCountry": "US",
@@ -192,7 +192,7 @@ curl -X POST /v1/reports/ftr \
   }'
 ```
 
-**Example Response — 201 Created**
+**Example Response -201 Created**
 
 ```json
 {
@@ -201,7 +201,7 @@ curl -X POST /v1/reports/ftr \
     "id": "rep_003",
     "reportType": "FTR",
     "reportNumber": "FTR-2026-00001",
-    "title": "International Transfer — School Fees",
+    "title": "International Transfer -School Fees",
     "status": "DRAFT",
     "relatedCaseId": null,
     "generatedBy": "550e8400-e29b-41d4-a716-446655440000",
@@ -223,8 +223,8 @@ Retrieve generated reports with filtering. The list view excludes `xmlContent` a
 
 | Parameter | Type      | Default | Description                                                |
 | --------- | --------- | ------- | ---------------------------------------------------------- |
-| `type`    | `string`  | —       | `SAR`, `CTR`, `FTR`                                        |
-| `status`  | `string`  | —       | `DRAFT`, `PENDING_REVIEW`, `APPROVED`, `FILED`, `REJECTED` |
+| `type`    | `string`  | -      | `SAR`, `CTR`, `FTR`                                        |
+| `status`  | `string`  | -      | `DRAFT`, `PENDING_REVIEW`, `APPROVED`, `FILED`, `REJECTED` |
 | `page`    | `integer` | `1`     | Page number                                                |
 | `limit`   | `integer` | `20`    | Items per page                                             |
 
@@ -235,7 +235,7 @@ curl -X GET "/v1/reports?type=SAR&status=DRAFT&page=1&limit=10" \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -246,7 +246,7 @@ curl -X GET "/v1/reports?type=SAR&status=DRAFT&page=1&limit=10" \
         "id": "rep_001",
         "reportType": "SAR",
         "reportNumber": "SAR-2026-00001",
-        "title": "Structuring Pattern — 4 Deposits in 3 Hours",
+        "title": "Structuring Pattern -4 Deposits in 3 Hours",
         "status": "DRAFT",
         "generatedBy": "550e8400-e29b-41d4-a716-446655440000",
         "approvedBy": null,
@@ -282,7 +282,7 @@ curl -X GET /v1/reports/rep_001 \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -292,7 +292,7 @@ curl -X GET /v1/reports/rep_001 \
     "tenantId": "660e8400-e29b-41d4-a716-446655440001",
     "reportType": "SAR",
     "reportNumber": "SAR-2026-00001",
-    "title": "Structuring Pattern — 4 Deposits in 3 Hours",
+    "title": "Structuring Pattern -4 Deposits in 3 Hours",
     "status": "APPROVED",
     "xmlContent": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Report>...</Report>",
     "jsonData": {
@@ -330,7 +330,7 @@ curl -X GET /v1/reports/rep_001/xml \
   -H "Accept: application/xml"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -384,7 +384,7 @@ curl -X PATCH /v1/reports/rep_001/approve \
   }'
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -422,7 +422,7 @@ curl -X PATCH /v1/reports/rep_001/file \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {

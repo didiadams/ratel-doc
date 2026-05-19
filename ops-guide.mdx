@@ -25,7 +25,7 @@ curl http://localhost:3001/api/v1/health
 curl http://localhost:8084/ping
 ```
 
-Expected output of `docker compose ps` — all should show `running`:
+Expected output of `docker compose ps` -all should show `running`:
 
 | Container              | Public Port(s)               | Notes                      |
 | ---------------------- | ---------------------------- | -------------------------- |
@@ -63,13 +63,13 @@ docker compose up -d ratel-app
 
 The `start.sh` entrypoint inside the container now runs this sequence automatically:
 
-1. **`prisma migrate deploy`** — Applies any committed migration files
-2. **`prisma db push`** — Syncs any schema changes that lack migration files (safety net)
-3. **`prisma db seed`** — Seeds default data if fresh database
+1. **`prisma migrate deploy`** -Applies any committed migration files
+2. **`prisma db push`** -Syncs any schema changes that lack migration files (safety net)
+3. **`prisma db seed`** -Seeds default data if fresh database
 4. **Start Next.js dashboard** (background, port 4000)
 5. **Start NestJS API** (foreground, port 3001)
 
-> **Note:** The old `start.sh` had a bug where `db push` never ran if `migrate deploy` returned exit code 0. This has been fixed — both commands now run unconditionally.
+> **Note:** The old `start.sh` had a bug where `db push` never ran if `migrate deploy` returned exit code 0. This has been fixed -both commands now run unconditionally.
 
 ---
 
@@ -149,7 +149,7 @@ docker compose exec -T ratel-postgres \
 
 ### Re-seed the Database
 
-The seed script is idempotent — it skips existing records:
+The seed script is idempotent -it skips existing records:
 
 ```bash
 docker compose exec ratel-app \
@@ -222,18 +222,18 @@ docker compose up -d --force-recreate ratel-app
 
 | Variable                   | What It Does                                                       |
 | -------------------------- | ------------------------------------------------------------------ |
-| `NEXT_PUBLIC_API_URL`      | Browser-facing API URL — must match your public IP or domain       |
+| `NEXT_PUBLIC_API_URL`      | Browser-facing API URL -must match your public IP or domain       |
 | `DASHBOARD_URL`            | Allowed CORS origin for the API                                    |
 | `DEFAULT_ADMIN_EMAIL`      | Email used when seeding the super admin                            |
 | `DEFAULT_ADMIN_PASSWORD`   | Password used when seeding the super admin                         |
-| `JWT_SECRET`               | Signs access tokens — never change on a live system                |
-| `JWT_REFRESH_SECRET`       | Signs refresh tokens — never change on a live system               |
+| `JWT_SECRET`               | Signs access tokens -never change on a live system                |
+| `JWT_REFRESH_SECRET`       | Signs refresh tokens -never change on a live system               |
 | `DATABASE_PASSWORD`        | Postgres password                                                  |
 | `LOG_LEVEL`                | `info` (default) · `debug` · `trace`                               |
 | `RESEND_API_KEY`           | Email delivery via Resend                                          |
-| `PREMBLY_API_KEY`          | Identity verification (NIN/BVN) — embedded mode                    |
+| `PREMBLY_API_KEY`          | Identity verification (NIN/BVN) -embedded mode                    |
 | `DOJAH_API_KEY`            | Fallback identity verification                                     |
-| `CAC_API_KEY`              | Corporate Affairs Commission lookup — set for live KYB             |
+| `CAC_API_KEY`              | Corporate Affairs Commission lookup -set for live KYB             |
 | `WATCHMAN_API_URL`         | Moov Watchman internal URL (default: `http://ratel-watchman:8084`) |
 | `WATCHMAN_MATCH_THRESHOLD` | Fuzzy match threshold 0–1 (default: `0.85`)                        |
 | `USE_MARBLE`               | Enable Marble decision engine (`true`/`false`)                     |

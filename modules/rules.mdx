@@ -161,7 +161,7 @@ result = response.json()
 
 </CodeGroup>
 
-**Example Response — 201 Created**
+**Example Response -201 Created**
 
 ```json
 {
@@ -204,8 +204,8 @@ Retrieve all rules including CBN built-ins and custom rules.
 
 | Parameter  | Type      | Default | Description                             |
 | ---------- | --------- | ------- | --------------------------------------- |
-| `status`   | `string`  | —       | `DRAFT`, `ACTIVE`, `PAUSED`, `ARCHIVED` |
-| `ruleType` | `string`  | —       | `CUSTOM`, `CBN_BUILTIN`                 |
+| `status`   | `string`  | -      | `DRAFT`, `ACTIVE`, `PAUSED`, `ARCHIVED` |
+| `ruleType` | `string`  | -      | `CUSTOM`, `CBN_BUILTIN`                 |
 | `page`     | `integer` | `1`     | Page number                             |
 | `limit`    | `integer` | `20`    | Items per page                          |
 
@@ -216,7 +216,7 @@ curl -X GET "/v1/rules?status=ACTIVE&page=1&limit=20" \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -267,7 +267,7 @@ curl -X GET /v1/rules/rule_789xyz \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -337,7 +337,7 @@ curl -X PATCH /v1/rules/rule_789xyz \
   }'
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -385,7 +385,7 @@ curl -X PATCH /v1/rules/rule_789xyz/activate \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -418,7 +418,7 @@ curl -X PATCH /v1/rules/rule_789xyz/pause \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -450,7 +450,7 @@ curl -X DELETE /v1/rules/rule_789xyz \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {

@@ -21,6 +21,8 @@ A tenant represents your organization within Verifow. All your transactions, cas
 | **Engine Configuration**   | Risk weights and thresholds can be tuned per tenant                                  |
 | **Auto-Seeded Rules**      | New tenants automatically receive the 7 CBN mandatory rules                          |
 | **KYC Provider Selection** | Each tenant chooses between embedded providers or BYOL (Bring Your Own License)      |
+| **KYC Trust Mode**         | Controls how KYC status is resolved: STRICT, HYBRID, or EXTERNAL                      |
+| **BYOL Fallback Mode**     | Defines behavior when the BYOL provider is unavailable                                |
 
 ## Data Boundaries
 
@@ -41,7 +43,7 @@ Each tenant independently controls how customer identity verification is perform
 
 ### Provider Modes
 
-| Mode       | Description                                           | Use Case                                      |
+| Mode       | Description                                           | Use Case-                                    |
 | ---------- | ----------------------------------------------------- | --------------------------------------------- |
 | `EMBEDDED` | Platform-managed providers (Prembly → Dojah fallback) | Default — no setup required                   |
 | `BYOL`     | Tenant provides their own KYC API credentials         | Institutions with existing provider contracts |
@@ -50,17 +52,40 @@ Each tenant independently controls how customer identity verification is perform
 
 `BANK_ADMIN` users can configure BYOL from **Dashboard → Settings → KYC Provider**:
 
-1. Select **BYOL** from the mode dropdown.
-2. Enter your provider details:
-   - **Provider Name** — e.g., "Smile Identity"
-   - **Base URL** — Your provider's API root
-   - **API Key / App ID** — Authentication credentials
-   - **Endpoints** — Paths for NIN, BVN, and Liveness checks
-   - **Response Mapping** — JSON paths to extract first/last names
+1. Select **BYOL** from-he mode dropdown.
+2. Enter your prov-er details:
+   - **Provider Name** — e-., "Smile Identity"
+   - **Base URL** —-our provider's API root
+   - **API Key / App ID** -Authentication credentials
+   - **Endpoints** — Paths-or NIN, BVN, and Liveness checks
+   - **R-ponse Mapping** — JSON paths to extract first/last names
    - **Match Confidence** — Threshold for name match success (0–100)
 3. Save — new verifications immediately use your provider.
 
 The configuration is stored securely as JSON in `Tenant.kycProviderConfig` and is never exposed to other tenants.
+
+## KYC Trust Mode
+
+Controls how KYC status is resolved during transaction screening:
+
+| Mode       | Description                                                                  |
+| ---------- | ---------------------------------------------------------------------------- |
+| `STRICT`   | **Default.** KYC records must exist in Ratel's DB. Payload KYC is ignored.   |
+| `HYBRID`   | Uses payload KYC if provided, falls back to DB lookup.                       |
+| `EXTERNAL` | Requires KYC status in every transaction payload. No local DB lookup.        |
+
+Managed via `PATCH /api/v1/tenants/me` with `kycTrustMode`.
+
+## BYOL Fallback Mode
+
+Defines behavior when the BYOL provider is unavailable:
+
+| Mode             | Description                                                              |
+| ---------------- | ------------------------------------------------------------------------ |
+| `NONE`           | **Default.** Returns `ServiceUnavailableException`.                      |
+| `WALLET_RESERVE` | Falls back to the embedded provider if the wallet has available funds.   |
+
+Managed via `PATCH /api/v1/tenants/me` with `byolFallbackMode`.
 
 ## Automated VPS Provisioning
 

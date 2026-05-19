@@ -85,7 +85,7 @@ data = response.json()
 
 </CodeGroup>
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -98,7 +98,7 @@ data = response.json()
 }
 ```
 
-**Example Response — 401 Unauthorized**
+**Example Response -401 Unauthorized**
 
 ```json
 {
@@ -130,7 +130,7 @@ curl -X POST /v1/auth/refresh \
   -d '{ "refreshToken": "eyJhbG..." }'
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -161,7 +161,7 @@ curl -X GET /v1/auth/me \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -198,7 +198,7 @@ Retrieve all users within your tenant.
 | --------- | --------- | ------- | ------------------------ |
 | `page`    | `integer` | `1`     | Page number              |
 | `limit`   | `integer` | `50`    | Items per page (max 100) |
-| `role`    | `string`  | —       | Filter by role           |
+| `role`    | `string`  | -      | Filter by role           |
 
 **Example Request**
 
@@ -207,7 +207,7 @@ curl -X GET "/v1/auth/users?page=1&limit=10" \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -264,7 +264,7 @@ curl -X POST /v1/auth/users \
   }'
 ```
 
-**Example Response — 201 Created**
+**Example Response -201 Created**
 
 ```json
 {
@@ -282,7 +282,7 @@ curl -X POST /v1/auth/users \
 }
 ```
 
-**Example Response — 409 Conflict**
+**Example Response -409 Conflict**
 
 ```json
 {
@@ -329,7 +329,7 @@ curl -X PATCH /v1/auth/users/770e8400-e29b-41d4-a716-446655440002 \
   }'
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -366,7 +366,7 @@ curl -X DELETE /v1/auth/users/770e8400-e29b-41d4-a716-446655440002 \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {

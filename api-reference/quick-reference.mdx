@@ -79,7 +79,7 @@ All endpoints are prefixed with `/api/v1/` and require `Authorization: Bearer <t
 
 | Endpoint      | Methods        | Description                                           |
 | ------------- | -------------- | ----------------------------------------------------- |
-| `/tenants/me` | `GET`, `PATCH` | Get or update tenant config (incl. KYC provider mode) |
+| `/tenants/me` | `GET`, `PATCH` | Get or update tenant config (incl. KYC trust mode, BYOL fallback mode, and KYC provider mode) |
 
 ### Reports
 
@@ -115,14 +115,14 @@ All endpoints are prefixed with `/api/v1/` and require `Authorization: Bearer <t
 | `200` | OK                | Request succeeded                        |
 | `201` | Created           | Resource created successfully            |
 | `204` | No Content        | Resource deleted or deactivated          |
-| `400` | Bad Request       | Validation error — check request body    |
+| `400` | Bad Request       | Validation error -check request body    |
 | `401` | Unauthorized      | Missing or invalid token                 |
 | `403` | Forbidden         | Insufficient permissions for this action |
 | `404` | Not Found         | Resource does not exist                  |
 | `409` | Conflict          | Duplicate or conflicting state           |
 | `429` | Too Many Requests | Rate limit exceeded                      |
-| `500` | Server Error      | Unexpected error — retry with backoff    |
+| `500` | Server Error      | Unexpected error -retry with backoff    |
 
 ---
 
-> **Verifow** — Enterprise-grade AML/CFT compliance for African financial institutions.
+> **Verifow** -Enterprise-grade AML/CFT compliance for African financial institutions.

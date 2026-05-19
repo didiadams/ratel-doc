@@ -30,14 +30,14 @@ The KYC module handles identity verification for your customers. Applications fl
 
 | Status              | Meaning                             | Risk Impact                              |
 | ------------------- | ----------------------------------- | ---------------------------------------- |
-| `PENDING`           | Submitted, awaiting document upload | No KYC record found — score 40, `REVIEW` |
-| `DOCUMENT_UPLOADED` | ID documents uploaded               | Awaiting verification                    |
-| `NIN_VERIFIED`      | NIN check passed                    | Partially verified                       |
-| `BVN_VERIFIED`      | BVN check passed                    | Partially verified                       |
-| `LIVENESS_PASSED`   | Biometric liveness check passed     | Partially verified                       |
-| `APPROVED`          | Fully verified                      | Score 0, `APPROVE`                       |
-| `REJECTED`          | Failed verification                 | Score 70, `ESCALATE`                     |
-| `EXPIRED`           | Verification expired                | Score 50, `REVIEW`                       |
+| `PENDING`           | Submitted, awaiting document upload | Score 100, `BLOCK`  -|
+| `DOCUMENT_UPLOADED` | ID documents uploaded               | Score 100, `BLOCK`    |
+| `NIN_VERIFIED`      | NIN check passed                    | Partially verified    |
+| `BVN_VERIFIED`      | BVN check passed                    | Partially verified    |
+| `LIVENESS_PASSED`   | Biometric liveness check passed     | Partially verified    |
+| `APPROVED`          | Fully verified                      | Score 0, `APPROVE`    |
+| `REJECTED`          | Failed verification                 | Score 100, `BLOCK`    |
+| `EXPIRED`           | Verification expired                | Score 100, `BLOCK`    |
 
 ## KYB Statuses
 
@@ -73,7 +73,7 @@ Each tenant can independently configure how identity verification is performed.
    - Endpoint paths for NIN, BVN, and Liveness
    - Request/response field mappings
    - Match confidence threshold
-3. Save — the change takes effect immediately for all new verifications.
+3. Save -the change takes effect immediately for all new verifications.
 
 ### BYOL Configuration Format
 
@@ -132,7 +132,7 @@ The configuration is stored as JSON in `Tenant.kycProviderConfig`:
 
 | Method  | Endpoint             | Description                                                              |
 | ------- | -------------------- | ------------------------------------------------------------------------ |
-| `PATCH` | `/api/v1/tenants/me` | Update tenant config including `kycProviderMode` and `kycProviderConfig` |
+| `PATCH` | `/api/v1/tenants/me` | Update tenant config including `kycProviderMode`, `kycProviderConfig`, `kycTrustMode`, and `byolFallbackMode` |
 
 ---
 
@@ -171,7 +171,7 @@ curl -X POST /v1/kyc/applications \
   }'
 ```
 
-**Example Response — 201 Created**
+**Example Response -201 Created**
 
 ```json
 {
@@ -275,7 +275,7 @@ curl -X POST /v1/kyc/kyb/applications/kyb_abc123/verify-cac \
   }'
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -300,7 +300,7 @@ curl -X POST /v1/kyc/kyb/applications/kyb_abc123/verify-cac \
 
 | Parameter | Type      | Default | Description      |
 | --------- | --------- | ------- | ---------------- |
-| `status`  | `string`  | —       | Filter by status |
+| `status`  | `string`  | -      | Filter by status |
 | `page`    | `integer` | `1`     | Page number      |
 | `limit`   | `integer` | `20`    | Items per page   |
 
@@ -311,7 +311,7 @@ curl -X GET "/v1/kyc/applications?status=PENDING&page=1&limit=10" \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -350,7 +350,7 @@ curl -X GET /v1/kyc/applications/kyc_abc123 \
   -H "Authorization: Bearer <access_token>"
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -436,7 +436,7 @@ curl -X POST /v1/kyc/applications/kyc_abc123/verify-bvn \
   }'
 ```
 
-**Example Response — 200 OK**
+**Example Response -200 OK**
 
 ```json
 {
@@ -445,6 +445,7 @@ curl -X POST /v1/kyc/applications/kyc_abc123/verify-bvn \
     "isMatch": true,
     "confidence": 0.95,
     "provider": "PREMBLY",
+    "providerSource": "EMBEDDED",
     "newStatus": "BVN_VERIFIED"
   }
 }
@@ -484,7 +485,7 @@ curl -X POST /v1/kyc/applications/kyc_abc123/verify-nin \
     "dateOfBirth": "1990-03-15"
   }'
 ```
-
+-
 **Example Response — 200 OK**
 
 ```json
@@ -494,6 +495,7 @@ curl -X POST /v1/kyc/applications/kyc_abc123/verify-nin \
     "isMatch": true,
     "confidence": 0.94,
     "provider": "PREMBLY",
+    "providerSource": "EMBEDDED",
     "newStatus": "NIN_VERIFIED"
   }
 }
@@ -528,7 +530,7 @@ curl -X POST /v1/kyc/applications/kyc_abc123/liveness-check \
     "selfieImageBase64": "/9j/4AAQSkZJRgABAQEASABIAAD...",
     "documentImageBase64": "/9j/4AAQSkZJRgABAQEASABIAAD..."
   }'
-```
+```-
 
 **Example Response — 200 OK**
 
@@ -541,6 +543,7 @@ curl -X POST /v1/kyc/applications/kyc_abc123/liveness-check \
     "faceMatch": true,
     "faceMatchConfidence": 0.92,
     "provider": "PREMBLY",
+    "providerSource": "EMBEDDED",
     "newStatus": "LIVENESS_PASSED"
   }
 }
@@ -572,7 +575,7 @@ curl -X PATCH /v1/kyc/applications/kyc_abc123/approve \
   -H "Content-Type: application/json" \
   -d '{
     "notes": "All documents verified. BVN and NIN match."
-  }'
+  }'-
 ```
 
 **Example Response — 200 OK**
@@ -621,7 +624,7 @@ curl -X PATCH /v1/kyc/applications/kyc_abc123/reject \
   -H "Content-Type: application/json" \
   -d '{
     "reason": "BVN name mismatch. Uploaded document appears fraudulent."
-  }'
+  }'-
 ```
 
 **Example Response — 200 OK**
@@ -671,7 +674,7 @@ curl -X POST /v1/kyc/kyb/applications/kyb_abc123/verify-directors \
     "directors": [
       { "name": "John Doe", "nin": "12345678901", "bvn": "22012345678", "verified": true }
     ]
-  }'
+  }'-
 ```
 
 **Example Response — 200 OK**
@@ -725,7 +728,7 @@ curl -X POST /v1/kyc/kyb/applications/kyb_abc123/screen-beneficial-owners \
     "beneficialOwners": [
       { "name": "Jane Smith", "clean": true, "hits": [] }
     ]
-  }'
+  }'-
 ```
 
 **Example Response — 200 OK**
@@ -750,7 +753,7 @@ Final approval of a KYB application. Requires `BANK_ADMIN` or `COMPLIANCE_OFFICE
 **Path Parameters**
 
 | Parameter | Type     | Description          |
-| --------- | -------- | -------------------- |
+| --------- | ------- | -------------------- |
 | `id`      | `string` | KYB Application UUID |
 
 **Example Response — 200 OK**
@@ -799,7 +802,7 @@ curl -X PATCH /v1/kyc/kyb/applications/kyb_abc123/reject \
   -H "Content-Type: application/json" \
   -d '{
     "reason": "Sanctions hit on beneficial owner Jane Smith."
-  }'
+  }'-
 ```
 
 **Example Response — 200 OK**

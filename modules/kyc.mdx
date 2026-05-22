@@ -112,6 +112,10 @@ The configuration is stored as JSON in `Tenant.kycProviderConfig`:
 | `POST`  | `/api/v1/kyc/applications/:id/verify-bvn`     | Verify applicant BVN         |
 | `POST`  | `/api/v1/kyc/applications/:id/verify-nin`     | Verify applicant NIN         |
 | `POST`  | `/api/v1/kyc/applications/:id/liveness-check` | Run biometric liveness check |
+| `POST`  | `/api/v1/kyc/applications/:id/documents`      | Upload document to MinIO     |
+| `GET`   | `/api/v1/kyc/applications/:id/documents`      | List uploaded documents      |
+| `GET`   | `/api/v1/kyc/applications/:id/documents/:docId/download` | Get presigned download URL |
+| `DELETE`| `/api/v1/kyc/applications/:id/documents/:docId` | Delete document from MinIO   |
 | `PATCH` | `/api/v1/kyc/applications/:id/approve`        | Approve application          |
 | `PATCH` | `/api/v1/kyc/applications/:id/reject`         | Reject application           |
 
@@ -125,6 +129,10 @@ The configuration is stored as JSON in `Tenant.kycProviderConfig`:
 | `POST`  | `/api/v1/kyc/kyb/applications/:id/verify-cac`               | Run CAC lookup by RC number  |
 | `POST`  | `/api/v1/kyc/kyb/applications/:id/verify-directors`         | Verify all directors via KYC |
 | `POST`  | `/api/v1/kyc/kyb/applications/:id/screen-beneficial-owners` | Screen BOs against sanctions |
+| `POST`  | `/api/v1/kyc/kyb/applications/:id/documents`                | Upload KYB document to MinIO |
+| `GET`   | `/api/v1/kyc/kyb/applications/:id/documents`                | List KYB uploaded documents  |
+| `GET`   | `/api/v1/kyc/kyb/applications/:id/documents/:docId/download`| Get presigned download URL   |
+| `DELETE`| `/api/v1/kyc/kyb/applications/:id/documents/:docId`         | Delete KYB document from MinIO |
 | `PATCH` | `/api/v1/kyc/kyb/applications/:id/approve`                  | Approve KYB application      |
 | `PATCH` | `/api/v1/kyc/kyb/applications/:id/reject`                   | Reject KYB application       |
 
@@ -817,5 +825,234 @@ curl -X PATCH /v1/kyc/kyb/applications/kyb_abc123/reject \
     "notes": "Sanctions hit on beneficial owner Jane Smith.",
     "updatedAt": "2026-05-16T10:00:00Z"
   }
+}
+```
+
+---
+
+## KYC Document Upload
+
+Upload, manage, and retrieve KYC application documents stored in MinIO (S3-compatible object storage).
+
+### Upload KYC Document
+
+`POST /api/v1/kyc/applications/:id/documents`
+
+Upload a file to MinIO and attach it to a KYC application.
+
+**Path Parameters**
+
+| Parameter | Type     | Description          |
+| --------- | -------- | -------------------- |
+| `id`      | `string` | KYC Application UUID |
+
+**Request Body (multipart/form-data)**
+
+| Field          | Type     | Required | Description                                         |
+| -------------- | -------- | -------- | --------------------------------------------------- |
+| `file`         | `file`   | ✅       | The file to upload (PDF, JPG, PNG, max 10MB)        |
+| `documentType` | `string` | ✅       | `PASSPORT`, `NATIONAL_ID`, `DRIVERS_LICENSE`, `VOTERS_CARD`, `UTILITY_BILL`, `BANK_STATEMENT`, `SELFIE`, `LIVENESS_VIDEO`, `SIGNATURE`, `OTHER` |
+
+**Example Request**
+
+```bash
+curl -X POST /v1/kyc/applications/kyc_abc123/documents \
+  -H "Authorization: Bearer <access_token>" \
+  -F "file=@/path/to/passport.pdf" \
+  -F "documentType=PASSPORT"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "doc_001",
+    "documentType": "PASSPORT",
+    "fileName": "passport.pdf",
+    "fileSizeBytes": 204800,
+    "mimeType": "application/pdf",
+    "uploadedAt": "2026-05-16T08:30:00Z",
+    "presignedUrl": "http://localhost:9000/ratel-documents/kyc/kyc_abc123/1715851200000-passport.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256..."
+  }
+}
+```
+
+---
+
+### List KYC Documents
+
+`GET /api/v1/kyc/applications/:id/documents`
+
+List all documents for a KYC application with presigned URLs.
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "doc_001",
+      "documentType": "PASSPORT",
+      "fileName": "passport.pdf",
+      "fileSizeBytes": 204800,
+      "mimeType": "application/pdf",
+      "uploadedAt": "2026-05-16T08:30:00Z",
+      "presignedUrl": "http://localhost:9000/ratel-documents/kyc/kyc_abc123/1715851200000-passport.pdf?X-Amz-Algorithm=..."
+    }
+  ]
+}
+```
+
+---
+
+### Get KYC Document Download URL
+
+`GET /api/v1/kyc/applications/:id/documents/:docId/download`
+
+Get a time-limited presigned URL to download a document directly from MinIO.
+
+**Path Parameters**
+
+| Parameter | Type     | Description          |
+| --------- | -------- | -------------------- |
+| `id`      | `string` | KYC Application UUID |
+| `docId`   | `string` | Document UUID        |
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "url": "http://localhost:9000/ratel-documents/kyc/kyc_abc123/1715851200000-passport.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256...",
+    "expiresIn": 300
+  }
+}
+```
+
+---
+
+### Delete KYC Document
+
+`DELETE /api/v1/kyc/applications/:id/documents/:docId`
+
+Delete a document from MinIO and the database. Requires `BANK_ADMIN` or `COMPLIANCE_OFFICER` role.
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": { "deleted": true }
+}
+```
+
+---
+
+## KYB Document Upload
+
+Upload, manage, and retrieve KYB application documents stored in MinIO.
+
+### Upload KYB Document
+
+`POST /api/v1/kyc/kyb/applications/:id/documents`
+
+**Request Body (multipart/form-data)**
+
+| Field          | Type     | Required | Description                                         |
+| -------------- | -------- | -------- | --------------------------------------------------- |
+| `file`         | `file`   | ✅       | The file to upload (PDF, JPG, PNG, max 10MB)        |
+| `documentType` | `string` | ✅       | `CAC_CERTIFICATE`, `MEMART`, `TAX_CLEARANCE`, `BOARD_RESOLUTION`, `AUDITED_ACCOUNTS`, `UTILITY_BILL`, `DIRECTOR_ID`, `BENEFICIAL_OWNER_ID`, `OTHER` |
+
+**Example Request**
+
+```bash
+curl -X POST /v1/kyc/kyb/applications/kyb_abc123/documents \
+  -H "Authorization: Bearer <access_token>" \
+  -F "file=@/path/to/cac_certificate.pdf" \
+  -F "documentType=CAC_CERTIFICATE"
+```
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "doc_kyb_001",
+    "documentType": "CAC_CERTIFICATE",
+    "fileName": "cac_certificate.pdf",
+    "fileSizeBytes": 512000,
+    "mimeType": "application/pdf",
+    "uploadedAt": "2026-05-16T09:00:00Z",
+    "presignedUrl": "http://localhost:9000/ratel-documents/kyb/kyb_abc123/1715853000000-cac_certificate.pdf?X-Amz-Algorithm=..."
+  }
+}
+```
+
+---
+
+### List KYB Documents
+
+`GET /api/v1/kyc/kyb/applications/:id/documents`
+
+List all documents for a KYB application with presigned URLs.
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "doc_kyb_001",
+      "documentType": "CAC_CERTIFICATE",
+      "fileName": "cac_certificate.pdf",
+      "fileSizeBytes": 512000,
+      "mimeType": "application/pdf",
+      "uploadedAt": "2026-05-16T09:00:00Z",
+      "presignedUrl": "http://localhost:9000/ratel-documents/kyb/kyb_abc123/1715853000000-cac_certificate.pdf?X-Amz-Algorithm=..."
+    }
+  ]
+}
+```
+
+---
+
+### Get KYB Document Download URL
+
+`GET /api/v1/kyc/kyb/applications/:id/documents/:docId/download`
+
+Get a time-limited presigned URL to download a KYB document.
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "url": "http://localhost:9000/ratel-documents/kyb/kyb_abc123/1715853000000-cac_certificate.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256...",
+    "expiresIn": 300
+  }
+}
+```
+
+---
+
+### Delete KYB Document
+
+`DELETE /api/v1/kyc/kyb/applications/:id/documents/:docId`
+
+Delete a KYB document from MinIO and the database. Requires `BANK_ADMIN` or `COMPLIANCE_OFFICER` role.
+
+**Example Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "data": { "deleted": true }
 }
 ```

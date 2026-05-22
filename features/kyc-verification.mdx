@@ -97,6 +97,55 @@ Tenants can configure how KYC status is resolved during transaction screening:
 
 Set the mode via `PATCH /api/v1/tenants/me` with `kycTrustMode`.
 
+## Document Upload & Storage
+
+KYC applications support document uploads via the API. Documents are stored in **MinIO** (an S3-compatible object storage server) and referenced in the database.
+
+### Supported Document Types
+
+| Type              | Description                          |
+| ----------------- | ------------------------------------ |
+| `PASSPORT`        | International passport               |
+| `NATIONAL_ID`     | National identity card               |
+| `DRIVERS_LICENSE` | Driver's license                     |
+| `VOTERS_CARD`     | Voter's card                         |
+| `UTILITY_BILL`    | Utility bill (address proof)         |
+| `BANK_STATEMENT`  | Bank statement                       |
+| `SELFIE`          | Selfie photograph                    |
+| `LIVENESS_VIDEO`  | Liveness check video recording       |
+| `SIGNATURE`       | Signature specimen                   |
+| `OTHER`           | Any other document                   |
+
+### Document Endpoints
+
+| Method   | Endpoint                                                   | Description                        |
+| -------- | ---------------------------------------------------------- | ---------------------------------- |
+| `POST`   | `/api/v1/kyc/applications/:id/documents`                   | Upload document (multipart/form-data) |
+| `GET`    | `/api/v1/kyc/applications/:id/documents`                   | List documents with presigned URLs |
+| `GET`    | `/api/v1/kyc/applications/:id/documents/:docId/download`   | Get 5-minute presigned download URL |
+| `DELETE` | `/api/v1/kyc/applications/:id/documents/:docId`            | Delete document (admin only)       |
+
+### How It Works
+
+1. **Upload:** `POST` with `multipart/form-data` containing `file` and `documentType`
+2. **Storage:** File is saved to MinIO under `kyc/{applicationId}/{timestamp}-{filename}`
+3. **Database:** A `KYCDocument` record is created with the MinIO object key
+4. **Retrieval:** The API returns **presigned URLs** (5-minute expiry) for secure viewing
+5. **Deletion:** Admin users can delete documents — this removes from both MinIO and the database
+
+### Upload Example
+
+```bash
+curl -X POST /api/v1/kyc/applications/kyc_abc123/documents \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@passport.pdf" \
+  -F "documentType=PASSPORT"
+```
+
+> **Note:** Documents are tenant-scoped. You can only access documents belonging to applications in your tenant.
+
+---
+
 ## BYOL Fallback Mode
 
 When a BYOL provider is unavailable, tenants can configure the fallback behavior:

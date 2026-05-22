@@ -74,6 +74,46 @@ The `CACProvider` performs company lookups by RC number. It operates in two mode
 
 Mock mode is useful for demonstrations and development. For production, configure `CAC_API_KEY` in your environment.
 
+## Document Upload & Storage
+
+KYB applications support document uploads via the API. Documents are stored in **MinIO** (S3-compatible object storage) and referenced in the database.
+
+### Supported Document Types
+
+| Type                    | Description                              |
+| ----------------------- | ---------------------------------------- |
+| `CAC_CERTIFICATE`       | CAC registration certificate             |
+| `MEMART`                | Memorandum and Articles of Association   |
+| `TAX_CLEARANCE`         | Tax clearance certificate                |
+| `BOARD_RESOLUTION`      | Board resolution document                |
+| `AUDITED_ACCOUNTS`      | Audited financial accounts               |
+| `UTILITY_BILL`          | Utility bill (address proof)             |
+| `DIRECTOR_ID`           | Director's identity document             |
+| `BENEFICIAL_OWNER_ID`   | Beneficial owner's identity document     |
+| `OTHER`                 | Any other document                       |
+
+### Document Endpoints
+
+| Method   | Endpoint                                                    | Description                        |
+| -------- | ----------------------------------------------------------- | ---------------------------------- |
+| `POST`   | `/api/v1/kyc/kyb/applications/:id/documents`                | Upload document (multipart/form-data) |
+| `GET`    | `/api/v1/kyc/kyb/applications/:id/documents`                | List documents with presigned URLs |
+| `GET`    | `/api/v1/kyc/kyb/applications/:id/documents/:docId/download`| Get 5-minute presigned download URL |
+| `DELETE` | `/api/v1/kyc/kyb/applications/:id/documents/:docId`         | Delete document (admin only)       |
+
+### Upload Example
+
+```bash
+curl -X POST /api/v1/kyc/kyb/applications/kyb_abc123/documents \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@cac_certificate.pdf" \
+  -F "documentType=CAC_CERTIFICATE"
+```
+
+> **Note:** Documents are tenant-scoped and stored under `kyb/{applicationId}/` in MinIO.
+
+---
+
 ## Permissions
 
 | Action | Who Can Do It |

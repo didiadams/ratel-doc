@@ -60,6 +60,9 @@ All endpoints are prefixed with `/api/v1/` and require `Authorization: Bearer <t
 | `/kyc/applications/:id/verify-bvn`     | `POST`        | Verify BVN                  |
 | `/kyc/applications/:id/verify-nin`     | `POST`        | Verify NIN                  |
 | `/kyc/applications/:id/liveness-check` | `POST`        | Run liveness check          |
+| `/kyc/applications/:id/documents`      | `POST`, `GET` | Upload or list documents    |
+| `/kyc/applications/:id/documents/:docId/download` | `GET` | Get presigned download URL  |
+| `/kyc/applications/:id/documents/:docId` | `DELETE`    | Delete document             |
 | `/kyc/applications/:id/approve`        | `PATCH`       | Approve application         |
 | `/kyc/applications/:id/reject`         | `PATCH`       | Reject application          |
 
@@ -72,6 +75,9 @@ All endpoints are prefixed with `/api/v1/` and require `Authorization: Bearer <t
 | `/kyc/kyb/applications/:id/verify-cac`               | `POST`        | Run CAC lookup by RC number     |
 | `/kyc/kyb/applications/:id/verify-directors`         | `POST`        | Verify all directors via KYC    |
 | `/kyc/kyb/applications/:id/screen-beneficial-owners` | `POST`        | Screen BOs against sanctions    |
+| `/kyc/kyb/applications/:id/documents`                | `POST`, `GET` | Upload or list KYB documents    |
+| `/kyc/kyb/applications/:id/documents/:docId/download`| `GET`         | Get presigned download URL      |
+| `/kyc/kyb/applications/:id/documents/:docId`         | `DELETE`      | Delete KYB document             |
 | `/kyc/kyb/applications/:id/approve`                  | `PATCH`       | Approve KYB application         |
 | `/kyc/kyb/applications/:id/reject`                   | `PATCH`       | Reject KYB application          |
 

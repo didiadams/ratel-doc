@@ -51,17 +51,22 @@ Submit a single transaction for real-time screening. The response includes the f
 | `senderKycVerifiedAt`   | `string` |          | ISO 8601 timestamp of last KYC verification                                             |
 | `senderKycExternalRef`  | `string` |          | Internal KYC reference (e.g. `CORE-BANK-KYC-78432`)                                     |
 | `senderName`            | `string` | ✅       | Sender's full name. Screened against sanctions                                          |
+| `senderBankCode`        | `string` |          | Sender's bank CBN code (e.g. `"058"` for GTBank)                                      |
 | `receiverAccountNumber` | `string` |          | Receiver's account number                                                               |
 | `receiverName`          | `string` |          | Receiver's full name. Also screened                                                     |
 | `receiverKycStatus`     | `string` |          | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`                     |
 | `receiverKycVerifiedAt` | `string` |          | ISO 8601 timestamp of last KYC verification                                             |
 | `receiverKycExternalRef`| `string` |          | Internal KYC reference for the receiver                                                 |
+| `receiverBvn`           | `string` |          | Receiver's BVN                                                                          |
 | `receiverBankCode`      | `string` |          | Receiver's bank CBN code (e.g. `"058"`)                                                 |
 | `receiverCountry`       | `string` |          | ISO 3166-1 alpha-2. Triggers FTR if ≠ `NG`                                              |
 | `narration`             | `string` |          | Transaction description                                                                 |
 | `deviceId`              | `string` |          | Device fingerprint for behavioral analysis                                              |
 | `ipAddress`             | `string` |          | Client IP for geo-anomaly detection                                                     |
+| `latitude`              | `number` |          | GPS latitude. Used for geo-anomaly detection                                            |
+| `longitude`             | `number` |          | GPS longitude. Used for geo-anomaly detection                                           |
 | `timestamp`             | `string` | ✅       | ISO 8601 timestamp                                                                      |
+| `metadata`              | `object` |          | Optional metadata for business transactions (see KYB Screening)                         |
 
 **Example Request**
 
@@ -83,14 +88,24 @@ curl -X POST /v1/transactions/screen \
     "senderKycVerifiedAt": "2026-05-01T10:00:00Z",
     "senderKycExternalRef": "CORE-BANK-KYC-78432",
     "senderName": "John Doe",
+    "senderBankCode": "058",
     "receiverAccountNumber": "9876543210",
+    "receiverBvn": "22087654321",
     "receiverName": "Jane Smith",
+    "receiverBankCode": "033",
     "receiverCountry": "NG",
     "receiverKycStatus": "PENDING",
     "receiverKycVerifiedAt": "2026-04-15T09:30:00Z",
     "receiverKycExternalRef": "CORE-BANK-KYC-99123",
     "narration": "Payment for goods",
-    "timestamp": "2026-05-16T12:00:00Z"
+    "deviceId": "device_abc123",
+    "ipAddress": "102.89.47.12",
+    "latitude": 6.5244,
+    "longitude": 3.3792,
+    "timestamp": "2026-05-16T12:00:00Z",
+    "metadata": {
+      "entityType": "INDIVIDUAL"
+    }
   }'
 ```
 
@@ -114,14 +129,24 @@ const response = await fetch("/v1/transactions/screen", {
     senderKycVerifiedAt: "2026-05-01T10:00:00Z",
     senderKycExternalRef: "CORE-BANK-KYC-78432",
     senderName: "John Doe",
+    senderBankCode: "058",
     receiverAccountNumber: "9876543210",
+    receiverBvn: "22087654321",
     receiverName: "Jane Smith",
+    receiverBankCode: "033",
     receiverCountry: "NG",
     receiverKycStatus: "PENDING",
     receiverKycVerifiedAt: "2026-04-15T09:30:00Z",
     receiverKycExternalRef: "CORE-BANK-KYC-99123",
     narration: "Payment for goods",
+    deviceId: "device_abc123",
+    ipAddress: "102.89.47.12",
+    latitude: 6.5244,
+    longitude: 3.3792,
     timestamp: "2026-05-16T12:00:00Z",
+    metadata: {
+      entityType: "INDIVIDUAL",
+    },
   }),
 });
 const result = await response.json();
@@ -141,7 +166,7 @@ response = requests.post(
         "externalId": "TXN-2026-001",
         "type": "TRANSFER",
         "channel": "MOBILE_APP",
-        "amount": 5-0000,
+        "amount": 5000000,
         "currency": "NGN",
         "senderAccountNumber": "0123456789",
         "senderBvn": "22012345678",
@@ -150,14 +175,24 @@ response = requests.post(
         "senderKycVerifiedAt": "2026-05-01T10:00:00Z",
         "senderKycExternalRef": "CORE-BANK-KYC-78432",
         "senderName": "John Doe",
+        "senderBankCode": "058",
         "receiverAccountNumber": "9876543210",
+        "receiverBvn": "22087654321",
         "receiverName": "Jane Smith",
+        "receiverBankCode": "033",
         "receiverCountry": "NG",
         "receiverKycStatus": "PENDING",
         "receiverKycVerifiedAt": "2026-04-15T09:30:00Z",
         "receiverKycExternalRef": "CORE-BANK-KYC-99123",
         "narration": "Payment for goods",
-        "timestamp": "2026-05-16T12:00:00Z"
+        "deviceId": "device_abc123",
+        "ipAddress": "102.89.47.12",
+        "latitude": 6.5244,
+        "longitude": 3.3792,
+        "timestamp": "2026-05-16T12:00:00Z",
+        "metadata": {
+            "entityType": "INDIVIDUAL"
+        }
     }
 )
 result = response.json()

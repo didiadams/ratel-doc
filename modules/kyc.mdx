@@ -691,21 +691,11 @@ Final approval of a KYC application.
 | --------- | -------- | ---------------- |
 | `id`      | `string` | Application UUID |
 
-**Request Body**
-
-| Field   | Type     | Required | Description   |
-| ------- | -------- | -------- | ------------- |
-| `notes` | `string` |          | Officer notes |
-
 **Example Request**
 
 ```bash
 curl -X PATCH /v1/kyc/applications/kyc_abc123/approve \
-  -H "Authorization: Bearer <access_token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "notes": "All documents verified. BVN and NIN match."
-  }'-
+  -H "Authorization: Bearer <access_token>"
 ```
 
 **Example Response — 200 OK**
@@ -717,7 +707,6 @@ curl -X PATCH /v1/kyc/applications/kyc_abc123/approve \
     "id": "kyc_abc123",
     "status": "APPROVED",
     "riskLevel": "LOW",
-    "notes": "All documents verified. BVN and NIN match.",
     "updatedAt": "2026-05-16T10:00:00Z"
   }
 }
@@ -885,6 +874,13 @@ Final approval of a KYB application. Requires `BANK_ADMIN` or `COMPLIANCE_OFFICE
 | Parameter | Type     | Description          |
 | --------- | ------- | -------------------- |
 | `id`      | `string` | KYB Application UUID |
+
+**Example Request**
+
+```bash
+curl -X PATCH /v1/kyc/kyb/applications/kyb_abc123/approve \
+  -H "Authorization: Bearer <access_token>"
+```
 
 **Example Response — 200 OK**
 

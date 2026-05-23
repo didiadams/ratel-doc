@@ -83,17 +83,19 @@ Submit a single transaction for real-time AML/CFT screening. The response includ
 | `senderKycExternalRef`  | `string` |          | Internal KYC reference (e.g. `CORE-BANK-KYC-78432`).                                                                |
 | `senderName`            | `string` | ✅       | Sender's full name. **Screened against global sanctions & PEP lists.**                                              |
 | `senderBankCode`        | `string` |          | Sender's bank CBN code (e.g. `"058"` for GTBank).                                                                   |
+| `senderBankCode`        | `string` |          | Sender's bank CBN code (e.g. `"058"` for GTBank).                                                                   |
 | `receiverAccountNumber` | `string` |          | Receiver's account number.                                                                                          |
 | `receiverName`          | `string` |          | Receiver's full name. **Also screened if provided.**                                                                |
 | `receiverBvn`           | `string` |          | Receiver's BVN.                                                                                                     |
 | `receiverKycStatus`     | `string` |          | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`.                                                  |
 | `receiverKycVerifiedAt` | `string` |          | ISO 8601 timestamp of last KYC verification.                                                                          |
 | `receiverKycExternalRef`| `string` |          | Internal KYC reference for the receiver.                                                                              |
+| `receiverBvn`           | `string` |          | Receiver's BVN.                                                                                                     |
 | `receiverBankCode`      | `string` |          | Receiver's bank CBN code.                                                                                           |
 | `receiverCountry`       | `string` |          | ISO 3166-1 alpha-2 code (e.g. `"NG"`, `"US"`). Triggers FTR if ≠ `NG`.                                              |
 | `narration`             | `string` |          | Transaction description. Scanned for high-risk keywords.                                                            |
 | `deviceId`              | `string` |          | Device fingerprint. Enables behavioral anomaly detection.                                                           |
-| `ipAddress`     -      | `string` |          | Client IP address. Enables geo-anomaly detection.                                                                   |
+| `ipAddress`             | `string` |          | Client IP address. Enables geo-anomaly detection.                                                                   |
 | `latitude`              | `number` |          | GPS latitude. Used for geo-anomaly detection.                                                                       |
 | `longitude`             | `number` |          | GPS longitude. Used for geo-anomaly detection.                                                                      |
 | `timestamp`             | `string` | ✅       | ISO 8601 (e.g. `"2026-05-08T12:00:00Z"`).                                                                           |
@@ -119,11 +121,21 @@ curl -X POST /api/v1/transactions/screen \
     "senderKycVerifiedAt": "2026-05-01T10:00:00Z",
     "senderKycExternalRef": "CORE-BANK-KYC-78432",
     "senderName": "John Doe",
+    "senderBankCode": "058",
     "receiverAccountNumber": "9876543210",
+    "receiverBvn": "22087654321",
     "receiverName": "Jane Smith",
+    "receiverBankCode": "033",
     "receiverCountry": "NG",
     "narration": "Payment for goods",
-    "timestamp": "2026-05-08T12:00:00Z"
+    "deviceId": "device_abc123",
+    "ipAddress": "102.89.47.12",
+    "latitude": 6.5244,
+    "longitude": 3.3792,
+    "timestamp": "2026-05-08T12:00:00Z",
+    "metadata": {
+      "entityType": "INDIVIDUAL"
+    }
   }'
 ```
 
@@ -146,11 +158,21 @@ const response = await fetch("/api/v1/transactions/screen", {
     senderKycVerifiedAt: "2026-05-01T10:00:00Z",
     senderKycExternalRef: "CORE-BANK-KYC-78432",
     senderName: "John Doe",
+    senderBankCode: "058",
     receiverAccountNumber: "9876543210",
+    receiverBvn: "22087654321",
     receiverName: "Jane Smith",
+    receiverBankCode: "033",
     receiverCountry: "NG",
     narration: "Payment for goods",
+    deviceId: "device_abc123",
+    ipAddress: "102.89.47.12",
+    latitude: 6.5244,
+    longitude: 3.3792,
     timestamp: "2026-05-08T12:00:00Z",
+    metadata: {
+      entityType: "INDIVIDUAL",
+    },
   }),
 });
 
@@ -178,12 +200,22 @@ response = requests.post(
         "senderKycStatus": "PENDING",
         "senderKycVerifiedAt": "2026-05-01T10:00:00Z",
         "senderKycExternalRef": "CORE-BANK-KYC-78432",
-        "senderName- "John Doe",
+        "senderName": "John Doe",
+        "senderBankCode": "058",
         "receiverAccountNumber": "9876543210",
+        "receiverBvn": "22087654321",
         "receiverName": "Jane Smith",
+        "receiverBankCode": "033",
         "receiverCountry": "NG",
         "narration": "Payment for goods",
-        "timestamp": "2026-05-08T12:00:00Z"
+        "deviceId": "device_abc123",
+        "ipAddress": "102.89.47.12",
+        "latitude": 6.5244,
+        "longitude": 3.3792,
+        "timestamp": "2026-05-08T12:00:00Z",
+        "metadata": {
+            "entityType": "INDIVIDUAL"
+        }
     }
 )
 
@@ -496,8 +528,8 @@ KYC (Know Your Customer) verification validates individual customer identities t
 | ------------------- | -------------------------------- | -------------------- |
 | `PENDING`           | Submitted, awaiting verification | Score 100, `BLOCK`   |
 | `DOCUMENT_UPLOADED` | ID documents uploaded            | Score 100, `BLOCK`   |
-| `NIN_VERIFIED`      | NIN check passed                 | Score 0, `APPROVE`   |
-| `BVN_VERIFIED`      | BVN check passed                 | Score 0, `APPROVE`   |
+| `NIN_VERIFIED`      | NIN check passed                 | Score 100, `BLOCK`   |
+| `BVN_VERIFIED`      | BVN check passed                 | Score 100, `BLOCK`   |
 | `LIVENESS_PASSED`   | Biometric liveness check passed  | Score 0, `APPROVE`   |
 | `APPROVED`          | Fully verified by officer        | Score 0, `APPROVE`   |
 | `REJECTED`          | Failed verification              | Score 100, `BLOCK`   |
@@ -522,8 +554,8 @@ Create a new KYC application for an individual customer.
 | `nin`         | `string` |          | National Identity Number (11 digits) |
 | `phone`       | `string` |          | Mobile number with country code      |
 | `email`       | `string` |          | Email address                        |
-| `address`     | `string` |          | Residential address                  |
 | `dateOfBirth` | `string` |          | ISO 8601 date (e.g. `"1990-03-15"`)  |
+| `tier`        | `string` |          | `TIER_1`, `TIER_2`, or `TIER_3`. Defaults to `TIER_1` |
 
 **Example Request**
 
@@ -539,8 +571,8 @@ curl -X POST /api/v1/kyc/applications \
     "nin": "12345678901",
     "phone": "+2348012345678",
     "email": "chinedu.obi@email.com",
-    "address": "12 Lagos Street, Lagos",
-    "dateOfBirth": "1990-03-15"
+    "dateOfBirth": "1990-03-15",
+    "tier": "TIER_2"
   }'
 ```
 
@@ -559,7 +591,6 @@ curl -X POST /api/v1/kyc/applications \
     "nin": "12345678901",
     "phone": "+2348012345678",
     "email": "chinedu.obi@email.com",
-    "address": "12 Lagos Street, Lagos",
     "dateOfBirth": "1990-03-15T00:00:00Z",
     "status": "PENDING",
     "riskLevel": null,
@@ -823,12 +854,6 @@ curl -X POST /api/v1/kyc/applications/kyc_abc123/liveness-check \
 `PATCH /api/v1/kyc/applications/:id/approve`
 
 Final approval of a KYC application. Requires `BANK_ADMIN` or `COMPLIANCE_OFFICER` role.
-
-**Request Body**
-
-| Field   | Type     | Required | Description   |
-| ------- | -------- | -------- | ------------- |
-| `notes` | `string` |          | Officer notes |
 
 **Example Response — 200 OK**
 

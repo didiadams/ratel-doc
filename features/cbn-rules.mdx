@@ -2,7 +2,7 @@
 title: 'CBN Mandatory Rules'
 ---
 
-These 7 rules implement the **Central Bank of Nigeria AML/CFT Act** requirements. They are **always active** and **cannot be disabled** by any tenant.
+These 9 rules implement the **Central Bank of Nigeria AML/CFT Act** requirements. They are **always active** and **cannot be disabled** by any tenant.
 
 | Rule | Trigger | Score | Auto-Actions |
 |------|---------|-------|-------------|
@@ -13,6 +13,8 @@ These 7 rules implement the **Central Bank of Nigeria AML/CFT Act** requirements
 | **CBN-005** Foreign Transfer | International transfer or receiver country ≠ NG | 40 | Generate FTR, Notify Officer |
 | **CBN-006** Dormant Account | No transaction activity for ≥ 180 days | 65 | Create Case, Enhanced Due Diligence, Notify Officer |
 | **CBN-007** Rapid Succession | ≥ 5 transactions within 60 minutes from same account | 75 | Create Case, Notify Officer |
+| **CBN-008** KYC Tier Limit | Transaction exceeds sender's KYC tier limit (Tier 1: ₦20k, Tier 2: ₦500k) | 100 | Block, Notify Officer, Prompt Tier Upgrade |
+| **CBN-009** Near Tier Limit | Transaction at ≥80% of sender's KYC tier limit | 30 | Review, Notify Officer |
 
 ### Structuring Detection Logic (CBN-003)
 

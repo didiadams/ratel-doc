@@ -30,25 +30,142 @@ The KYC module handles identity verification for your customers. Applications fl
 
 | Status              | Meaning                             | Risk Impact                              |
 | ------------------- | ----------------------------------- | ---------------------------------------- |
-| `PENDING`           | Submitted, awaiting document upload | Score 100, `BLOCK`  -|
+| `PENDING`           | Submitted, awaiting document upload | Score 100, `BLOCK`    |
 | `DOCUMENT_UPLOADED` | ID documents uploaded               | Score 100, `BLOCK`    |
-| `NIN_VERIFIED`      | NIN check passed                    | Partially verified    |
-| `BVN_VERIFIED`      | BVN check passed                    | Partially verified    |
-| `LIVENESS_PASSED`   | Biometric liveness check passed     | Partially verified    |
+| `NIN_VERIFIED`      | NIN check passed                    | Score 100, `BLOCK` (maps to `IN_PROGRESS`) |
+| `BVN_VERIFIED`      | BVN check passed                    | Score 100, `BLOCK` (maps to `IN_PROGRESS`) |
+| `LIVENESS_PASSED`   | Biometric liveness check passed     | Score 0, `APPROVE` (maps to `VERIFIED`)    |
 | `APPROVED`          | Fully verified                      | Score 0, `APPROVE`    |
 | `REJECTED`          | Failed verification                 | Score 100, `BLOCK`    |
 | `EXPIRED`           | Verification expired                | Score 100, `BLOCK`    |
 
+## KYC Tiers (CBN-Compliant)
+
+Ratel supports CBN-mandated account tiers. Each tier requires a different level of identity verification:
+
+| Tier                  | Requirements                                                          | Typical Limits (CBN) |
+| --------------------- | --------------------------------------------------------------------- | -------------------- |
+| `TIER_1` · Basic      | BVN **or** NIN                                                        | ₦20,000 single txn   |
+| `TIER_2` · Standard   | BVN + valid ID (passport / driver&apos;s license / voter&apos;s card)     | ₦500,000 max balance |
+| `TIER_3` · Premium    | BVN/NIN + valid ID + proof of address + liveness check                | Unlimited            |
+
+**Key behaviors:**
+- Applications default to `TIER_1` if no tier is specified at creation
+- Tier 1 requires **either** BVN or NIN verification
+- Tier 2 requires a **linked BVN** plus a **valid means of identification** (Passport, Driver&apos;s License, Voter&apos;s Card, or National ID)
+- Tier 3 adds **proof of address** and a **liveness/biometric check**
+- **Smart tier default**: If both BVN and NIN are provided at creation, the application defaults to `TIER_2`
+- **Auto-upgrade**: As applicants upload documents or complete verifications, the system automatically upgrades their tier when requirements are met
+  - `TIER_1` → `TIER_2`: requires **verified BVN** + valid ID (NIN alone is insufficient for Tier 2)
+  - `TIER_2` → `TIER_3`: requires verified BVN/NIN + valid ID + proof of address + liveness
+- The admin **reviews** documents uploaded by the applicant — never uploads on their behalf
+- The `tier` field is stored on the `KYCApplication` and flows into transaction screening for rule-based limit enforcement
+
+### Applicant "Comes Back" — Adding BVN/NIN Later
+
+Not all applicants provide both BVN and NIN at creation. The system supports a **resume workflow** where an applicant (or officer on their behalf) can add missing identity numbers to an existing `PENDING` application.
+
+**Scenario:**
+1. Applicant creates application with only name and phone → Status: `PENDING`, Tier: `TIER_1`
+2. Later, applicant provides their NIN via mobile app or branch visit
+3. Officer uses `PATCH /api/v1/kyc/applications/:id` to add the NIN
+4. Officer clicks **"Verify NIN"** → Status becomes `NIN_VERIFIED`
+5. Applicant is now Tier 1 approved (or can proceed to Tier 2/3)
+
+```bash
+# Officer adds missing NIN to an existing application
+PATCH /api/v1/kyc/applications/kyc_abc123
+{
+  "nin": "12345678901"
+}
+
+# Then verify it
+POST /api/v1/kyc/applications/kyc_abc123/verify-nin
+{
+  "nin": "12345678901",
+  "firstName": "Chinedu",
+  "lastName": "Obi",
+  "dateOfBirth": "1990-03-15"
+}
+```
+
+**Editable fields:** `nin`, `bvn`, `email`, `phone`, `dateOfBirth`
+**Allowed statuses:** `PENDING`, `DOCUMENT_UPLOADED`, `NIN_VERIFIED`, `BVN_VERIFIED`
+**Validation:** NIN and BVN must be exactly 11 digits; empty strings clear the field; invalid dates are rejected
+**Smart tier bump:** If both BVN and NIN become present, tier auto-bumps to `TIER_2`. If documents/verifications already exist, `auto-upgrade` is also evaluated.
+
+### Status Preservation During Verification
+
+The KYC `status` field tracks the **highest verified milestone** reached. Verifying an identity type never downgrades a higher status:
+
+| Current Status | Verify NIN | Verify BVN | Result |
+| -------------- | ---------- | ---------- | ------ |
+| `PENDING` | `NIN_VERIFIED` | `BVN_VERIFIED` | Normal progression |
+| `NIN_VERIFIED` | `NIN_VERIFIED` | `BVN_VERIFIED` | Upgrades to BVN |
+| `BVN_VERIFIED` | **stays `BVN_VERIFIED`** | `BVN_VERIFIED` | NIN does not downgrade |
+| `LIVENESS_PASSED` | **stays `LIVENESS_PASSED`** | **stays `LIVENESS_PASSED`** | Preserves highest milestone |
+
+This ensures a Tier 2 application at `BVN_VERIFIED` remains approvable even if NIN is later verified, and a Tier 3 application at `LIVENESS_PASSED` remains approvable if additional identity checks are run.
+
+### Tier Upgrade Flow
+
+1. Applicant is approved at **Tier 1** (NIN verified only)
+2. Later, they provide BVN → Admin clicks **"Upgrade to Tier 2"**
+3. System resets status to `NIN_VERIFIED` (preserving the verified NIN)
+4. Admin verifies the BVN → Status becomes `BVN_VERIFIED`
+5. Admin approves → Application is now **Tier 2 · Approved**
+
+### BYOL Provider Tier Limits
+
+If a tenant uses BYOL (Bring Your Own License), their provider may not support all verification types needed for higher tiers. Configure `maxTier` and `supportedVerifications` in the BYOL config:
+
+```json
+{
+  "providerName": "SmileIdentity",
+  "maxTier": "TIER_1",
+  "supportedVerifications": ["nin", "bvn"],
+  // ... rest of config
+}
+```
+
+If a tenant requests Tier 2/3 but their BYOL provider's `maxTier` is lower:
+- With `kycFallbackMode = WALLET_RESERVE`: Platform automatically falls back to embedded providers for the missing verification types
+- With `kycFallbackMode = NONE`: The verification is blocked with a clear error message
+
+## KYC Endpoints
+
+| Method  | Endpoint                                      | Description                  |
+| ------- | --------------------------------------------- | ---------------------------- |
+| `POST`  | `/api/v1/kyc/applications`                    | Submit a KYC application     |
+| `GET`   | `/api/v1/kyc/applications`                    | List applications            |
+| `GET`   | `/api/v1/kyc/applications/:id`                | Retrieve application details |
+| `PATCH` | `/api/v1/kyc/applications/:id`                | Update identity fields       |
+| `POST`  | `/api/v1/kyc/applications/:id/verify-bvn`     | Verify applicant BVN         |
+| `POST`  | `/api/v1/kyc/applications/:id/verify-nin`     | Verify applicant NIN         |
+| `POST`  | `/api/v1/kyc/applications/:id/liveness-check` | Run biometric liveness check |
+| `POST`  | `/api/v1/kyc/applications/:id/documents`      | Upload document to MinIO     |
+| `GET`   | `/api/v1/kyc/applications/:id/documents`      | List uploaded documents      |
+| `GET`   | `/api/v1/kyc/applications/:id/documents/:docId/download` | Get presigned download URL |
+| `DELETE`| `/api/v1/kyc/applications/:id/documents/:docId` | Delete document from MinIO   |
+| `PATCH` | `/api/v1/kyc/applications/:id/approve`        | Approve application          |
+| `PATCH` | `/api/v1/kyc/applications/:id/reject`         | Reject application           |
+| `POST`  | `/api/v1/kyc/applications/:id/upgrade-tier`   | Upgrade to Tier 2 or 3       |
+| `GET`   | `/api/v1/kyc/applications/:id/tier-requirements` | Check tier requirements   |
+
 ## KYB Statuses
 
-| Status               | Meaning                                    | Risk Impact         |
-| -------------------- | ------------------------------------------ | ------------------- |
-| `PENDING`            | Application submitted, awaiting CAC lookup | Score 40, `REVIEW`  |
-| `CAC_VERIFIED`       | CAC lookup successful                      | Score 40, `REVIEW`  |
-| `DIRECTORS_VERIFIED` | Directors identity verified                | Score 40, `REVIEW`  |
-| `BOS_VERIFIED`       | Beneficial owners screened                 | Score 10, `APPROVE` |
-| `APPROVED`           | Fully verified                             | Score 0, `APPROVE`  |
-| `REJECTED`           | Failed verification or sanctions hit       | Score 85, `BLOCK`   |
+| Status                       | Meaning                                    | Risk Impact         |
+| ---------------------------- | ------------------------------------------ | ------------------- |
+| `PENDING`                    | Application submitted, awaiting CAC lookup | Score 100, `BLOCK`  |
+| `CAC_VERIFIED`               | CAC lookup successful                      | Score 100, `BLOCK`  |
+| `DIRECTORS_VERIFIED`         | Directors identity verified                | Score 100, `BLOCK`  |
+| `BENEFICIAL_OWNERS_VERIFIED` | Beneficial owners screened                 | Score 100, `BLOCK`  |
+| `DOCUMENT_UPLOADED`          | Supporting documents uploaded              | Score 100, `BLOCK`  |
+| `SCREENING_PASSED`           | All compliance checks passed               | Score 100, `BLOCK`  |
+| `APPROVED`                   | Fully verified                             | Score 0, `APPROVE`  |
+| `REJECTED`                   | Failed verification or sanctions hit       | Score 100, `BLOCK`  |
+
+> **Note:** KYB is a hard prerequisite for business transactions. Only `APPROVED` status allows transactions to proceed without risk flags. All intermediate statuses score 100 and result in `BLOCK`.
 
 ## Per-Tenant KYC Provider Configuration
 
@@ -160,6 +277,7 @@ Create a new KYC application for a customer.
 | `phone`       | `string` |          | Mobile number with country code     |
 | `email`       | `string` |          | Email address                       |
 | `dateOfBirth` | `string` |          | ISO 8601 date (e.g. `"1990-03-15"`) |
+| `tier`        | `string` |          | `TIER_1`, `TIER_2`, or `TIER_3`. Defaults to `TIER_1` |
 
 **Example Request**
 
@@ -459,6 +577,8 @@ curl -X POST /v1/kyc/applications/kyc_abc123/verify-bvn \
 }
 ```
 
+> **Auto-upgrade behavior:** If the applicant has already uploaded a valid ID document, successful BVN verification may auto-upgrade the application from Tier 1 to Tier 2.
+
 ---
 
 ### Verify NIN
@@ -556,6 +676,8 @@ curl -X POST /v1/kyc/applications/kyc_abc123/liveness-check \
   }
 }
 ```
+
+> **Auto-upgrade behavior:** If the applicant has already uploaded a valid ID and proof of address, successful liveness verification may auto-upgrade the application from Tier 2 to Tier 3.
 
 ---
 
@@ -747,7 +869,7 @@ curl -X POST /v1/kyc/kyb/applications/kyb_abc123/screen-beneficial-owners \
   "data": {
     "allClean": true,
     "beneficialOwners": [{ "name": "Jane Smith", "clean": true, "hits": [] }],
-    "newStatus": "BOS_VERIFIED"
+    "newStatus": "BENEFICIAL_OWNERS_VERIFIED"
   }
 }
 ```
@@ -878,6 +1000,8 @@ curl -X POST /v1/kyc/applications/kyc_abc123/documents \
   }
 }
 ```
+
+> **Auto-upgrade behavior:** After a document is uploaded, the system automatically checks if the applicant now meets the requirements for a higher tier. For example, uploading a `PASSPORT` after BVN verification may auto-upgrade the application from Tier 1 to Tier 2.
 
 ---
 

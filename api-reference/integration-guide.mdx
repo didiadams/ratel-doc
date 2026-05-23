@@ -78,6 +78,7 @@ Submit a single transaction for real-time AML/CFT screening. The response includ
 | `senderAccountNumber`   | `string` | ✅       | Sender's bank account number (NUBAN, 10 digits).                                                                    |
 | `senderBvn`             | `string` |          | Sender's BVN. **Strongly recommended** -enables KYC Verification scoring.                                          |
 | `senderKycStatus`       | `string` |          | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`. Overrides DB lookup in HYBRID/EXTERNAL modes.  |
+| `senderKycTier`         | `string` |          | `TIER_1`, `TIER_2`, `TIER_3`. Required in EXTERNAL mode; enables CBN tier-based limits in rule engines.             |
 | `senderKycVerifiedAt`   | `string` |          | ISO 8601 timestamp of last KYC verification.                                                                        |
 | `senderKycExternalRef`  | `string` |          | Internal KYC reference (e.g. `CORE-BANK-KYC-78432`).                                                                |
 | `senderName`            | `string` | ✅       | Sender's full name. **Screened against global sanctions & PEP lists.**                                              |
@@ -114,6 +115,7 @@ curl -X POST /api/v1/transactions/screen \
     "senderAccountNumber": "0123456789",
     "senderBvn": "22012345678",
     "senderKycStatus": "PENDING",
+    "senderKycTier": "TIER_1",
     "senderKycVerifiedAt": "2026-05-01T10:00:00Z",
     "senderKycExternalRef": "CORE-BANK-KYC-78432",
     "senderName": "John Doe",
@@ -649,7 +651,7 @@ Retrieve a KYC application with full verification results and uploaded documents
 
 `POST /api/v1/kyc/applications/:id/verify-bvn`
 
-Verify the applicant's BVN against the configured identity provider (Prembly, Dojah, or BYOL).
+Verify the applicant's BVN against the configured identity provider (embedded or BYOL).
 
 **Path Parameters**
 
@@ -891,7 +893,7 @@ KYB (Know Your Business) verifies corporate entities before they transact. It in
 | `PENDING`            | Application submitted, awaiting CAC lookup | Score 40, `REVIEW`  |
 | `CAC_VERIFIED`       | CAC lookup successful                      | Score 40, `REVIEW`  |
 | `DIRECTORS_VERIFIED` | Directors identity verified                | Score 40, `REVIEW`  |
-| `BOS_VERIFIED`       | Beneficial owners screened                 | Score 10, `APPROVE` |
+| `BENEFICIAL_OWNERS_VERIFIED` | Beneficial owners screened         | Score 100, `BLOCK`  |
 | `APPROVED`           | Fully verified                             | Score 0, `APPROVE`  |
 | `REJECTED`           | Failed verification or sanctions hit       | Score 85, `BLOCK`   |
 
@@ -1092,7 +1094,7 @@ Screen beneficial owners against global sanctions and PEP watchlists.
   "data": {
     "allClean": true,
     "beneficialOwners": [{ "name": "Jane Smith", "clean": true, "hits": [] }],
-    "newStatus": "BOS_VERIFIED"
+    "newStatus": "BENEFICIAL_OWNERS_VERIFIED"
   }
 }
 ```
@@ -1219,7 +1221,7 @@ Every transaction passes through multiple screening layers in sequence. The enti
 | 1     | **Validation**                 | ~5ms    | Schema validation, idempotency check, persist transaction       |
 | 2     | **Context Enrichment**         | ~15ms   | Fetch sender's recent history, account dormancy, KYC/KYB status |
 | 3     | **Global Sanctions Screening** | ~25ms   | Screen names against OFAC, UN, EU, UK, Interpol, PEP lists      |
-| 4     | **Regulatory Compliance**      | ~2ms    | Execute 7 mandatory AML rules                                   |
+| 4     | **Regulatory Compliance**      | ~2ms    | Execute 9 mandatory AML rules                                   |
 | 5     | **Identity Risk (KYC)**        | ~1ms    | Evaluate sender's KYC verification status                       |
 | 6     | **Identity Risk (KYB)**        | ~1ms    | For business transactions — evaluate KYB verification status    |
 | 7     | **Decision Engine**            | ~10ms   | Local rule evaluation using stored AST formulas                 |
@@ -1227,7 +1229,7 @@ Every transaction passes through multiple screening layers in sequence. The enti
 
 ### Mandatory Regulatory Rules
 
-These 7 rules are **always active** and **cannot be disabled**:
+These 9 rules are **always active** and **cannot be disabled**:
 
 | Rule                           | Trigger                                                              | Auto-Actions                 |
 | ------------------------------ | -------------------------------------------------------------------- | ---------------------------- |
@@ -1238,6 +1240,8 @@ These 7 rules are **always active** and **cannot be disabled**:
 | **AML-005** Foreign Transfer   | International transfer or receiver country ≠ NG                      | Generate FTR                 |
 | **AML-006** Dormant Account    | No activity for ≥ 180 days                                           | Create Case                  |
 | **AML-007** Rapid Succession   | ≥ 5 txns within 60 minutes from same account                         | Create Case                  |
+| **AML-008** KYC Tier Limit     | Transaction exceeds sender's KYC tier limit                          | Block, Prompt Tier Upgrade   |
+| **AML-009** Near Tier Limit    | Transaction at ≥80% of sender's KYC tier limit                       | Review, Notify Officer       |
 
 ### Identity Risk Scoring
 
@@ -1246,7 +1250,8 @@ These 7 rules are **always active** and **cannot be disabled**:
 | Sender KYC Status                                 | Risk Score | Outcome  |
 | ------------------------------------------------- | ---------- | -------- |
 | **APPROVED**                                      | 0       - | APPROVE  |
-| **NIN_VERIFIED / BVN_VERIFIED / LIVENESS_PASSED** | 0          | APPROVE  |
+| **LIVENESS_PASSED**                               | 0          | APPROVE  |
+| **NIN_VERIFIED / BVN_VERIFIED / DOCUMENT_UPLOADED** | 100      | BLOCK    |
 | **PENDING**                                       | 100        | BLOCK    |
 | **DOCUMENT_UPLOADED**                             | 100     - | BLOCK    |
 | **NONE** (no application)                         | 100        | BLOCK    |
@@ -1258,10 +1263,9 @@ These 7 rules are **always active** and **cannot be disabled**:
 | Sender KYB Status                               | Risk Score | Outcome |
 | ----------------------------------------------- | ---------- | ------- |
 | **APPROVED**                                    | 0          | APPROVE |
-| **BOS_VERIFIED**                                | 10         | APPROVE |
-| **PENDING / CAC_VERIFIED / DIRECTORS_VERIFIED** | 40         | REVIEW  |
-| **NONE** (no application)                       | 60         | REVIEW  |
-| **REJECTED**                                    | 85         | BLOCK   |
+| **PENDING / CAC_VERIFIED / DIRECTORS_VERIFIED / BENEFICIAL_OWNERS_VERIFIED / DOCUMENT_UPLOADED / SCREENING_PASSED** | 100 | BLOCK |
+| **NONE** (no application)                       | 100        | BLOCK   |
+| **REJECTED**                                    | 100        | BLOCK   |
 
 ### KYC Trust Modes
 

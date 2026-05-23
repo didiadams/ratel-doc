@@ -263,10 +263,10 @@ docker compose up -d --build --force-recreate ratel-app
 | `DATABASE_PASSWORD`        | Postgres password                                                  |
 | `LOG_LEVEL`                | `info` (default) · `debug` · `trace`                               |
 | `RESEND_API_KEY`           | Email delivery via Resend                                          |
-| `PREMBLY_API_KEY`          | Identity verification (NIN/BVN) -embedded mode                    |
-| `DOJAH_API_KEY`            | Fallback identity verification                                     |
+| `PREMBLY_API_KEY`          | Primary embedded KYC provider API key                             |
+| `DOJAH_API_KEY`            | Fallback embedded KYC provider API key                             |
 | `CAC_API_KEY`              | Corporate Affairs Commission lookup -set for live KYB             |
-| `WATCHMAN_API_URL`         | Moov Watchman internal URL (default: `http://ratel-watchman:8084`) |
+| `WATCHMAN_API_URL`         | Sanctions screening service internal URL (default: `http://ratel-watchman:8084`) |
 | `WATCHMAN_MATCH_THRESHOLD` | Fuzzy match threshold 0–1 (default: `0.85`)                        |
 | `USE_MARBLE`               | Enable Marble decision engine (`true`/`false`)                     |
 

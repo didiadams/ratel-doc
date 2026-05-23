@@ -45,9 +45,15 @@ CAC Lookup ──► Director Verification ──► BO Screening ──► Comp
 | `PENDING` | Application submitted, awaiting CAC lookup |
 | `CAC_VERIFIED` | CAC lookup successful, company details confirmed |
 | `DIRECTORS_VERIFIED` | All directors passed identity verification |
-| `BOS_VERIFIED` | Beneficial owners screened, no sanctions hits |
-| `APPROVED` | Fully verified -business can transact freely |
+| `BENEFICIAL_OWNERS_VERIFIED` | Beneficial owners screened, no sanctions hits |
+| `DOCUMENT_UPLOADED` | Supporting documents uploaded |
+| `SCREENING_PASSED` | All compliance checks passed |
+| `APPROVED` | Fully verified — business can transact freely |
 | `REJECTED` | Failed verification or sanctions hit found |
+
+### Approval Workflow
+
+KYB applications can be approved from `DIRECTORS_VERIFIED`, `BENEFICIAL_OWNERS_VERIFIED`, or `DOCUMENT_UPLOADED` status. The compliance officer reviews CAC results, director verifications, and beneficial owner screenings before approving.
 
 ## Screening Impact for Business Transactions
 
@@ -55,11 +61,10 @@ When a business transaction is screened, the KYB Verification engine evaluates t
 
 | Condition | Score | Outcome | What Happens |
 |-----------|-------|---------|--------------|
-| **No KYB record** | 60 | `REVIEW` | Officer notified, business prompted to complete KYB |
-| **PENDING / CAC_VERIFIED / DIRECTORS_VERIFIED** | 40 | `REVIEW` | Verification in progress -transaction flagged for review |
-| **BOS_VERIFIED** | 10 | `APPROVE` | Partially verified -low risk contribution |
-| **APPROVED** | 0 | `APPROVE` | Fully verified -no risk contribution |
-| **REJECTED** | 85 | `BLOCK` | Transaction blocked, case created automatically |
+| **No KYB record** | 100 | `BLOCK` | Transaction blocked, officer notified, business prompted to complete KYB |
+| **PENDING / CAC_VERIFIED / DIRECTORS_VERIFIED / BENEFICIAL_OWNERS_VERIFIED / DOCUMENT_UPLOADED / SCREENING_PASSED** | 100 | `BLOCK` | Verification incomplete — transaction blocked |
+| **APPROVED** | 0 | `APPROVE` | Fully verified — no risk contribution |
+| **REJECTED** | 100 | `BLOCK` | Transaction blocked, case created automatically |
 
 > **Note**: KYB screening is inserted into the pipeline immediately after KYC Verification. For individual transactions (`entityType: "INDIVIDUAL"` or absent), the KYB engine contributes zero score.
 

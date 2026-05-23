@@ -19,7 +19,7 @@ A tenant represents your organization within Verifow. All your transactions, cas
 | **Independent Rules**      | Each tenant maintains its own custom rules alongside the shared CBN mandatory rules  |
 | **Dedicated Admins**       | Every tenant has `BANK_ADMIN` users who manage day-to-day operations                 |
 | **Engine Configuration**   | Risk weights and thresholds can be tuned per tenant                                  |
-| **Auto-Seeded Rules**      | New tenants automatically receive the 7 CBN mandatory rules                          |
+| **Auto-Seeded Rules**      | New tenants automatically receive the 9 CBN mandatory rules                          |
 | **KYC Provider Selection** | Each tenant chooses between embedded providers or BYOL (Bring Your Own License)      |
 | **KYC Trust Mode**         | Controls how KYC status is resolved: STRICT, HYBRID, or EXTERNAL                      |
 | **BYOL Fallback Mode**     | Defines behavior when the BYOL provider is unavailable                                |
@@ -45,7 +45,7 @@ Each tenant independently controls how customer identity verification is perform
 
 | Mode       | Description                                           | Use Case-                                    |
 | ---------- | ----------------------------------------------------- | --------------------------------------------- |
-| `EMBEDDED` | Platform-managed providers (Prembly → Dojah fallback) | Default — no setup required                   |
+| `EMBEDDED` | Platform-managed providers (primary → fallback chain) | Default — no setup required                   |
 | `BYOL`     | Tenant provides their own KYC API credentials         | Institutions with existing provider contracts |
 
 ### Configuring BYOL
@@ -54,7 +54,7 @@ Each tenant independently controls how customer identity verification is perform
 
 1. Select **BYOL** from-he mode dropdown.
 2. Enter your prov-er details:
-   - **Provider Name** — e-., "Smile Identity"
+   - **Provider Name** — e.g., "YourProviderName"
    - **Base URL** —-our provider's API root
    - **API Key / App ID** -Authentication credentials
    - **Endpoints** — Paths-or NIN, BVN, and Liveness checks

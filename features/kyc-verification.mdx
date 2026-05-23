@@ -9,17 +9,17 @@ Every transaction checks the sender's KYC verification status using their BVN. T
 
 ### Embedded Providers (Default)
 
-BVN, NIN, and vNIN verification calls are made through integrated providers (Prembly, Dojah). When you trigger `verify-bvn` or `verify-nin`, the platform calls the provider's API with the ID number and cross-references the returned name against the applicant's name (including swapped name order, which is common in Nigeria). Liveness checks use face-match and liveness detection APIs.
+BVN, NIN, and vNIN verification calls are made through integrated providers. When you trigger `verify-bvn` or `verify-nin`, the platform calls the provider's API with the ID number and cross-references the returned name against the applicant's name (including swapped name order, which is common in Nigeria). Liveness checks use face-match and liveness detection APIs.
 
 ### Bring Your Own License (BYOL)
 
-Tenants can switch to **BYOL mode** and plug in their own KYC provider via a JSON configuration. This is useful when your institution already has a direct contract with an identity verification provider (e.g., Smile Identity, VerifyMe, Prembly enterprise).
+Tenants can switch to **BYOL mode** and plug in their own KYC provider via a JSON configuration. This is useful when your institution already has a direct contract with an identity verification provider.
 
 **How it works:**
 
 | Mode       | Provider                                    | Configuration                 |
 | ---------- | ------------------------------------------- | ----------------------------- |
-| `EMBEDDED` | Platform-managed (Prembly → Dojah fallback) | None required                 |
+| `EMBEDDED` | Platform-managed (primary → fallback chain) | None required                 |
 | `BYOL`     | Tenant-managed via `CustomProvider`         | JSON config stored per-tenant |
 
 **BYOL Configuration JSON** (stored in `Tenant.kycProviderConfig`):
@@ -42,6 +42,8 @@ Tenants can switch to **BYOL mode** and plug in their own KYC provider via a JSO
     "firstNamePath": "result.first_name",
     "lastNamePath": "result.last_name"
   },
+  "supportedVerifications": ["nin", "bvn", "liveness"],
+  "maxTier": "TIER_3",
   "matchConfidence": 92
 }
 ```
@@ -53,8 +55,58 @@ Tenants can switch to **BYOL mode** and plug in their own KYC provider via a JSO
 | `requestMapping`  | Maps internal field names to provider API fields. Use `{{nin}}` for dynamic values or `'NIN'` for literals. |
 | `responseMapping` | JSON paths to extract `firstName` and `lastName` from the provider response.                                |
 | `matchConfidence` | Minimum confidence (0–100) to consider a name match successful.                                             |
+| `supportedVerifications` | Which checks the BYOL provider supports (`nin`, `bvn`, `vnin`, `liveness`).                          |
+| `maxTier`         | Highest tier this BYOL provider can achieve (`TIER_1`, `TIER_2`, `TIER_3`). If target tier exceeds this, platform falls back to embedded providers (if fallback is enabled). |
 
 Admins can switch modes and edit the BYOL config from **Dashboard → Settings → KYC Provider**.
+
+## KYC Tiers
+
+Ratel implements CBN-mandated KYC tiers. Each tier maps to different verification requirements and transaction limits:
+
+| Tier                | Requirements                                                          | Approval From Status | CBN Typical Limit  |
+| ------------------- | --------------------------------------------------------------------- | -------------------- | ------------------ |
+| `TIER_1` · Basic    | BVN **or** NIN                                                        | `NIN_VERIFIED` / `BVN_VERIFIED` | ₦20,000 single txn |
+| `TIER_2` · Standard | BVN + valid ID                                                        | `BVN_VERIFIED`       | ₦500,000 max balance |
+| `TIER_3` · Premium  | BVN/NIN + valid ID + proof of address + liveness                      | `LIVENESS_PASSED`    | Unlimited          |
+
+- Applications default to `TIER_1`, or `TIER_2` if both BVN and NIN are provided at creation
+- Tier can be explicitly set at creation via the `tier` field
+- **Auto-upgrade**: As applicants upload documents or complete verifications, the system automatically upgrades their tier when requirements are met
+  - `TIER_1` → `TIER_2`: requires **verified BVN** + valid ID (NIN alone does not qualify)
+  - `TIER_2` → `TIER_3`: requires verified BVN/NIN + valid ID + proof of address + liveness
+- Approved applications can be manually upgraded to a higher tier via the dashboard
+- Tier flows into transaction screening for rule-based limit enforcement
+
+### Adding Identity Information After Creation
+
+Applicants often don't have their BVN or NIN available when they first start the onboarding flow. The system supports updating these fields on an existing `PENDING` application via `PATCH /api/v1/kyc/applications/:id`:
+
+```bash
+# Applicant comes back with their BVN
+PATCH /api/v1/kyc/applications/kyc_abc123
+{
+  "bvn": "22012345678",
+  "dateOfBirth": "1990-03-15"
+}
+
+# Then verify it
+POST /api/v1/kyc/applications/kyc_abc123/verify-bvn
+{
+  "bvn": "22012345678",
+  "firstName": "Chinedu",
+  "lastName": "Obi",
+  "dateOfBirth": "1990-03-15"
+}
+```
+
+**Key rules:**
+- Updates only allowed while status is `PENDING`, `DOCUMENT_UPLOADED`, `NIN_VERIFIED`, or `BVN_VERIFIED`
+- NIN and BVN are validated as exactly 11 digits; empty strings clear the field
+- If both BVN and NIN become present, tier auto-bumps from `TIER_1` to `TIER_2`
+- After updating, the system re-evaluates `auto-upgrade` in case documents/verifications already qualify for a higher tier
+- The verification endpoints (`verify-nin`, `verify-bvn`) accept the ID number in the request body, so the application record doesn't need to be pre-populated
+- **Status preservation**: Verifying NIN when status is already `BVN_VERIFIED` or `LIVENESS_PASSED` does not downgrade the status. The highest milestone is always preserved.
 
 ## KYC Application Statuses
 
@@ -80,7 +132,8 @@ When a transaction is screened, the KYC Verification engine evaluates the sender
 | **No KYC record**                                 | 100   | `BLOCK`    | Transaction blocked, officer notified, customer prompted to complete KYC |
 | **PENDING**                                       | 100   | `BLOCK`    | Transaction blocked unti-verification completes                |
 | **DOCUMENT_UPLOADED**                             | 100   | `BLOCK`    | Transaction blocked-ntil verification completes                |
-| **NIN_VERIFIED / BVN_VERIFIED / LIVENESS_PASSED** | 0     | `APPROVE`  | Partially verif-d — no risk contribution                       |
+| **NIN_VERIFIED / BVN_VERIFIED**                   | 100   | `BLOCK`    | Maps to `IN_PROGRESS` — transaction blocked until fully verified |
+| **LIVENESS_PASSED**                               | 0     | `APPROVE`  | Maps to `VERIFIED` — no risk contribution (Tier 3 equivalent)  |
 | **APPROVED**                                      | 0     | `APPROVE`  | Fully verified — no risk contribution                           |
 | **EXPIRED**                                       | 100   | `BLOCK`    | Transaction blocked, re-verification required                   |
 | **REJECTED**                                      | 100   | `BLOCK`    | Transaction blocked, enhanced due diligence required            |
@@ -92,8 +145,8 @@ Tenants can configure how KYC status is resolved during transaction screening:
 | Mode       | Behavior                                                                 |
 | ---------- | ------------------------------------------------------------------------ |
 | `STRICT`   | **Default.** KYC records must exist in Ratel's DB. Payload KYC is ignored. |
-| `HYBRID`   | Uses payload KYC if provided, falls back to DB lookup.                     |
-| `EXTERNAL` | Requires KYC status in every transaction payload. No local DB lookup.      |
+| `HYBRID`   | Uses payload KYC if provided, falls back to DB lookup. `senderKycTier` optional. |
+| `EXTERNAL` | Requires KYC status **and** `senderKycTier` in every transaction payload. No local DB lookup. |
 
 Set the mode via `PATCH /api/v1/tenants/me` with `kycTrustMode`.
 

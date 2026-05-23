@@ -47,6 +47,7 @@ Submit a single transaction for real-time screening. The response includes the f
 | `senderAccountNumber`   | `string` | ✅       | Sender's bank account number (NUBAN, 10 digits)                                         |
 | `senderBvn`             | `string` |          | Sender's BVN. Enables identity risk scoring                                             |
 | `senderKycStatus`       | `string` |          | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`                     |
+| `senderKycTier`         | `string` |          | `TIER_1`, `TIER_2`, `TIER_3`. Required in EXTERNAL mode; optional in HYBRID mode       |
 | `senderKycVerifiedAt`   | `string` |          | ISO 8601 timestamp of last KYC verification                                             |
 | `senderKycExternalRef`  | `string` |          | Internal KYC reference (e.g. `CORE-BANK-KYC-78432`)                                     |
 | `senderName`            | `string` | ✅       | Sender's full name. Screened against sanctions                                          |
@@ -78,6 +79,7 @@ curl -X POST /v1/transactions/screen \
     "senderAccountNumber": "0123456789",
     "senderBvn": "22012345678",
     "senderKycStatus": "VERIFIED",
+    "senderKycTier": "TIER_2",
     "senderKycVerifiedAt": "2026-05-01T10:00:00Z",
     "senderKycExternalRef": "CORE-BANK-KYC-78432",
     "senderName": "John Doe",
@@ -108,6 +110,7 @@ const response = await fetch("/v1/transactions/screen", {
     senderAccountNumber: "0123456789",
     senderBvn: "22012345678",
     senderKycStatus: "VERIFIED",
+    senderKycTier: "TIER_2",
     senderKycVerifiedAt: "2026-05-01T10:00:00Z",
     senderKycExternalRef: "CORE-BANK-KYC-78432",
     senderName: "John Doe",
@@ -143,6 +146,7 @@ response = requests.post(
         "senderAccountNumber": "0123456789",
         "senderBvn": "22012345678",
         "senderKycStatus": "VERIFIED",
+        "senderKycTier": "TIER_2",
         "senderKycVerifiedAt": "2026-05-01T10:00:00Z",
         "senderKycExternalRef": "CORE-BANK-KYC-78432",
         "senderName": "John Doe",

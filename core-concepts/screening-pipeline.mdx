@@ -9,7 +9,7 @@ Every transaction flows through these stages sequentially:
 | 1 | **Validation** | ~5ms | Idempotency check, schema validation, store in database |
 | 2 | **Context Enrichment** | ~15ms | Fetch sender's last 50 transactions, account dormancy, KYC/KYB status |
 | 3 | **Sanctions & PEP** | ~25ms | Screen sender + receiver names against global watchlist entities |
-| 4 | **Regulatory Compliance** | ~2ms | Execute 7 mandatory CBN rules (PEP status from Stage 3 feeds in) |
+| 4 | **Regulatory Compliance** | ~2ms | Execute 9 mandatory CBN rules (PEP status from Stage 3 feeds in) |
 | 5 | **KYC Verification** | ~0ms | Evaluate sender's KYC status (REJECTED / EXPIRED / NONE / VERIFIED) |
 | 6 | **KYB Verification** | ~0ms | For business transactions: evaluate corporate KYB status |
 | 7 | **Custom Rules** | ~10ms | Execute configurable detection rules |
@@ -49,11 +49,14 @@ KYB screening runs when either of these is present in the transaction metadata:
 | KYB Status | Score | Outcome | Description |
 |------------|-------|---------|-------------|
 | **APPROVED** | 0 | `APPROVE` | Fully verified corporate entity |
-| **BOS_VERIFIED** | 10 | `APPROVE` | Beneficial owners screened, no hits |
-| **DIRECTORS_VERIFIED** | 40 | `REVIEW` | Directors verified, BO screening pending |
-| **CAC_VERIFIED** | 40 | `REVIEW` | Company confirmed, director verification pending |
-| **PENDING** | 40 | `REVIEW` | Application submitted, CAC lookup pending |
-| **NONE** (no record) | 60 | `REVIEW` | No KYB application found for this business |
-| **REJECTED** | 85 | `BLOCK` | Failed verification or sanctions hit on beneficial owner |
+| **APPROVED** | 0 | `APPROVE` | Fully verified corporate entity |
+| **BENEFICIAL_OWNERS_VERIFIED** | 100 | `BLOCK` | BOs screened, awaiting final approval |
+| **DIRECTORS_VERIFIED** | 100 | `BLOCK` | Directors verified, awaiting final approval |
+| **CAC_VERIFIED** | 100 | `BLOCK` | Company confirmed, awaiting director verification |
+| **DOCUMENT_UPLOADED** | 100 | `BLOCK` | Supporting documents uploaded, awaiting review |
+| **SCREENING_PASSED** | 100 | `BLOCK` | All compliance checks passed, awaiting final approval |
+| **PENDING** | 100 | `BLOCK` | Application submitted, CAC lookup pending |
+| **NONE** (no record) | 100 | `BLOCK` | No KYB application found for this business |
+| **REJECTED** | 100 | `BLOCK` | Failed verification or sanctions hit on beneficial owner |
 
 ---

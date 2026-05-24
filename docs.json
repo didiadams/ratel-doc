@@ -55,13 +55,7 @@
           "modules/tenants"
         ]
       },
-      {
-        "group": "Operations",
-        "pages": [
-          "ops-guide",
-          "scaling-guide"
-        ]
-      },
+
       {
         "group": "API Reference",
         "pages": [

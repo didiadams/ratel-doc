@@ -19,10 +19,9 @@ This guide covers everything you need to integrate:
 3. [KYC Verification](#kyc-verification)
 4. [KYB Verification](#kyb-verification)
 5. [Liveness Check](#liveness-check)
-6. [Health & System](#health--system)
-7. [How Screening Works](#how-screening-works)
-8. [Webhooks](#webhooks)
-9. [Error Handling](#error-handling)
+6. [How Screening Works](#how-screening-works)
+7. [Webhooks](#webhooks)
+8. [Error Handling](#error-handling)
 
 ---
 
@@ -1171,64 +1170,6 @@ Requires `BANK_ADMIN` or `COMPLIANCE_OFFICER` role.
     "riskLevel": "HIGH",
     "notes": "Sanctions hit on beneficial owner Jane Smith.",
     "updatedAt": "2026-05-16T10:00:00Z"
-  }
-}
-```
-
----
-
-## Health & System
-
-### Health Check
-
-`GET /api/v1/health`
-
-Public endpoint — n-authentication required. Use this to monitor system availability.
-
-**Example Response — 200 OK**
-
-```json
-{
-  "status": "healthy",
-  "timestamp": "2026-05-17T02:46:09.295Z",
-  "version": "0.1.0",
-  "services": {
-    "database": "connected"
-  }
-}
-```
-
-### Engine Health
-
-`GET /api/v1/engines/health`
-
-Returns the health status of all connected screening engines. Requires `BANK_ADMIN` or `SUPER_ADMIN`.
--
-**Example Response — 200 OK**
-
-```json
-{
-  "success": true,
-  "data": {
-    "Decision Engine": {
-      "isHealthy": true,
-      "latencyMs": 6,
-      "details": { "mood": "Feu flammes !" }
-    },
-    "Behavioral Analysis": {
-      "isHealthy": true,
-      "version": "latest",
-      "latencyMs": 36
-    },
-    "SANCTIONS_SCREENING": {
-      "isHealthy": true,
-      "latencyMs": 2,
-      "details": {
-        "description": "Global Sanctions Screening — OFAC SDN/Non-SDN, EU/UK/UN sanctions, FinCEN 311",
-        "endpoint": "http://ratel-watchman:8084/search",
-        "sources": "US OFAC, EU FSF, UK HMT, UN SC, US CSL"
-      }-
-    }
   }
 }
 ```

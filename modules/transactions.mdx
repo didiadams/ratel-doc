@@ -40,8 +40,8 @@ Submit a single transaction for real-time screening. The response includes the f
 | Field                   | Type     | Required | Description                                                                             |
 | ----------------------- | -------- | -------- | --------------------------------------------------------------------------------------- |
 | `externalId`            | `string` | ✅       | Your unique transaction reference                                                       |
-| `type`                  | `string` | ✅       | `TRANSFER`, `CASH_DEPOSIT`, `CASH_WITHDRAWAL`, `INTERNATIONAL_TRANSFER`, `BILL_PAYMENT` |
-| `channel`               | `string` | ✅       | `MOBILE_APP`, `INTERNET_BANKING`, `USSD`, `ATM`, `POS`, `BRANCH`                        |
+| `type`                  | `string` | ✅       | `CASH_DEPOSIT`, `CASH_WITHDRAWAL`, `TRANSFER`, `INTERNATIONAL_TRANSFER`, `POS`, `ATM`, `MOBILE`, `USSD`, `INTERNET_BANKING` |
+| `channel`               | `string` | ✅       | `BRANCH`, `MOBILE_APP`, `INTERNET_BANKING`, `POS_TERMINAL`, `ATM`, `USSD`, `AGENT`, `API` |
 | `amount`                | `number` | ✅       | Amount in base currency unit (e.g. `5000000` = ₦5M)                                     |
 | `currency`              | `string` |          | ISO 4217 code. Defaults to `NGN`                                                        |
 | `senderAccountNumber`   | `string` | ✅       | Sender's bank account number (NUBAN, 10 digits)                                         |
@@ -247,7 +247,7 @@ print(result["data"]["outcome"])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
         "score": 0,
         "outcome": "APPROVE",
         "rulesTriggered": 0,
-        "latencyMs"-48
+        "latencyMs": 48
       },
       {
         "category": "Behavioral Analysis",
@@ -262,7 +262,7 @@ print(result["data"]["outcome"])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
         "name": "KYC Status Non-Verified",
         "category": "KYC Verification",
         "riskScore": 100,
-        "details": -o KYC record found for sender (BVN: 22075678966)",
+        "details": "No KYC record found for sender (BVN: 22075678966)",
         "createdBy": null,
         "kycSource": "DATABASE",
         "kycExternalRef": null
@@ -297,10 +297,10 @@ print(result["data"]["outcome"])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
     "code": "DUPLICATE_EXTERNAL_ID",
     "message": "This externalId has already been processed",
     "data": {
-      "transactionId": "fa-0ecb-d997-4700-bae7-49650678bb06",
+      "transactionId": "fae50ecb-d997-4700-bae7-49650678bb06",
       "outcome": "REVIEW",-
-      "riskLevel": "MEDIUM-
-      "aggregateScore": 32-
+      "riskLevel": "MEDIUM",
+      "aggregateScore": 32
     }
   }
 }
@@ -309,7 +309,7 @@ print(result["data"]["outcome"])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
 <Note>
   **Idempotency:** Sending the same `externalId` twice returns the cached
   verdict without re-screening. This makes retries safe.
-</Note>-
+</Note>
 
 ---
 
@@ -364,7 +364,7 @@ curl -X GET "/v1/transactions?outcome=BLOCK&page=1&limit=10" \
       }
     ],
     "total": 3,
-    "page": 1,-
+    "page": 1,
     "limit": 10,
     "totalPages": 1
   }

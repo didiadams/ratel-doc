@@ -395,11 +395,11 @@ print(result["data"]["outcome"])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
 <Note>
   **Idempotency:** Sending the same `externalId` twice returns the cached
   verdict without re-screening. This makes retries safe.
-</Note>-
--
+</Note>
+
 ----
 
-### List Transaction
+### List Transactions
 
 `GET /api/v1/transactions`
 

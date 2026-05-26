@@ -70,8 +70,8 @@ Submit a single transaction for real-time AML/CFT screening. The response includ
 | Field                   | Type     | Required | Description                                                                                                         |
 | ----------------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
 | `externalId`            | `string` | ✅       | Your unique transaction reference. Used for **idempotency** -sending the same ID twice returns the cached verdict. |
-| `type`                  | `string` | ✅       | `TRANSFER`, `CASH_DEPOSIT`, `CASH_WITHDRAWAL`, `INTERNATIONAL_TRANSFER`, `BILL_PAYMENT`                             |
-| `channel`               | `string` | ✅       | `MOBILE_APP`, `INTERNET_BANKING`, `USSD`, `ATM`, `POS`, `BRANCH`, `API`, `AGENT`                                    |
+| `type`                  | `string` | ✅       | `CASH_DEPOSIT`, `CASH_WITHDRAWAL`, `TRANSFER`, `INTERNATIONAL_TRANSFER`, `POS`, `ATM`, `MOBILE`, `USSD`, `INTERNET_BANKING` |
+| `channel`               | `string` | ✅       | `BRANCH`, `MOBILE_APP`, `INTERNET_BANKING`, `POS_TERMINAL`, `ATM`, `USSD`, `AGENT`, `API`                           |
 | `amount`                | `number` | ✅       | Amount in base currency unit (e.g. `5000000` = ₦5M).                                                                |
 | `currency`              | `string` |          | ISO 4217 code. Defaults to `NGN`.                                                                                   |
 | `senderAccountNumber`   | `string` | ✅       | Sender's bank account number (NUBAN, 10 digits).                                                                    |
@@ -82,14 +82,12 @@ Submit a single transaction for real-time AML/CFT screening. The response includ
 | `senderKycExternalRef`  | `string` |          | Internal KYC reference (e.g. `CORE-BANK-KYC-78432`).                                                                |
 | `senderName`            | `string` | ✅       | Sender's full name. **Screened against global sanctions & PEP lists.**                                              |
 | `senderBankCode`        | `string` |          | Sender's bank CBN code (e.g. `"058"` for GTBank).                                                                   |
-| `senderBankCode`        | `string` |          | Sender's bank CBN code (e.g. `"058"` for GTBank).                                                                   |
 | `receiverAccountNumber` | `string` |          | Receiver's account number.                                                                                          |
 | `receiverName`          | `string` |          | Receiver's full name. **Also screened if provided.**                                                                |
 | `receiverBvn`           | `string` |          | Receiver's BVN.                                                                                                     |
 | `receiverKycStatus`     | `string` |          | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`.                                                  |
 | `receiverKycVerifiedAt` | `string` |          | ISO 8601 timestamp of last KYC verification.                                                                          |
 | `receiverKycExternalRef`| `string` |          | Internal KYC reference for the receiver.                                                                              |
-| `receiverBvn`           | `string` |          | Receiver's BVN.                                                                                                     |
 | `receiverBankCode`      | `string` |          | Receiver's bank CBN code.                                                                                           |
 | `receiverCountry`       | `string` |          | ISO 3166-1 alpha-2 code (e.g. `"NG"`, `"US"`). Triggers FTR if ≠ `NG`.                                              |
 | `narration`             | `string` |          | Transaction description. Scanned for high-risk keywords.                                                            |
@@ -279,7 +277,7 @@ print(result["data"]["outcome"])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
         "rulesTriggered": 1,
         "latencyMs": 92
       }
-    ],-
+    ],
     "triggeredRules": [
       {
         "name": "KYC Status Non-Verified",
@@ -333,7 +331,7 @@ print(result["data"]["outcome"])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
       {
         "name": "Structuring Detection",
         "category": "Regulatory Compliance",
-        "riskScore"-80,
+        "riskScore": 80,
         "details": "Potential structuring: 4 transactions totaling ₦11,000,000.00 in 24h",
         "createdBy": null
       },
@@ -385,12 +383,12 @@ print(result["data"]["outcome"])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
 
 <Note>
   **Idempotency:** Sending the same `externalId` twice returns the cached
-  verdict without re-scree-ng. This makes retries safe.
+  verdict without re-screening. This makes retries safe.
 </Note>-
 -
 ----
 
-### List Transactio-
+### List Transaction
 
 `GET /api/v1/transactions`
 
@@ -440,7 +438,7 @@ Retrieve a paginated list of all screened transactions in your tenant.
     "limit": 10,
     "totalPages": 1
   }
-}-
+}
 ```
 
 ---
@@ -594,7 +592,7 @@ curl -X POST /api/v1/kyc/applications \
     "status": "PENDING",
     "riskLevel": null,
     "assignedTo": null,
-    "notes": null,-
+    "notes": null,
     "createdAt": "2026-05-16T08:00:00Z",
     "updatedAt": "2026-05-16T08:00:00Z"
   }
@@ -695,7 +693,7 @@ Verify the applicant's BVN against the configured identity provider (embedded or
 | ------------- | -------- | -------- | ----------------------------- |
 | `bvn`         | `string` | ✅       | BVN to verify (11 digits)     |
 | `firstName`   | `string` | ✅       | First name for cross-match    |
-| `lastName`    | `-ring` | ✅       | Last name for cross-match     |
+| `lastName`    | `string` | ✅       | Last name for cross-match     |
 | `dateOfBirth` | `string` | ✅       | Date of birth for cross-match |
 
 **Example Request**
@@ -803,7 +801,7 @@ curl -X POST /api/v1/kyc/applications/kyc_abc123/liveness-check \
   -d '{
     "selfieImageBase64": "/9j/4AAQSkZJRgABAQEASABIAAD...",
     "documentImageBase64": "/9j/4AAQSkZJRgABAQEASABIAAD..."
-  }'--
+  }'
 ```
 
 **Example Response — 200 OK (Pass)**
@@ -1007,7 +1005,7 @@ curl -X POST /api/v1/kyc/kyb/applications \
       { "name": "Jane Smith", "percentage": 75, "bvn": "22087654321" }
     ],
     "assignedTo": null,
-    "notes": null,-
+    "notes": null,
     "createdAt": "2026-05-16T08:00:00Z",
     "updatedAt": "2026-05-16T08:00:00Z"
   }
@@ -1052,7 +1050,7 @@ Run a CAC lookup by RC number to fetch company details, directors, and beneficia
     },
     "newStatus": "CAC_VERIFIED"
   }
-}-
+}
 ```
 
 ---
@@ -1089,7 +1087,7 @@ Verify each director's identity via BVN/NIN against identity providers.
       }
     ],
     "newStatus": "DIRECTORS_VERIFIED"
-  }-
+  }
 }
 ```
 
@@ -1110,7 +1108,7 @@ Screen beneficial owners against global sanctions and PEP watchlists.
 | `beneficialOwners[].clean` | `boolean` | ✅       | Pre-screened clean flag             |
 | `beneficialOwners[].hits`  | `array`   |          | List of watchlist hits if not clean |
 
-**Example Response -200 OK**
+**Example Response — 200 OK**
 
 ```json
 {
@@ -1138,7 +1136,7 @@ Requires `BANK_ADMIN` or `COMPLIANCE_OFFICER` role.
   "success": true,
   "data": {
     "id": "kyb_abc123",
-    "status": "APPR-ED",
+    "status": "APPROVED",
     "riskLevel": "LOW",
     "updatedAt": "2026-05-16T10:00:00Z"
   }
@@ -1161,9 +1159,9 @@ Requires `BANK_ADMIN` or `COMPLIANCE_OFFICER` role.
 
 **Example Response — 200 OK**
 
-```json-
+```json
 {
-  "success": true,-
+  "success": true,
   "data": {
     "id": "kyb_abc123",
     "status": "REJECTED",
@@ -1215,11 +1213,11 @@ These 9 rules are **always active** and **cannot be disabled**:
 
 | Sender KYC Status                                 | Risk Score | Outcome  |
 | ------------------------------------------------- | ---------- | -------- |
-| **APPROVED**                                      | 0       - | APPROVE  |
+| **APPROVED**                                      | 0 | APPROVE  |
 | **LIVENESS_PASSED**                               | 0          | APPROVE  |
 | **NIN_VERIFIED / BVN_VERIFIED / DOCUMENT_UPLOADED** | 100      | BLOCK    |
 | **PENDING**                                       | 100        | BLOCK    |
-| **DOCUMENT_UPLOADED**                             | 100     - | BLOCK    |
+| **DOCUMENT_UPLOADED**                             | 100 | BLOCK    |
 | **NONE** (no application)                         | 100        | BLOCK    |
 | **EXPIRED**                                       | 100        | BLOCK    |
 | **REJECTED**                                      | 100        | BLOCK    |
@@ -1277,7 +1275,7 @@ Verifow sends real-time notifications to your backend when a compliance officer 
 | --------------- | ----------------------------------------------------------------------------------------------------- |
 | `case.resolved` | A compliance officer marks a case as `RESOLVED_TRUE_POSITIVE`, `RESOLVED_FALSE_POSITIVE`, or `CLOSED` |
 
-### Payload-
+### Payload
 
 ```json
 {
@@ -1362,14 +1360,14 @@ def handle_webhook():
     if not hmac.compare_digest(signature, expected):
         abort(401)
 
-    event = json.loads(request.data)-
+    event = json.loads(request.data)
 
     if event['event'] == 'case.resolved':
         if event['data']['status'] == 'RESOLVED_FALSE_POSITIVE':
             # Unfreeze the transaction
             pass
         elif event['data']['status'] == 'RESOLVED_TRUE_POSITIVE':
-            # -rmanently block
+            # Permanently block
             pass
 
     return 'OK', 200

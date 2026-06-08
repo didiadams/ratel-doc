@@ -28,28 +28,29 @@ The KYC module handles identity verification for your customers. Applications fl
 
 ## KYC Statuses
 
-| Status              | Meaning                             | Risk Impact                              |
-| ------------------- | ----------------------------------- | ---------------------------------------- |
-| `PENDING`           | Submitted, awaiting document upload | Score 100, `BLOCK`    |
-| `DOCUMENT_UPLOADED` | ID documents uploaded               | Score 100, `BLOCK`    |
+| Status              | Meaning                             | Risk Impact                                |
+| ------------------- | ----------------------------------- | ------------------------------------------ |
+| `PENDING`           | Submitted, awaiting document upload | Score 100, `BLOCK`                         |
+| `DOCUMENT_UPLOADED` | ID documents uploaded               | Score 100, `BLOCK`                         |
 | `NIN_VERIFIED`      | NIN check passed                    | Score 100, `BLOCK` (maps to `IN_PROGRESS`) |
 | `BVN_VERIFIED`      | BVN check passed                    | Score 100, `BLOCK` (maps to `IN_PROGRESS`) |
 | `LIVENESS_PASSED`   | Biometric liveness check passed     | Score 0, `APPROVE` (maps to `VERIFIED`)    |
-| `APPROVED`          | Fully verified                      | Score 0, `APPROVE`    |
-| `REJECTED`          | Failed verification                 | Score 100, `BLOCK`    |
-| `EXPIRED`           | Verification expired                | Score 100, `BLOCK`    |
+| `APPROVED`          | Fully verified                      | Score 0, `APPROVE`                         |
+| `REJECTED`          | Failed verification                 | Score 100, `BLOCK`                         |
+| `EXPIRED`           | Verification expired                | Score 100, `BLOCK`                         |
 
 ## KYC Tiers (CBN-Compliant)
 
-Ratel supports CBN-mandated account tiers. Each tier requires a different level of identity verification:
+The platform supports CBN-mandated account tiers. Each tier requires a different level of identity verification:
 
-| Tier                  | Requirements                                                          | Typical Limits (CBN) |
-| --------------------- | --------------------------------------------------------------------- | -------------------- |
-| `TIER_1` · Basic      | BVN **or** NIN                                                        | ₦20,000 single txn   |
-| `TIER_2` · Standard   | BVN + valid ID (passport / driver&apos;s license / voter&apos;s card)     | ₦500,000 max balance |
-| `TIER_3` · Premium    | BVN/NIN + valid ID + proof of address + liveness check                | Unlimited            |
+| Tier                | Requirements                                                          | Typical Limits (CBN) |
+| ------------------- | --------------------------------------------------------------------- | -------------------- |
+| `TIER_1` · Basic    | BVN **or** NIN                                                        | ₦20,000 single txn   |
+| `TIER_2` · Standard | BVN + valid ID (passport / driver&apos;s license / voter&apos;s card) | ₦500,000 max balance |
+| `TIER_3` · Premium  | BVN/NIN + valid ID + proof of address + liveness check                | Unlimited            |
 
 **Key behaviors:**
+
 - Applications default to `TIER_1` if no tier is specified at creation
 - Tier 1 requires **either** BVN or NIN verification
 - Tier 2 requires a **linked BVN** plus a **valid means of identification** (Passport, Driver&apos;s License, Voter&apos;s Card, or National ID)
@@ -66,6 +67,7 @@ Ratel supports CBN-mandated account tiers. Each tier requires a different level 
 Not all applicants provide both BVN and NIN at creation. The system supports a **resume workflow** where an applicant (or officer on their behalf) can add missing identity numbers to an existing `PENDING` application.
 
 **Scenario:**
+
 1. Applicant creates application with only name and phone → Status: `PENDING`, Tier: `TIER_1`
 2. Later, applicant provides their NIN via mobile app or branch visit
 3. Officer uses `PATCH /api/v1/kyc/applications/:id` to add the NIN
@@ -98,11 +100,11 @@ POST /api/v1/kyc/applications/kyc_abc123/verify-nin
 
 The KYC `status` field tracks the **highest verified milestone** reached. Verifying an identity type never downgrades a higher status:
 
-| Current Status | Verify NIN | Verify BVN | Result |
-| -------------- | ---------- | ---------- | ------ |
-| `PENDING` | `NIN_VERIFIED` | `BVN_VERIFIED` | Normal progression |
-| `NIN_VERIFIED` | `NIN_VERIFIED` | `BVN_VERIFIED` | Upgrades to BVN |
-| `BVN_VERIFIED` | **stays `BVN_VERIFIED`** | `BVN_VERIFIED` | NIN does not downgrade |
+| Current Status    | Verify NIN                  | Verify BVN                  | Result                      |
+| ----------------- | --------------------------- | --------------------------- | --------------------------- |
+| `PENDING`         | `NIN_VERIFIED`              | `BVN_VERIFIED`              | Normal progression          |
+| `NIN_VERIFIED`    | `NIN_VERIFIED`              | `BVN_VERIFIED`              | Upgrades to BVN             |
+| `BVN_VERIFIED`    | **stays `BVN_VERIFIED`**    | `BVN_VERIFIED`              | NIN does not downgrade      |
 | `LIVENESS_PASSED` | **stays `LIVENESS_PASSED`** | **stays `LIVENESS_PASSED`** | Preserves highest milestone |
 
 This ensures a Tier 2 application at `BVN_VERIFIED` remains approvable even if NIN is later verified, and a Tier 3 application at `LIVENESS_PASSED` remains approvable if additional identity checks are run.
@@ -123,47 +125,48 @@ If a tenant uses BYOL (Bring Your Own License), their provider may not support a
 {
   "providerName": "SmileIdentity",
   "maxTier": "TIER_1",
-  "supportedVerifications": ["nin", "bvn"],
+  "supportedVerifications": ["nin", "bvn"]
   // ... rest of config
 }
 ```
 
 If a tenant requests Tier 2/3 but their BYOL provider's `maxTier` is lower:
+
 - With `kycFallbackMode = WALLET_RESERVE`: Platform automatically falls back to embedded providers for the missing verification types
 - With `kycFallbackMode = NONE`: The verification is blocked with a clear error message
 
 ## KYC Endpoints
 
-| Method  | Endpoint                                      | Description                  |
-| ------- | --------------------------------------------- | ---------------------------- |
-| `POST`  | `/api/v1/kyc/applications`                    | Submit a KYC application     |
-| `GET`   | `/api/v1/kyc/applications`                    | List applications            |
-| `GET`   | `/api/v1/kyc/applications/:id`                | Retrieve application details |
-| `PATCH` | `/api/v1/kyc/applications/:id`                | Update identity fields       |
-| `POST`  | `/api/v1/kyc/applications/:id/verify-bvn`     | Verify applicant BVN         |
-| `POST`  | `/api/v1/kyc/applications/:id/verify-nin`     | Verify applicant NIN         |
-| `POST`  | `/api/v1/kyc/applications/:id/liveness-check` | Run biometric liveness check |
-| `POST`  | `/api/v1/kyc/applications/:id/documents`      | Upload document to MinIO     |
-| `GET`   | `/api/v1/kyc/applications/:id/documents`      | List uploaded documents      |
-| `GET`   | `/api/v1/kyc/applications/:id/documents/:docId/download` | Get presigned download URL |
-| `DELETE`| `/api/v1/kyc/applications/:id/documents/:docId` | Delete document from MinIO   |
-| `PATCH` | `/api/v1/kyc/applications/:id/approve`        | Approve application          |
-| `PATCH` | `/api/v1/kyc/applications/:id/reject`         | Reject application           |
-| `POST`  | `/api/v1/kyc/applications/:id/upgrade-tier`   | Upgrade to Tier 2 or 3       |
-| `GET`   | `/api/v1/kyc/applications/:id/tier-requirements` | Check tier requirements   |
+| Method   | Endpoint                                                 | Description                  |
+| -------- | -------------------------------------------------------- | ---------------------------- |
+| `POST`   | `/api/v1/kyc/applications`                               | Submit a KYC application     |
+| `GET`    | `/api/v1/kyc/applications`                               | List applications            |
+| `GET`    | `/api/v1/kyc/applications/:id`                           | Retrieve application details |
+| `PATCH`  | `/api/v1/kyc/applications/:id`                           | Update identity fields       |
+| `POST`   | `/api/v1/kyc/applications/:id/verify-bvn`                | Verify applicant BVN         |
+| `POST`   | `/api/v1/kyc/applications/:id/verify-nin`                | Verify applicant NIN         |
+| `POST`   | `/api/v1/kyc/applications/:id/liveness-check`            | Run biometric liveness check |
+| `POST`   | `/api/v1/kyc/applications/:id/documents`                 | Upload document to MinIO     |
+| `GET`    | `/api/v1/kyc/applications/:id/documents`                 | List uploaded documents      |
+| `GET`    | `/api/v1/kyc/applications/:id/documents/:docId/download` | Get presigned download URL   |
+| `DELETE` | `/api/v1/kyc/applications/:id/documents/:docId`          | Delete document from MinIO   |
+| `PATCH`  | `/api/v1/kyc/applications/:id/approve`                   | Approve application          |
+| `PATCH`  | `/api/v1/kyc/applications/:id/reject`                    | Reject application           |
+| `POST`   | `/api/v1/kyc/applications/:id/upgrade-tier`              | Upgrade to Tier 2 or 3       |
+| `GET`    | `/api/v1/kyc/applications/:id/tier-requirements`         | Check tier requirements      |
 
 ## KYB Statuses
 
-| Status                       | Meaning                                    | Risk Impact         |
-| ---------------------------- | ------------------------------------------ | ------------------- |
-| `PENDING`                    | Application submitted, awaiting CAC lookup | Score 100, `BLOCK`  |
-| `CAC_VERIFIED`               | CAC lookup successful                      | Score 100, `BLOCK`  |
-| `DIRECTORS_VERIFIED`         | Directors identity verified                | Score 100, `BLOCK`  |
-| `BENEFICIAL_OWNERS_VERIFIED` | Beneficial owners screened                 | Score 100, `BLOCK`  |
-| `DOCUMENT_UPLOADED`          | Supporting documents uploaded              | Score 100, `BLOCK`  |
-| `SCREENING_PASSED`           | All compliance checks passed               | Score 100, `BLOCK`  |
-| `APPROVED`                   | Fully verified                             | Score 0, `APPROVE`  |
-| `REJECTED`                   | Failed verification or sanctions hit       | Score 100, `BLOCK`  |
+| Status                       | Meaning                                    | Risk Impact        |
+| ---------------------------- | ------------------------------------------ | ------------------ |
+| `PENDING`                    | Application submitted, awaiting CAC lookup | Score 100, `BLOCK` |
+| `CAC_VERIFIED`               | CAC lookup successful                      | Score 100, `BLOCK` |
+| `DIRECTORS_VERIFIED`         | Directors identity verified                | Score 100, `BLOCK` |
+| `BENEFICIAL_OWNERS_VERIFIED` | Beneficial owners screened                 | Score 100, `BLOCK` |
+| `DOCUMENT_UPLOADED`          | Supporting documents uploaded              | Score 100, `BLOCK` |
+| `SCREENING_PASSED`           | All compliance checks passed               | Score 100, `BLOCK` |
+| `APPROVED`                   | Fully verified                             | Score 0, `APPROVE` |
+| `REJECTED`                   | Failed verification or sanctions hit       | Score 100, `BLOCK` |
 
 > **Note:** KYB is a hard prerequisite for business transactions. Only `APPROVED` status allows transactions to proceed without risk flags. All intermediate statuses score 100 and result in `BLOCK`.
 
@@ -221,42 +224,42 @@ The configuration is stored as JSON in `Tenant.kycProviderConfig`:
 
 ## KYC Endpoints
 
-| Method  | Endpoint                                      | Description                  |
-| ------- | --------------------------------------------- | ---------------------------- |
-| `POST`  | `/api/v1/kyc/applications`                    | Submit a KYC application     |
-| `GET`   | `/api/v1/kyc/applications`                    | List applications            |
-| `GET`   | `/api/v1/kyc/applications/:id`                | Retrieve application details |
-| `POST`  | `/api/v1/kyc/applications/:id/verify-bvn`     | Verify applicant BVN         |
-| `POST`  | `/api/v1/kyc/applications/:id/verify-nin`     | Verify applicant NIN         |
-| `POST`  | `/api/v1/kyc/applications/:id/liveness-check` | Run biometric liveness check |
-| `POST`  | `/api/v1/kyc/applications/:id/documents`      | Upload document to MinIO     |
-| `GET`   | `/api/v1/kyc/applications/:id/documents`      | List uploaded documents      |
-| `GET`   | `/api/v1/kyc/applications/:id/documents/:docId/download` | Get presigned download URL |
-| `DELETE`| `/api/v1/kyc/applications/:id/documents/:docId` | Delete document from MinIO   |
-| `PATCH` | `/api/v1/kyc/applications/:id/approve`        | Approve application          |
-| `PATCH` | `/api/v1/kyc/applications/:id/reject`         | Reject application           |
+| Method   | Endpoint                                                 | Description                  |
+| -------- | -------------------------------------------------------- | ---------------------------- |
+| `POST`   | `/api/v1/kyc/applications`                               | Submit a KYC application     |
+| `GET`    | `/api/v1/kyc/applications`                               | List applications            |
+| `GET`    | `/api/v1/kyc/applications/:id`                           | Retrieve application details |
+| `POST`   | `/api/v1/kyc/applications/:id/verify-bvn`                | Verify applicant BVN         |
+| `POST`   | `/api/v1/kyc/applications/:id/verify-nin`                | Verify applicant NIN         |
+| `POST`   | `/api/v1/kyc/applications/:id/liveness-check`            | Run biometric liveness check |
+| `POST`   | `/api/v1/kyc/applications/:id/documents`                 | Upload document to MinIO     |
+| `GET`    | `/api/v1/kyc/applications/:id/documents`                 | List uploaded documents      |
+| `GET`    | `/api/v1/kyc/applications/:id/documents/:docId/download` | Get presigned download URL   |
+| `DELETE` | `/api/v1/kyc/applications/:id/documents/:docId`          | Delete document from MinIO   |
+| `PATCH`  | `/api/v1/kyc/applications/:id/approve`                   | Approve application          |
+| `PATCH`  | `/api/v1/kyc/applications/:id/reject`                    | Reject application           |
 
 ## KYB Endpoints
 
-| Method  | Endpoint                                                    | Description                  |
-| ------- | ----------------------------------------------------------- | ---------------------------- |
-| `POST`  | `/api/v1/kyc/kyb/applications`                              | Create a KYB application     |
-| `GET`   | `/api/v1/kyc/kyb/applications`                              | List KYB applications        |
-| `GET`   | `/api/v1/kyc/kyb/applications/:id`                          | Get KYB application details  |
-| `POST`  | `/api/v1/kyc/kyb/applications/:id/verify-cac`               | Run CAC lookup by RC number  |
-| `POST`  | `/api/v1/kyc/kyb/applications/:id/verify-directors`         | Verify all directors via KYC |
-| `POST`  | `/api/v1/kyc/kyb/applications/:id/screen-beneficial-owners` | Screen BOs against sanctions |
-| `POST`  | `/api/v1/kyc/kyb/applications/:id/documents`                | Upload KYB document to MinIO |
-| `GET`   | `/api/v1/kyc/kyb/applications/:id/documents`                | List KYB uploaded documents  |
-| `GET`   | `/api/v1/kyc/kyb/applications/:id/documents/:docId/download`| Get presigned download URL   |
-| `DELETE`| `/api/v1/kyc/kyb/applications/:id/documents/:docId`         | Delete KYB document from MinIO |
-| `PATCH` | `/api/v1/kyc/kyb/applications/:id/approve`                  | Approve KYB application      |
-| `PATCH` | `/api/v1/kyc/kyb/applications/:id/reject`                   | Reject KYB application       |
+| Method   | Endpoint                                                     | Description                    |
+| -------- | ------------------------------------------------------------ | ------------------------------ |
+| `POST`   | `/api/v1/kyc/kyb/applications`                               | Create a KYB application       |
+| `GET`    | `/api/v1/kyc/kyb/applications`                               | List KYB applications          |
+| `GET`    | `/api/v1/kyc/kyb/applications/:id`                           | Get KYB application details    |
+| `POST`   | `/api/v1/kyc/kyb/applications/:id/verify-cac`                | Run CAC lookup by RC number    |
+| `POST`   | `/api/v1/kyc/kyb/applications/:id/verify-directors`          | Verify all directors via KYC   |
+| `POST`   | `/api/v1/kyc/kyb/applications/:id/screen-beneficial-owners`  | Screen BOs against sanctions   |
+| `POST`   | `/api/v1/kyc/kyb/applications/:id/documents`                 | Upload KYB document to MinIO   |
+| `GET`    | `/api/v1/kyc/kyb/applications/:id/documents`                 | List KYB uploaded documents    |
+| `GET`    | `/api/v1/kyc/kyb/applications/:id/documents/:docId/download` | Get presigned download URL     |
+| `DELETE` | `/api/v1/kyc/kyb/applications/:id/documents/:docId`          | Delete KYB document from MinIO |
+| `PATCH`  | `/api/v1/kyc/kyb/applications/:id/approve`                   | Approve KYB application        |
+| `PATCH`  | `/api/v1/kyc/kyb/applications/:id/reject`                    | Reject KYB application         |
 
 ## Tenant Configuration Endpoints
 
-| Method  | Endpoint             | Description                                                              |
-| ------- | -------------------- | ------------------------------------------------------------------------ |
+| Method  | Endpoint             | Description                                                                                                   |
+| ------- | -------------------- | ------------------------------------------------------------------------------------------------------------- |
 | `PATCH` | `/api/v1/tenants/me` | Update tenant config including `kycProviderMode`, `kycProviderConfig`, `kycTrustMode`, and `byolFallbackMode` |
 
 ---
@@ -267,16 +270,16 @@ Create a new KYC application for a customer.
 
 **Request Body**
 
-| Field         | Type     | Required | Description                         |
-| ------------- | -------- | -------- | ----------------------------------- |
-| `entityType`  | `string` | ✅       | `INDIVIDUAL` or `BUSINESS`          |
-| `firstName`   | `string` | ✅       | Applicant first name                |
-| `lastName`    | `string` | ✅       | Applicant last name                 |
-| `bvn`         | `string` |          | Bank Verification Number            |
-| `nin`         | `string` |          | National Identity Number            |
-| `phone`       | `string` |          | Mobile number with country code     |
-| `email`       | `string` |          | Email address                       |
-| `dateOfBirth` | `string` |          | ISO 8601 date (e.g. `"1990-03-15"`) |
+| Field         | Type     | Required | Description                                           |
+| ------------- | -------- | -------- | ----------------------------------------------------- |
+| `entityType`  | `string` | ✅       | `INDIVIDUAL` or `BUSINESS`                            |
+| `firstName`   | `string` | ✅       | Applicant first name                                  |
+| `lastName`    | `string` | ✅       | Applicant last name                                   |
+| `bvn`         | `string` |          | Bank Verification Number                              |
+| `nin`         | `string` |          | National Identity Number                              |
+| `phone`       | `string` |          | Mobile number with country code                       |
+| `email`       | `string` |          | Email address                                         |
+| `dateOfBirth` | `string` |          | ISO 8601 date (e.g. `"1990-03-15"`)                   |
 | `tier`        | `string` |          | `TIER_1`, `TIER_2`, or `TIER_3`. Defaults to `TIER_1` |
 
 **Example Request**
@@ -426,7 +429,7 @@ curl -X POST /v1/kyc/kyb/applications/kyb_abc123/verify-cac \
 
 | Parameter | Type      | Default | Description      |
 | --------- | --------- | ------- | ---------------- |
-| `status`  | `string`  | -      | Filter by status |
+| `status`  | `string`  | -       | Filter by status |
 | `page`    | `integer` | `1`     | Page number      |
 | `limit`   | `integer` | `20`    | Items per page   |
 
@@ -613,8 +616,8 @@ curl -X POST /v1/kyc/applications/kyc_abc123/verify-nin \
     "dateOfBirth": "1990-03-15"
   }'
 ```
--
-**Example Response — 200 OK**
+
+- **Example Response — 200 OK**
 
 ```json
 {
@@ -650,7 +653,7 @@ Run a biometric liveness and face-match check.
 
 **Example Request**
 
-```bash
+````bash
 curl -X POST /v1/kyc/applications/kyc_abc123/liveness-check \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
@@ -675,7 +678,7 @@ curl -X POST /v1/kyc/applications/kyc_abc123/liveness-check \
     "newStatus": "LIVENESS_PASSED"
   }
 }
-```
+````
 
 > **Auto-upgrade behavior:** If the applicant has already uploaded a valid ID and proof of address, successful liveness verification may auto-upgrade the application from Tier 2 to Tier 3.
 
@@ -872,7 +875,7 @@ Final approval of a KYB application. Requires `BANK_ADMIN` or `COMPLIANCE_OFFICE
 **Path Parameters**
 
 | Parameter | Type     | Description          |
-| --------- | ------- | -------------------- |
+| --------- | -------- | -------------------- |
 | `id`      | `string` | KYB Application UUID |
 
 **Example Request**
@@ -966,9 +969,9 @@ Upload a file to MinIO and attach it to a KYC application.
 
 **Request Body (multipart/form-data)**
 
-| Field          | Type     | Required | Description                                         |
-| -------------- | -------- | -------- | --------------------------------------------------- |
-| `file`         | `file`   | ✅       | The file to upload (PDF, JPG, PNG, max 10MB)        |
+| Field          | Type     | Required | Description                                                                                                                                     |
+| -------------- | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `file`         | `file`   | ✅       | The file to upload (PDF, JPG, PNG, max 10MB)                                                                                                    |
 | `documentType` | `string` | ✅       | `PASSPORT`, `NATIONAL_ID`, `DRIVERS_LICENSE`, `VOTERS_CARD`, `UTILITY_BILL`, `BANK_STATEMENT`, `SELFIE`, `LIVENESS_VIDEO`, `SIGNATURE`, `OTHER` |
 
 **Example Request**
@@ -992,7 +995,7 @@ curl -X POST /v1/kyc/applications/kyc_abc123/documents \
     "fileSizeBytes": 204800,
     "mimeType": "application/pdf",
     "uploadedAt": "2026-05-16T08:30:00Z",
-    "presignedUrl": "http://localhost:9000/ratel-documents/kyc/kyc_abc123/1715851200000-passport.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256..."
+    "presignedUrl": "documents/kyc/kyc_abc123/1715851200000-passport.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256..."
   }
 }
 ```
@@ -1020,7 +1023,7 @@ List all documents for a KYC application with presigned URLs.
       "fileSizeBytes": 204800,
       "mimeType": "application/pdf",
       "uploadedAt": "2026-05-16T08:30:00Z",
-      "presignedUrl": "http://localhost:9000/ratel-documents/kyc/kyc_abc123/1715851200000-passport.pdf?X-Amz-Algorithm=..."
+      "presignedUrl": "documents/kyc/kyc_abc123/1715851200000-passport.pdf?X-Amz-Algorithm=..."
     }
   ]
 }
@@ -1047,7 +1050,7 @@ Get a time-limited presigned URL to download a document directly from MinIO.
 {
   "success": true,
   "data": {
-    "url": "http://localhost:9000/ratel-documents/kyc/kyc_abc123/1715851200000-passport.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256...",
+    "url": "documents/kyc/kyc_abc123/1715851200000-passport.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256...",
     "expiresIn": 300
   }
 }
@@ -1082,9 +1085,9 @@ Upload, manage, and retrieve KYB application documents stored in MinIO.
 
 **Request Body (multipart/form-data)**
 
-| Field          | Type     | Required | Description                                         |
-| -------------- | -------- | -------- | --------------------------------------------------- |
-| `file`         | `file`   | ✅       | The file to upload (PDF, JPG, PNG, max 10MB)        |
+| Field          | Type     | Required | Description                                                                                                                                         |
+| -------------- | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `file`         | `file`   | ✅       | The file to upload (PDF, JPG, PNG, max 10MB)                                                                                                        |
 | `documentType` | `string` | ✅       | `CAC_CERTIFICATE`, `MEMART`, `TAX_CLEARANCE`, `BOARD_RESOLUTION`, `AUDITED_ACCOUNTS`, `UTILITY_BILL`, `DIRECTOR_ID`, `BENEFICIAL_OWNER_ID`, `OTHER` |
 
 **Example Request**
@@ -1108,7 +1111,7 @@ curl -X POST /v1/kyc/kyb/applications/kyb_abc123/documents \
     "fileSizeBytes": 512000,
     "mimeType": "application/pdf",
     "uploadedAt": "2026-05-16T09:00:00Z",
-    "presignedUrl": "http://localhost:9000/ratel-documents/kyb/kyb_abc123/1715853000000-cac_certificate.pdf?X-Amz-Algorithm=..."
+    "presignedUrl": "documents/kyb/kyb_abc123/1715853000000-cac_certificate.pdf?X-Amz-Algorithm=..."
   }
 }
 ```
@@ -1134,7 +1137,7 @@ List all documents for a KYB application with presigned URLs.
       "fileSizeBytes": 512000,
       "mimeType": "application/pdf",
       "uploadedAt": "2026-05-16T09:00:00Z",
-      "presignedUrl": "http://localhost:9000/ratel-documents/kyb/kyb_abc123/1715853000000-cac_certificate.pdf?X-Amz-Algorithm=..."
+      "presignedUrl": "documents/kyb/kyb_abc123/1715853000000-cac_certificate.pdf?X-Amz-Algorithm=..."
     }
   ]
 }
@@ -1154,7 +1157,7 @@ Get a time-limited presigned URL to download a KYB document.
 {
   "success": true,
   "data": {
-    "url": "http://localhost:9000/ratel-documents/kyb/kyb_abc123/1715853000000-cac_certificate.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256...",
+    "url": "documents/kyb/kyb_abc123/1715853000000-cac_certificate.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256...",
     "expiresIn": 300
   }
 }

@@ -67,36 +67,36 @@ Submit a single transaction for real-time AML/CFT screening. The response includ
 
 **Request Body**
 
-| Field                   | Type     | Required | Description                                                                                                         |
-| ----------------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
-| `externalId`            | `string` | ✅       | Your unique transaction reference. Used for **idempotency** -sending the same ID twice returns the cached verdict. |
-| `type`                  | `string` | ✅       | `CASH_DEPOSIT`, `CASH_WITHDRAWAL`, `TRANSFER`, `INTERNATIONAL_TRANSFER`, `POS`, `ATM`, `MOBILE`, `USSD`, `INTERNET_BANKING` |
-| `channel`               | `string` | ✅       | `BRANCH`, `MOBILE_APP`, `INTERNET_BANKING`, `POS_TERMINAL`, `ATM`, `USSD`, `AGENT`, `API`                           |
-| `amount`                | `number` | ✅       | Amount in base currency unit (e.g. `5000000` = ₦5M).                                                                |
-| `currency`              | `string` |          | ISO 4217 code. Defaults to `NGN`.                                                                                   |
-| `senderAccountNumber`   | `string` | ✅       | Sender's bank account number (NUBAN, 10 digits).                                                                    |
-| `senderBvn`             | `string` |          | Sender's BVN. **Strongly recommended** -enables KYC Verification scoring.                                          |
-| `senderKycStatus`       | `string` |          | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`. Overrides DB lookup in HYBRID/EXTERNAL modes.  |
-| `senderKycTier`         | `string` |          | `TIER_1`, `TIER_2`, `TIER_3`. Required in EXTERNAL mode; enables CBN tier-based limits in rule engines.             |
-| `senderKycVerifiedAt`   | `string` |          | ISO 8601 timestamp of last KYC verification.                                                                        |
-| `senderKycExternalRef`  | `string` |          | Internal KYC reference (e.g. `CORE-BANK-KYC-78432`).                                                                |
-| `senderName`            | `string` | ✅       | Sender's full name. **Screened against global sanctions & PEP lists.**                                              |
-| `senderBankCode`        | `string` |          | Sender's bank CBN code (e.g. `"058"` for GTBank).                                                                   |
-| `receiverAccountNumber` | `string` |          | Receiver's account number.                                                                                          |
-| `receiverName`          | `string` |          | Receiver's full name. **Also screened if provided.**                                                                |
-| `receiverBvn`           | `string` |          | Receiver's BVN.                                                                                                     |
-| `receiverKycStatus`     | `string` |          | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`.                                                  |
-| `receiverKycVerifiedAt` | `string` |          | ISO 8601 timestamp of last KYC verification.                                                                          |
-| `receiverKycExternalRef`| `string` |          | Internal KYC reference for the receiver.                                                                              |
-| `receiverBankCode`      | `string` |          | Receiver's bank CBN code.                                                                                           |
-| `receiverCountry`       | `string` |          | ISO 3166-1 alpha-2 code (e.g. `"NG"`, `"US"`). Triggers FTR if ≠ `NG`.                                              |
-| `narration`             | `string` |          | Transaction description. Scanned for high-risk keywords.                                                            |
-| `deviceId`              | `string` |          | Device fingerprint. Enables behavioral anomaly detection.                                                           |
-| `ipAddress`             | `string` |          | Client IP address. Enables geo-anomaly detection.                                                                   |
-| `latitude`              | `number` |          | GPS latitude. Used for geo-anomaly detection.                                                                       |
-| `longitude`             | `number` |          | GPS longitude. Used for geo-anomaly detection.                                                                      |
-| `timestamp`             | `string` | ✅       | ISO 8601 (e.g. `"2026-05-08T12:00:00Z"`).                                                                           |
-| `metadata`              | `object` |          | Optional metadata for business transactions (see [KYB Screening](#kyb-screening)).                                  |
+| Field                    | Type     | Required | Description                                                                                                                 |
+| ------------------------ | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `externalId`             | `string` | ✅       | Your unique transaction reference. Used for **idempotency** -sending the same ID twice returns the cached verdict.          |
+| `type`                   | `string` | ✅       | `CASH_DEPOSIT`, `CASH_WITHDRAWAL`, `TRANSFER`, `INTERNATIONAL_TRANSFER`, `POS`, `ATM`, `MOBILE`, `USSD`, `INTERNET_BANKING` |
+| `channel`                | `string` | ✅       | `BRANCH`, `MOBILE_APP`, `INTERNET_BANKING`, `POS_TERMINAL`, `ATM`, `USSD`, `AGENT`, `API`                                   |
+| `amount`                 | `number` | ✅       | Amount in base currency unit (e.g. `5000000` = ₦5M).                                                                        |
+| `currency`               | `string` |          | ISO 4217 code. Defaults to `NGN`.                                                                                           |
+| `senderAccountNumber`    | `string` | ✅       | Sender's bank account number (NUBAN, 10 digits).                                                                            |
+| `senderBvn`              | `string` |          | Sender's BVN. **Strongly recommended** -enables KYC Verification scoring.                                                   |
+| `senderKycStatus`        | `string` |          | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`. Overrides DB lookup in HYBRID/EXTERNAL modes.          |
+| `senderKycTier`          | `string` |          | `TIER_1`, `TIER_2`, `TIER_3`. Required in EXTERNAL mode; enables CBN tier-based limits in rule engines.                     |
+| `senderKycVerifiedAt`    | `string` |          | ISO 8601 timestamp of last KYC verification.                                                                                |
+| `senderKycExternalRef`   | `string` |          | Internal KYC reference (e.g. `CORE-BANK-KYC-78432`).                                                                        |
+| `senderName`             | `string` | ✅       | Sender's full name. **Screened against global sanctions & PEP lists.**                                                      |
+| `senderBankCode`         | `string` |          | Sender's bank CBN code (e.g. `"058"` for GTBank).                                                                           |
+| `receiverAccountNumber`  | `string` |          | Receiver's account number.                                                                                                  |
+| `receiverName`           | `string` |          | Receiver's full name. **Also screened if provided.**                                                                        |
+| `receiverBvn`            | `string` |          | Receiver's BVN.                                                                                                             |
+| `receiverKycStatus`      | `string` |          | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`.                                                        |
+| `receiverKycVerifiedAt`  | `string` |          | ISO 8601 timestamp of last KYC verification.                                                                                |
+| `receiverKycExternalRef` | `string` |          | Internal KYC reference for the receiver.                                                                                    |
+| `receiverBankCode`       | `string` |          | Receiver's bank CBN code.                                                                                                   |
+| `receiverCountry`        | `string` |          | ISO 3166-1 alpha-2 code (e.g. `"NG"`, `"US"`). Triggers FTR if ≠ `NG`.                                                      |
+| `narration`              | `string` |          | Transaction description. Scanned for high-risk keywords.                                                                    |
+| `deviceId`               | `string` |          | Device fingerprint. Enables behavioral anomaly detection.                                                                   |
+| `ipAddress`              | `string` |          | Client IP address. Enables geo-anomaly detection.                                                                           |
+| `latitude`               | `number` |          | GPS latitude. Used for geo-anomaly detection.                                                                               |
+| `longitude`              | `number` |          | GPS longitude. Used for geo-anomaly detection.                                                                              |
+| `timestamp`              | `string` | ✅       | ISO 8601 (e.g. `"2026-05-08T12:00:00Z"`).                                                                                   |
+| `metadata`               | `object` |          | Optional metadata for business transactions (see [KYB Screening](#kyb-screening)).                                          |
 
 **Example Request — Individual Transaction**
 
@@ -307,7 +307,7 @@ print(result["data"]["outcome"])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
 
 **Example Response — 200 OK (BLOCK with Sanctions Hit)**
 
-```json
+````json
 {
   "success": true,
   "data": {
@@ -372,7 +372,7 @@ print(result["data"]["outcome"])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
     ]
   }
 }
-```
+````
 
 **Example Response — 409 Conflict (Idempotent)**
 
@@ -397,7 +397,7 @@ print(result["data"]["outcome"])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
   verdict without re-screening. This makes retries safe.
 </Note>
 
-----
+---
 
 ### List Transactions
 
@@ -532,16 +532,16 @@ KYC (Know Your Customer) verification validates individual customer identities t
 
 ### KYC Application Statuses
 
-| Status              | Meaning                          | Risk Impact          |
-| ------------------- | -------------------------------- | -------------------- |
-| `PENDING`           | Submitted, awaiting verification | Score 100, `BLOCK`   |
-| `DOCUMENT_UPLOADED` | ID documents uploaded            | Score 100, `BLOCK`   |
-| `NIN_VERIFIED`      | NIN check passed                 | Score 100, `BLOCK`   |
-| `BVN_VERIFIED`      | BVN check passed                 | Score 100, `BLOCK`   |
-| `LIVENESS_PASSED`   | Biometric liveness check passed  | Score 0, `APPROVE`   |
-| `APPROVED`          | Fully verified by officer        | Score 0, `APPROVE`   |
-| `REJECTED`          | Failed verification              | Score 100, `BLOCK`   |
-| `EXPIRED`           | Verification expired             | Score 100, `BLOCK`   |
+| Status              | Meaning                          | Risk Impact        |
+| ------------------- | -------------------------------- | ------------------ |
+| `PENDING`           | Submitted, awaiting verification | Score 100, `BLOCK` |
+| `DOCUMENT_UPLOADED` | ID documents uploaded            | Score 100, `BLOCK` |
+| `NIN_VERIFIED`      | NIN check passed                 | Score 100, `BLOCK` |
+| `BVN_VERIFIED`      | BVN check passed                 | Score 100, `BLOCK` |
+| `LIVENESS_PASSED`   | Biometric liveness check passed  | Score 0, `APPROVE` |
+| `APPROVED`          | Fully verified by officer        | Score 0, `APPROVE` |
+| `REJECTED`          | Failed verification              | Score 100, `BLOCK` |
+| `EXPIRED`           | Verification expired             | Score 100, `BLOCK` |
 
 ---
 
@@ -553,16 +553,16 @@ Create a new KYC application for an individual customer.
 
 **Request Body**
 
-| Field         | Type     | Required | Description                          |
-| ------------- | -------- | -------- | ------------------------------------ |
-| `entityType`  | `string` | ✅       | `INDIVIDUAL` or `BUSINESS`           |
-| `firstName`   | `string` | ✅       | Applicant first name                 |
-| `lastName`    | `string` | ✅       | Applicant last name                  |
-| `bvn`         | `string` |          | Bank Verification Number (11 digits) |
-| `nin`         | `string` |          | National Identity Number (11 digits) |
-| `phone`       | `string` |          | Mobile number with country code      |
-| `email`       | `string` |          | Email address                        |
-| `dateOfBirth` | `string` |          | ISO 8601 date (e.g. `"1990-03-15"`)  |
+| Field         | Type     | Required | Description                                           |
+| ------------- | -------- | -------- | ----------------------------------------------------- |
+| `entityType`  | `string` | ✅       | `INDIVIDUAL` or `BUSINESS`                            |
+| `firstName`   | `string` | ✅       | Applicant first name                                  |
+| `lastName`    | `string` | ✅       | Applicant last name                                   |
+| `bvn`         | `string` |          | Bank Verification Number (11 digits)                  |
+| `nin`         | `string` |          | National Identity Number (11 digits)                  |
+| `phone`       | `string` |          | Mobile number with country code                       |
+| `email`       | `string` |          | Email address                                         |
+| `dateOfBirth` | `string` |          | ISO 8601 date (e.g. `"1990-03-15"`)                   |
 | `tier`        | `string` |          | `TIER_1`, `TIER_2`, or `TIER_3`. Defaults to `TIER_1` |
 
 **Example Request**
@@ -614,8 +614,8 @@ curl -X POST /api/v1/kyc/applications \
 
 ### List KYC Applications
 
-`GET /api/v1/kyc/applications`
--
+## `GET /api/v1/kyc/applications`
+
 **Query Parameters**
 
 | Parameter | Type      | Default | Description      |
@@ -735,8 +735,8 @@ curl -X POST /api/v1/kyc/applications/kyc_abc123/verify-bvn \
   }
 }
 ```
--
----
+
+- ***
 
 ### Verify NIN
 
@@ -848,14 +848,14 @@ curl -X POST /api/v1/kyc/applications/kyc_abc123/liveness-check \
   }
 }
 ```
--
-<Note>
-  A failed liveness check does **not** automatically reject the application. The
-  status remains `PENDING` (or its previous state) so a compliance officer can
-  review and decide whether to request a retry or reject.
-</Note>
 
----
+- <Note>
+    A failed liveness check does **not** automatically reject the application.
+    The status remains `PENDING` (or its previous state) so a compliance officer
+    can review and decide whether to request a retry or reject.
+  </Note>
+
+  ***
 
 ### Approve KYC Application
 
@@ -877,14 +877,14 @@ Final approval of a KYC application. Requires `BANK_ADMIN` or `COMPLIANCE_OFFICE
   }
 }
 ```
--
-<Note>
-  Approving a KYC application updates the customer's risk profile. Future
-  transactions from this customer will reflect the `APPROVED` status (score 0,
-  no KYC-related risk).
-</Note>
 
----
+- <Note>
+    Approving a KYC application updates the customer's risk profile. Future
+    transactions from this customer will reflect the `APPROVED` status (score 0,
+    no KYC-related risk).
+  </Note>
+
+  ***
 
 ### Reject KYC Application
 
@@ -921,14 +921,14 @@ KYB (Know Your Business) verifies corporate entities before they transact. It in
 
 ### KYB Application Statuses
 
-| Status               | Meaning                                    | Risk Impact         |
-| -------------------- | ------------------------------------------ | ------------------- |
-| `PENDING`            | Application submitted, awaiting CAC lookup | Score 40, `REVIEW`  |
-| `CAC_VERIFIED`       | CAC lookup successful                      | Score 40, `REVIEW`  |
-| `DIRECTORS_VERIFIED` | Directors identity verified                | Score 40, `REVIEW`  |
-| `BENEFICIAL_OWNERS_VERIFIED` | Beneficial owners screened         | Score 100, `BLOCK`  |
-| `APPROVED`           | Fully verified                             | Score 0, `APPROVE`  |
-| `REJECTED`           | Failed verification or sanctions hit       | Score 85, `BLOCK`   |
+| Status                       | Meaning                                    | Risk Impact        |
+| ---------------------------- | ------------------------------------------ | ------------------ |
+| `PENDING`                    | Application submitted, awaiting CAC lookup | Score 40, `REVIEW` |
+| `CAC_VERIFIED`               | CAC lookup successful                      | Score 40, `REVIEW` |
+| `DIRECTORS_VERIFIED`         | Directors identity verified                | Score 40, `REVIEW` |
+| `BENEFICIAL_OWNERS_VERIFIED` | Beneficial owners screened                 | Score 100, `BLOCK` |
+| `APPROVED`                   | Fully verified                             | Score 0, `APPROVE` |
+| `REJECTED`                   | Failed verification or sanctions hit       | Score 85, `BLOCK`  |
 
 ### KYB Screening Trigger
 
@@ -1222,35 +1222,35 @@ These 9 rules are **always active** and **cannot be disabled**:
 
 #### Individual (KYC)
 
-| Sender KYC Status                                 | Risk Score | Outcome  |
-| ------------------------------------------------- | ---------- | -------- |
-| **APPROVED**                                      | 0 | APPROVE  |
-| **LIVENESS_PASSED**                               | 0          | APPROVE  |
-| **NIN_VERIFIED / BVN_VERIFIED / DOCUMENT_UPLOADED** | 100      | BLOCK    |
-| **PENDING**                                       | 100        | BLOCK    |
-| **DOCUMENT_UPLOADED**                             | 100 | BLOCK    |
-| **NONE** (no application)                         | 100        | BLOCK    |
-| **EXPIRED**                                       | 100        | BLOCK    |
-| **REJECTED**                                      | 100        | BLOCK    |
+| Sender KYC Status                                   | Risk Score | Outcome |
+| --------------------------------------------------- | ---------- | ------- |
+| **APPROVED**                                        | 0          | APPROVE |
+| **LIVENESS_PASSED**                                 | 0          | APPROVE |
+| **NIN_VERIFIED / BVN_VERIFIED / DOCUMENT_UPLOADED** | 100        | BLOCK   |
+| **PENDING**                                         | 100        | BLOCK   |
+| **DOCUMENT_UPLOADED**                               | 100        | BLOCK   |
+| **NONE** (no application)                           | 100        | BLOCK   |
+| **EXPIRED**                                         | 100        | BLOCK   |
+| **REJECTED**                                        | 100        | BLOCK   |
 
 #### Business (KYB)
 
-| Sender KYB Status                               | Risk Score | Outcome |
-| ----------------------------------------------- | ---------- | ------- |
-| **APPROVED**                                    | 0          | APPROVE |
-| **PENDING / CAC_VERIFIED / DIRECTORS_VERIFIED / BENEFICIAL_OWNERS_VERIFIED / DOCUMENT_UPLOADED / SCREENING_PASSED** | 100 | BLOCK |
-| **NONE** (no application)                       | 100        | BLOCK   |
-| **REJECTED**                                    | 100        | BLOCK   |
+| Sender KYB Status                                                                                                   | Risk Score | Outcome |
+| ------------------------------------------------------------------------------------------------------------------- | ---------- | ------- |
+| **APPROVED**                                                                                                        | 0          | APPROVE |
+| **PENDING / CAC_VERIFIED / DIRECTORS_VERIFIED / BENEFICIAL_OWNERS_VERIFIED / DOCUMENT_UPLOADED / SCREENING_PASSED** | 100        | BLOCK   |
+| **NONE** (no application)                                                                                           | 100        | BLOCK   |
+| **REJECTED**                                                                                                        | 100        | BLOCK   |
 
 ### KYC Trust Modes
 
 Tenants can configure how KYC status is resolved during transaction screening:
 
-| Mode       | Behavior                                                                 |
-| ---------- | ------------------------------------------------------------------------ |
-| `STRICT`   | **Default.** KYC records must exist in Ratel's DB. Payload KYC is ignored. |
-| `HYBRID`   | Uses payload KYC if provided, falls back to DB lookup.                     |
-| `EXTERNAL` | Requires KYC status in every transaction payload. No local DB lookup.      |
+| Mode       | Behavior                                                               |
+| ---------- | ---------------------------------------------------------------------- |
+| `STRICT`   | **Default.** KYC records must exist in the DB. Payload KYC is ignored. |
+| `HYBRID`   | Uses payload KYC if provided, falls back to DB lookup.                 |
+| `EXTERNAL` | Requires KYC status in every transaction payload. No local DB lookup.  |
 
 Set the mode via `PATCH /api/v1/tenants/me` with `kycTrustMode`.
 
@@ -1320,36 +1320,37 @@ Verifow sends real-time notifications to your backend when a compliance officer 
 
 ### Signature Verification
 
-Every webhook includes an `X-Ratel-Signature` header — an HMAC-SHA256 hash of the raw JSON body, signed with your Webhook Secret.
+Every webhook includes an `X-Signature` header — an HMAC-SHA256 hash of the raw JSON body, signed with your Webhook Secret.
 
 <CodeGroup>
 ```javascript Node.js (Express)
 const crypto = require('crypto');
 
-app.post('/ratel/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
-  const signature = req.headers['x-ratel-signature'];
-  const hash = crypto
-    .createHmac('sha256', process.env.RATEL_WEBHOOK_SECRET)
-    .update(req.body)
-    .digest('hex');
+app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
+const signature = req.headers['x-signature'];
+const hash = crypto
+.createHmac('sha256', WEBHOOK_SECRET)
+.update(req.body)
+.digest('hex');
 
-  if (`sha256=${hash}` !== signature) {
-    return res.status(401).send('Invalid signature');
-  }
+if (`sha256=${hash}` !== signature) {
+return res.status(401).send('Invalid signature');
+}
 
-  const event = JSON.parse(req.body);
+const event = JSON.parse(req.body);
 
-  if (event.event === 'case.resolved') {
-    if (event.data.status === 'RESOLVED_FALSE_POSITIVE') {
-      // Unfreeze the transaction in your system
-    } else if (event.data.status === 'RESOLVED_TRUE_POSITIVE') {
-      // Permanently block and escalate
-    }
-  }
+if (event.event === 'case.resolved') {
+if (event.data.status === 'RESOLVED_FALSE_POSITIVE') {
+// Unfreeze the transaction in your system
+} else if (event.data.status === 'RESOLVED_TRUE_POSITIVE') {
+// Permanently block and escalate
+}
+}
 
-  res.status(200).send('OK');
+res.status(200).send('OK');
 });
-```
+
+````
 
 ```python Python (Flask)
 import hmac
@@ -1359,11 +1360,11 @@ from flask import Flask, request, abort
 
 app = Flask(__name__)
 
-@app.route('/ratel/webhooks', methods=['POST'])
+@app.route('/webhooks', methods=['POST'])
 def handle_webhook():
-    signature = request.headers.get('X-Ratel-Signature', '')
+    signature = request.headers.get('X-Signature', '')
     expected = 'sha256=' + hmac.new(
-        RATEL_WEBHOOK_SECRET.encode(),
+        WEBHOOK_SECRET.encode(),
         request.data,
         hashlib.sha256
     ).hexdigest()-
@@ -1382,7 +1383,7 @@ def handle_webhook():
             pass
 
     return 'OK', 200
-```
+````
 
 </CodeGroup>
 

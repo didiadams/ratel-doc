@@ -37,36 +37,36 @@ Submit a single transaction for real-time screening. The response includes the f
 
 **Request Body**
 
-| Field                   | Type     | Required | Description                                                                             |
-| ----------------------- | -------- | -------- | --------------------------------------------------------------------------------------- |
-| `externalId`            | `string` | ✅       | Your unique transaction reference                                                       |
-| `type`                  | `string` | ✅       | `CASH_DEPOSIT`, `CASH_WITHDRAWAL`, `TRANSFER`, `INTERNATIONAL_TRANSFER`, `POS`, `ATM`, `MOBILE`, `USSD`, `INTERNET_BANKING` |
-| `channel`               | `string` | ✅       | `BRANCH`, `MOBILE_APP`, `INTERNET_BANKING`, `POS_TERMINAL`, `ATM`, `USSD`, `AGENT`, `API` |
-| `amount`                | `number` | ✅       | Amount in base currency unit (e.g. `5000000` = ₦5M)                                     |
-| `currency`              | `string` |          | ISO 4217 code. Defaults to `NGN`                                                        |
-| `senderAccountNumber`   | `string` | ✅       | Sender's bank account number (NUBAN, 10 digits)                                         |
-| `senderBvn`             | `string` |          | Sender's BVN. Enables identity risk scoring                                             |
-| `senderKycStatus`       | `string` |          | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`                     |
-| `senderKycTier`         | `string` |          | `TIER_1`, `TIER_2`, `TIER_3`. Required in EXTERNAL mode; optional in HYBRID mode       |
-| `senderKycVerifiedAt`   | `string` |          | ISO 8601 timestamp of last KYC verification                                             |
-| `senderKycExternalRef`  | `string` |          | Internal KYC reference (e.g. `CORE-BANK-KYC-78432`)                                     |
-| `senderName`            | `string` | ✅       | Sender's full name. Screened against sanctions                                          |
-| `senderBankCode`        | `string` |          | Sender's bank CBN code (e.g. `"058"` for GTBank)                                      |
-| `receiverAccountNumber` | `string` |          | Receiver's account number                                                               |
-| `receiverName`          | `string` |          | Receiver's full name. Also screened                                                     |
-| `receiverKycStatus`     | `string` |          | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`                     |
-| `receiverKycVerifiedAt` | `string` |          | ISO 8601 timestamp of last KYC verification                                             |
-| `receiverKycExternalRef`| `string` |          | Internal KYC reference for the receiver                                                 |
-| `receiverBvn`           | `string` |          | Receiver's BVN                                                                          |
-| `receiverBankCode`      | `string` |          | Receiver's bank CBN code (e.g. `"058"`)                                                 |
-| `receiverCountry`       | `string` |          | ISO 3166-1 alpha-2. Triggers FTR if ≠ `NG`                                              |
-| `narration`             | `string` |          | Transaction description                                                                 |
-| `deviceId`              | `string` |          | Device fingerprint for behavioral analysis                                              |
-| `ipAddress`             | `string` |          | Client IP for geo-anomaly detection                                                     |
-| `latitude`              | `number` |          | GPS latitude. Used for geo-anomaly detection                                            |
-| `longitude`             | `number` |          | GPS longitude. Used for geo-anomaly detection                                           |
-| `timestamp`             | `string` | ✅       | ISO 8601 timestamp                                                                      |
-| `metadata`              | `object` |          | Optional metadata for business transactions (see KYB Screening)                         |
+| Field                    | Type     | Required | Description                                                                                                                 |
+| ------------------------ | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `externalId`             | `string` | ✅       | Your unique transaction reference                                                                                           |
+| `type`                   | `string` | ✅       | `CASH_DEPOSIT`, `CASH_WITHDRAWAL`, `TRANSFER`, `INTERNATIONAL_TRANSFER`, `POS`, `ATM`, `MOBILE`, `USSD`, `INTERNET_BANKING` |
+| `channel`                | `string` | ✅       | `BRANCH`, `MOBILE_APP`, `INTERNET_BANKING`, `POS_TERMINAL`, `ATM`, `USSD`, `AGENT`, `API`                                   |
+| `amount`                 | `number` | ✅       | Amount in base currency unit (e.g. `5000000` = ₦5M)                                                                         |
+| `currency`               | `string` |          | ISO 4217 code. Defaults to `NGN`                                                                                            |
+| `senderAccountNumber`    | `string` | ✅       | Sender's bank account number (NUBAN, 10 digits)                                                                             |
+| `senderBvn`              | `string` |          | Sender's BVN. Enables identity risk scoring                                                                                 |
+| `senderKycStatus`        | `string` |          | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`                                                         |
+| `senderKycTier`          | `string` |          | `TIER_1`, `TIER_2`, `TIER_3`. Required in EXTERNAL mode; optional in HYBRID mode                                            |
+| `senderKycVerifiedAt`    | `string` |          | ISO 8601 timestamp of last KYC verification                                                                                 |
+| `senderKycExternalRef`   | `string` |          | Internal KYC reference (e.g. `CORE-BANK-KYC-78432`)                                                                         |
+| `senderName`             | `string` | ✅       | Sender's full name. Screened against sanctions                                                                              |
+| `senderBankCode`         | `string` |          | Sender's bank CBN code (e.g. `"058"` for GTBank)                                                                            |
+| `receiverAccountNumber`  | `string` |          | Receiver's account number                                                                                                   |
+| `receiverName`           | `string` |          | Receiver's full name. Also screened                                                                                         |
+| `receiverKycStatus`      | `string` |          | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`                                                         |
+| `receiverKycVerifiedAt`  | `string` |          | ISO 8601 timestamp of last KYC verification                                                                                 |
+| `receiverKycExternalRef` | `string` |          | Internal KYC reference for the receiver                                                                                     |
+| `receiverBvn`            | `string` |          | Receiver's BVN                                                                                                              |
+| `receiverBankCode`       | `string` |          | Receiver's bank CBN code (e.g. `"058"`)                                                                                     |
+| `receiverCountry`        | `string` |          | ISO 3166-1 alpha-2. Triggers FTR if ≠ `NG`                                                                                  |
+| `narration`              | `string` |          | Transaction description                                                                                                     |
+| `deviceId`               | `string` |          | Device fingerprint for behavioral analysis                                                                                  |
+| `ipAddress`              | `string` |          | Client IP for geo-anomaly detection                                                                                         |
+| `latitude`               | `number` |          | GPS latitude. Used for geo-anomaly detection                                                                                |
+| `longitude`              | `number` |          | GPS longitude. Used for geo-anomaly detection                                                                               |
+| `timestamp`              | `string` | ✅       | ISO 8601 timestamp                                                                                                          |
+| `metadata`               | `object` |          | Optional metadata for business transactions (see KYB Screening)                                                             |
 
 **Example Request**
 
@@ -452,10 +452,10 @@ curl -X GET /v1/transactions/fae50ecb-d997-4700-bae7-49650678bb06 \
 
 Tenants can configure how KYC status is resolved during transaction screening:
 
-| Mode       | Behavior                                                                 |
-| ---------- | ------------------------------------------------------------------------ |
-| `STRICT`   | **Default.** KYC records must exist in Ratel's DB. Payload KYC is ignored. |
-| `HYBRID`   | Uses payload KYC if provided, falls back to DB lookup.                     |
-| `EXTERNAL` | Requires KYC status in every transaction payload. No local DB lookup.      |
+| Mode       | Behavior                                                               |
+| ---------- | ---------------------------------------------------------------------- |
+| `STRICT`   | **Default.** KYC records must exist in the DB. Payload KYC is ignored. |
+| `HYBRID`   | Uses payload KYC if provided, falls back to DB lookup.                 |
+| `EXTERNAL` | Requires KYC status in every transaction payload. No local DB lookup.  |
 
 Set the mode via `PATCH /api/v1/tenants/me` with `kycTrustMode`.

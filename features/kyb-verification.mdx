@@ -1,6 +1,6 @@
 ---
-title: 'KYB Verification'
-description: 'Know Your Business -corporate verification via CAC lookup, director identity checks, and beneficial owner sanctions screening'
+title: "KYB Verification"
+description: "Know Your Business -corporate verification via CAC lookup, director identity checks, and beneficial owner sanctions screening"
 ---
 
 The KYB (Know Your Business) module verifies corporate entities before they transact. It integrates with the Corporate Affairs Commission (CAC) to validate company registration, verify directors through KYC identity checks, and screen beneficial owners against global sanctions lists.
@@ -30,26 +30,26 @@ CAC Lookup ──► Director Verification ──► BO Screening ──► Comp
 (RC Number)      (KYC per director)       (Sanctions)       (Approve/Reject)
 ```
 
-| Step | Action | Who |
-|------|--------|-----|
-| 1 | Submit KYB application with company name, RC number, TIN | Compliance Officer |
-| 2 | Run CAC lookup -fetch company details, directors, beneficial owners | `COMPLIANCE_OFFICER` |
-| 3 | Verify each director's identity via NIN/BVN | `COMPLIANCE_OFFICER` |
-| 4 | Screen beneficial owners against Watchman sanctions | `COMPLIANCE_OFFICER` |
-| 5 | Approve or reject the application | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Step | Action                                                              | Who                                |
+| ---- | ------------------------------------------------------------------- | ---------------------------------- |
+| 1    | Submit KYB application with company name, RC number, TIN            | Compliance Officer                 |
+| 2    | Run CAC lookup -fetch company details, directors, beneficial owners | `COMPLIANCE_OFFICER`               |
+| 3    | Verify each director's identity via NIN/BVN                         | `COMPLIANCE_OFFICER`               |
+| 4    | Screen beneficial owners against sanctions                          | `COMPLIANCE_OFFICER`               |
+| 5    | Approve or reject the application                                   | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
 
 ## KYB Statuses
 
-| Status | Meaning |
-|--------|---------|
-| `PENDING` | Application submitted, awaiting CAC lookup |
-| `CAC_VERIFIED` | CAC lookup successful, company details confirmed |
-| `DIRECTORS_VERIFIED` | All directors passed identity verification |
-| `BENEFICIAL_OWNERS_VERIFIED` | Beneficial owners screened, no sanctions hits |
-| `DOCUMENT_UPLOADED` | Supporting documents uploaded |
-| `SCREENING_PASSED` | All compliance checks passed |
-| `APPROVED` | Fully verified — business can transact freely |
-| `REJECTED` | Failed verification or sanctions hit found |
+| Status                       | Meaning                                          |
+| ---------------------------- | ------------------------------------------------ |
+| `PENDING`                    | Application submitted, awaiting CAC lookup       |
+| `CAC_VERIFIED`               | CAC lookup successful, company details confirmed |
+| `DIRECTORS_VERIFIED`         | All directors passed identity verification       |
+| `BENEFICIAL_OWNERS_VERIFIED` | Beneficial owners screened, no sanctions hits    |
+| `DOCUMENT_UPLOADED`          | Supporting documents uploaded                    |
+| `SCREENING_PASSED`           | All compliance checks passed                     |
+| `APPROVED`                   | Fully verified — business can transact freely    |
+| `REJECTED`                   | Failed verification or sanctions hit found       |
 
 ### Approval Workflow
 
@@ -59,12 +59,12 @@ KYB applications can be approved from `DIRECTORS_VERIFIED`, `BENEFICIAL_OWNERS_V
 
 When a business transaction is screened, the KYB Verification engine evaluates the sender's KYB status:
 
-| Condition | Score | Outcome | What Happens |
-|-----------|-------|---------|--------------|
-| **No KYB record** | 100 | `BLOCK` | Transaction blocked, officer notified, business prompted to complete KYB |
-| **PENDING / CAC_VERIFIED / DIRECTORS_VERIFIED / BENEFICIAL_OWNERS_VERIFIED / DOCUMENT_UPLOADED / SCREENING_PASSED** | 100 | `BLOCK` | Verification incomplete — transaction blocked |
-| **APPROVED** | 0 | `APPROVE` | Fully verified — no risk contribution |
-| **REJECTED** | 100 | `BLOCK` | Transaction blocked, case created automatically |
+| Condition                                                                                                           | Score | Outcome   | What Happens                                                             |
+| ------------------------------------------------------------------------------------------------------------------- | ----- | --------- | ------------------------------------------------------------------------ |
+| **No KYB record**                                                                                                   | 100   | `BLOCK`   | Transaction blocked, officer notified, business prompted to complete KYB |
+| **PENDING / CAC_VERIFIED / DIRECTORS_VERIFIED / BENEFICIAL_OWNERS_VERIFIED / DOCUMENT_UPLOADED / SCREENING_PASSED** | 100   | `BLOCK`   | Verification incomplete — transaction blocked                            |
+| **APPROVED**                                                                                                        | 0     | `APPROVE` | Fully verified — no risk contribution                                    |
+| **REJECTED**                                                                                                        | 100   | `BLOCK`   | Transaction blocked, case created automatically                          |
 
 > **Note**: KYB screening is inserted into the pipeline immediately after KYC Verification. For individual transactions (`entityType: "INDIVIDUAL"` or absent), the KYB engine contributes zero score.
 
@@ -72,9 +72,9 @@ When a business transaction is screened, the KYB Verification engine evaluates t
 
 The `CACProvider` performs company lookups by RC number. It operates in two modes:
 
-| Mode | Behavior |
-|------|----------|
-| **Live** | Calls the real CAC API when `CAC_API_KEY` is configured |
+| Mode     | Behavior                                                        |
+| -------- | --------------------------------------------------------------- |
+| **Live** | Calls the real CAC API when `CAC_API_KEY` is configured         |
 | **Mock** | Returns synthetic company data for demos when no API key is set |
 
 Mock mode is useful for demonstrations and development. For production, configure `CAC_API_KEY` in your environment.
@@ -85,26 +85,26 @@ KYB applications support document uploads via the API. Documents are stored in *
 
 ### Supported Document Types
 
-| Type                    | Description                              |
-| ----------------------- | ---------------------------------------- |
-| `CAC_CERTIFICATE`       | CAC registration certificate             |
-| `MEMART`                | Memorandum and Articles of Association   |
-| `TAX_CLEARANCE`         | Tax clearance certificate                |
-| `BOARD_RESOLUTION`      | Board resolution document                |
-| `AUDITED_ACCOUNTS`      | Audited financial accounts               |
-| `UTILITY_BILL`          | Utility bill (address proof)             |
-| `DIRECTOR_ID`           | Director's identity document             |
-| `BENEFICIAL_OWNER_ID`   | Beneficial owner's identity document     |
-| `OTHER`                 | Any other document                       |
+| Type                  | Description                            |
+| --------------------- | -------------------------------------- |
+| `CAC_CERTIFICATE`     | CAC registration certificate           |
+| `MEMART`              | Memorandum and Articles of Association |
+| `TAX_CLEARANCE`       | Tax clearance certificate              |
+| `BOARD_RESOLUTION`    | Board resolution document              |
+| `AUDITED_ACCOUNTS`    | Audited financial accounts             |
+| `UTILITY_BILL`        | Utility bill (address proof)           |
+| `DIRECTOR_ID`         | Director's identity document           |
+| `BENEFICIAL_OWNER_ID` | Beneficial owner's identity document   |
+| `OTHER`               | Any other document                     |
 
 ### Document Endpoints
 
-| Method   | Endpoint                                                    | Description                        |
-| -------- | ----------------------------------------------------------- | ---------------------------------- |
-| `POST`   | `/api/v1/kyc/kyb/applications/:id/documents`                | Upload document (multipart/form-data) |
-| `GET`    | `/api/v1/kyc/kyb/applications/:id/documents`                | List documents with presigned URLs |
-| `GET`    | `/api/v1/kyc/kyb/applications/:id/documents/:docId/download`| Get 5-minute presigned download URL |
-| `DELETE` | `/api/v1/kyc/kyb/applications/:id/documents/:docId`         | Delete document (admin only)       |
+| Method   | Endpoint                                                     | Description                           |
+| -------- | ------------------------------------------------------------ | ------------------------------------- |
+| `POST`   | `/api/v1/kyc/kyb/applications/:id/documents`                 | Upload document (multipart/form-data) |
+| `GET`    | `/api/v1/kyc/kyb/applications/:id/documents`                 | List documents with presigned URLs    |
+| `GET`    | `/api/v1/kyc/kyb/applications/:id/documents/:docId/download` | Get 5-minute presigned download URL   |
+| `DELETE` | `/api/v1/kyc/kyb/applications/:id/documents/:docId`          | Delete document (admin only)          |
 
 ### Upload Example
 
@@ -121,10 +121,10 @@ curl -X POST /api/v1/kyc/kyb/applications/kyb_abc123/documents \
 
 ## Permissions
 
-| Action | Who Can Do It |
-|--------|---------------|
-| Create KYB application | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
-| Run CAC lookup | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
-| Verify directors | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Action                   | Who Can Do It                      |
+| ------------------------ | ---------------------------------- |
+| Create KYB application   | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Run CAC lookup           | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Verify directors         | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
 | Screen beneficial owners | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
-| Approve/reject KYB | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |
+| Approve/reject KYB       | `BANK_ADMIN`, `COMPLIANCE_OFFICER` |

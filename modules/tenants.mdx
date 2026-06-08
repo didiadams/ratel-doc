@@ -68,11 +68,11 @@ The configuration is stored securely as JSON in `Tenant.kycProviderConfig` and i
 
 Controls how KYC status is resolved during transaction screening:
 
-| Mode       | Description                                                                |
-| ---------- | -------------------------------------------------------------------------- |
-| `STRICT`   | **Default.** KYC records must exist in Ratel's DB. Payload KYC is ignored. |
-| `HYBRID`   | Uses payload KYC if provided, falls back to DB lookup.                     |
-| `EXTERNAL` | Requires KYC status in every transaction payload. No local DB lookup.      |
+| Mode       | Description                                                            |
+| ---------- | ---------------------------------------------------------------------- |
+| `STRICT`   | **Default.** KYC records must exist in the DB. Payload KYC is ignored. |
+| `HYBRID`   | Uses payload KYC if provided, falls back to DB lookup.                 |
+| `EXTERNAL` | Requires KYC status in every transaction payload. No local DB lookup.  |
 
 Managed via `PATCH /api/v1/tenants/me` with `kycTrustMode`.
 

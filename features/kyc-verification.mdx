@@ -50,25 +50,25 @@ Tenants can switch to **BYOL mode** and plug in their own KYC provider via a JSO
 
 **Key mapping fields:**
 
-| Field             | Purpose                                                                                                     |
-| ----------------- | ----------------------------------------------------------------------------------------------------------- |
-| `requestMapping`  | Maps internal field names to provider API fields. Use `{{nin}}` for dynamic values or `'NIN'` for literals. |
-| `responseMapping` | JSON paths to extract `firstName` and `lastName` from the provider response.                                |
-| `matchConfidence` | Minimum confidence (0–100) to consider a name match successful.                                             |
-| `supportedVerifications` | Which checks the BYOL provider supports (`nin`, `bvn`, `vnin`, `liveness`).                          |
-| `maxTier`         | Highest tier this BYOL provider can achieve (`TIER_1`, `TIER_2`, `TIER_3`). If target tier exceeds this, platform falls back to embedded providers (if fallback is enabled). |
+| Field                    | Purpose                                                                                                                                                                      |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `requestMapping`         | Maps internal field names to provider API fields. Use `{{nin}}` for dynamic values or `'NIN'` for literals.                                                                  |
+| `responseMapping`        | JSON paths to extract `firstName` and `lastName` from the provider response.                                                                                                 |
+| `matchConfidence`        | Minimum confidence (0–100) to consider a name match successful.                                                                                                              |
+| `supportedVerifications` | Which checks the BYOL provider supports (`nin`, `bvn`, `vnin`, `liveness`).                                                                                                  |
+| `maxTier`                | Highest tier this BYOL provider can achieve (`TIER_1`, `TIER_2`, `TIER_3`). If target tier exceeds this, platform falls back to embedded providers (if fallback is enabled). |
 
 Admins can switch modes and edit the BYOL config from **Dashboard → Settings → KYC Provider**.
 
 ## KYC Tiers
 
-Ratel implements CBN-mandated KYC tiers. Each tier maps to different verification requirements and transaction limits:
+The platform implements CBN-mandated KYC tiers. Each tier maps to different verification requirements and transaction limits:
 
-| Tier                | Requirements                                                          | Approval From Status | CBN Typical Limit  |
-| ------------------- | --------------------------------------------------------------------- | -------------------- | ------------------ |
-| `TIER_1` · Basic    | BVN **or** NIN                                                        | `NIN_VERIFIED` / `BVN_VERIFIED` | ₦20,000 single txn |
-| `TIER_2` · Standard | BVN + valid ID                                                        | `BVN_VERIFIED`       | ₦500,000 max balance |
-| `TIER_3` · Premium  | BVN/NIN + valid ID + proof of address + liveness                      | `LIVENESS_PASSED`    | Unlimited          |
+| Tier                | Requirements                                     | Approval From Status            | CBN Typical Limit    |
+| ------------------- | ------------------------------------------------ | ------------------------------- | -------------------- |
+| `TIER_1` · Basic    | BVN **or** NIN                                   | `NIN_VERIFIED` / `BVN_VERIFIED` | ₦20,000 single txn   |
+| `TIER_2` · Standard | BVN + valid ID                                   | `BVN_VERIFIED`                  | ₦500,000 max balance |
+| `TIER_3` · Premium  | BVN/NIN + valid ID + proof of address + liveness | `LIVENESS_PASSED`               | Unlimited            |
 
 - Applications default to `TIER_1`, or `TIER_2` if both BVN and NIN are provided at creation
 - Tier can be explicitly set at creation via the `tier` field
@@ -101,6 +101,7 @@ POST /api/v1/kyc/applications/kyc_abc123/verify-bvn
 ```
 
 **Key rules:**
+
 - Updates only allowed while status is `PENDING`, `DOCUMENT_UPLOADED`, `NIN_VERIFIED`, or `BVN_VERIFIED`
 - NIN and BVN are validated as exactly 11 digits; empty strings clear the field
 - If both BVN and NIN become present, tier auto-bumps from `TIER_1` to `TIER_2`
@@ -127,25 +128,25 @@ Applications progress through the following statuses during verification:
 
 When a transaction is screened, the KYC Verification engine evaluates the sender's status. If no KYC application exists, the engine flags it accordingly.
 
-| Condition                                         | Score | Outcome    | What Happens                                                    |
-| ------------------------------------------------- | ----- | ---------- | --------------------------------------------------------------- |
-| **No KYC record**                                 | 100   | `BLOCK`    | Transaction blocked, officer notified, customer prompted to complete KYC |
-| **PENDING**                                       | 100   | `BLOCK`    | Transaction blocked unti-verification completes                |
-| **DOCUMENT_UPLOADED**                             | 100   | `BLOCK`    | Transaction blocked-ntil verification completes                |
-| **NIN_VERIFIED / BVN_VERIFIED**                   | 100   | `BLOCK`    | Maps to `IN_PROGRESS` — transaction blocked until fully verified |
-| **LIVENESS_PASSED**                               | 0     | `APPROVE`  | Maps to `VERIFIED` — no risk contribution (Tier 3 equivalent)  |
-| **APPROVED**                                      | 0     | `APPROVE`  | Fully verified — no risk contribution                           |
-| **EXPIRED**                                       | 100   | `BLOCK`    | Transaction blocked, re-verification required                   |
-| **REJECTED**                                      | 100   | `BLOCK`    | Transaction blocked, enhanced due diligence required            |
+| Condition                       | Score | Outcome   | What Happens                                                             |
+| ------------------------------- | ----- | --------- | ------------------------------------------------------------------------ |
+| **No KYC record**               | 100   | `BLOCK`   | Transaction blocked, officer notified, customer prompted to complete KYC |
+| **PENDING**                     | 100   | `BLOCK`   | Transaction blocked unti-verification completes                          |
+| **DOCUMENT_UPLOADED**           | 100   | `BLOCK`   | Transaction blocked-ntil verification completes                          |
+| **NIN_VERIFIED / BVN_VERIFIED** | 100   | `BLOCK`   | Maps to `IN_PROGRESS` — transaction blocked until fully verified         |
+| **LIVENESS_PASSED**             | 0     | `APPROVE` | Maps to `VERIFIED` — no risk contribution (Tier 3 equivalent)            |
+| **APPROVED**                    | 0     | `APPROVE` | Fully verified — no risk contribution                                    |
+| **EXPIRED**                     | 100   | `BLOCK`   | Transaction blocked, re-verification required                            |
+| **REJECTED**                    | 100   | `BLOCK`   | Transaction blocked, enhanced due diligence required                     |
 
 ## KYC Trust Modes
 
 Tenants can configure how KYC status is resolved during transaction screening:
 
-| Mode       | Behavior                                                                 |
-| ---------- | ------------------------------------------------------------------------ |
-| `STRICT`   | **Default.** KYC records must exist in Ratel's DB. Payload KYC is ignored. |
-| `HYBRID`   | Uses payload KYC if provided, falls back to DB lookup. `senderKycTier` optional. |
+| Mode       | Behavior                                                                                      |
+| ---------- | --------------------------------------------------------------------------------------------- |
+| `STRICT`   | **Default.** KYC records must exist in the DB. Payload KYC is ignored.                        |
+| `HYBRID`   | Uses payload KYC if provided, falls back to DB lookup. `senderKycTier` optional.              |
 | `EXTERNAL` | Requires KYC status **and** `senderKycTier` in every transaction payload. No local DB lookup. |
 
 Set the mode via `PATCH /api/v1/tenants/me` with `kycTrustMode`.
@@ -156,27 +157,27 @@ KYC applications support document uploads via the API. Documents are stored in *
 
 ### Supported Document Types
 
-| Type              | Description                          |
-| ----------------- | ------------------------------------ |
-| `PASSPORT`        | International passport               |
-| `NATIONAL_ID`     | National identity card               |
-| `DRIVERS_LICENSE` | Driver's license                     |
-| `VOTERS_CARD`     | Voter's card                         |
-| `UTILITY_BILL`    | Utility bill (address proof)         |
-| `BANK_STATEMENT`  | Bank statement                       |
-| `SELFIE`          | Selfie photograph                    |
-| `LIVENESS_VIDEO`  | Liveness check video recording       |
-| `SIGNATURE`       | Signature specimen                   |
-| `OTHER`           | Any other document                   |
+| Type              | Description                    |
+| ----------------- | ------------------------------ |
+| `PASSPORT`        | International passport         |
+| `NATIONAL_ID`     | National identity card         |
+| `DRIVERS_LICENSE` | Driver's license               |
+| `VOTERS_CARD`     | Voter's card                   |
+| `UTILITY_BILL`    | Utility bill (address proof)   |
+| `BANK_STATEMENT`  | Bank statement                 |
+| `SELFIE`          | Selfie photograph              |
+| `LIVENESS_VIDEO`  | Liveness check video recording |
+| `SIGNATURE`       | Signature specimen             |
+| `OTHER`           | Any other document             |
 
 ### Document Endpoints
 
-| Method   | Endpoint                                                   | Description                        |
-| -------- | ---------------------------------------------------------- | ---------------------------------- |
-| `POST`   | `/api/v1/kyc/applications/:id/documents`                   | Upload document (multipart/form-data) |
-| `GET`    | `/api/v1/kyc/applications/:id/documents`                   | List documents with presigned URLs |
-| `GET`    | `/api/v1/kyc/applications/:id/documents/:docId/download`   | Get 5-minute presigned download URL |
-| `DELETE` | `/api/v1/kyc/applications/:id/documents/:docId`            | Delete document (admin only)       |
+| Method   | Endpoint                                                 | Description                           |
+| -------- | -------------------------------------------------------- | ------------------------------------- |
+| `POST`   | `/api/v1/kyc/applications/:id/documents`                 | Upload document (multipart/form-data) |
+| `GET`    | `/api/v1/kyc/applications/:id/documents`                 | List documents with presigned URLs    |
+| `GET`    | `/api/v1/kyc/applications/:id/documents/:docId/download` | Get 5-minute presigned download URL   |
+| `DELETE` | `/api/v1/kyc/applications/:id/documents/:docId`          | Delete document (admin only)          |
 
 ### How It Works
 
@@ -203,10 +204,10 @@ curl -X POST /api/v1/kyc/applications/kyc_abc123/documents \
 
 When a BYOL provider is unavailable, tenants can configure the fallback behavior:
 
-| Mode             | Behavior                                                                |
-| ---------------- | ----------------------------------------------------------------------- |
-| `NONE`           | **Default.** Returns `ServiceUnavailableException`.                      |
-| `WALLET_RESERVE` | Falls back to the embedded provider if the wallet has available funds.   |
+| Mode             | Behavior                                                               |
+| ---------------- | ---------------------------------------------------------------------- |
+| `NONE`           | **Default.** Returns `ServiceUnavailableException`.                    |
+| `WALLET_RESERVE` | Falls back to the embedded provider if the wallet has available funds. |
 
 Set the mode via `PATCH /api/v1/tenants/me` with `byolFallbackMode`.
 

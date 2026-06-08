@@ -21,8 +21,8 @@ A tenant represents your organization within Verifow. All your transactions, cas
 | **Engine Configuration**   | Risk weights and thresholds can be tuned per tenant                                  |
 | **Auto-Seeded Rules**      | New tenants automatically receive the 9 CBN mandatory rules                          |
 | **KYC Provider Selection** | Each tenant chooses between embedded providers or BYOL (Bring Your Own License)      |
-| **KYC Trust Mode**         | Controls how KYC status is resolved: STRICT, HYBRID, or EXTERNAL                      |
-| **BYOL Fallback Mode**     | Defines behavior when the BYOL provider is unavailable                                |
+| **KYC Trust Mode**         | Controls how KYC status is resolved: STRICT, HYBRID, or EXTERNAL                     |
+| **BYOL Fallback Mode**     | Defines behavior when the BYOL provider is unavailable                               |
 
 ## Data Boundaries
 
@@ -43,7 +43,7 @@ Each tenant independently controls how customer identity verification is perform
 
 ### Provider Modes
 
-| Mode       | Description                                           | Use Case-                                    |
+| Mode       | Description                                           | Use Case-                                     |
 | ---------- | ----------------------------------------------------- | --------------------------------------------- |
 | `EMBEDDED` | Platform-managed providers (primary → fallback chain) | Default — no setup required                   |
 | `BYOL`     | Tenant provides their own KYC API credentials         | Institutions with existing provider contracts |
@@ -68,11 +68,11 @@ The configuration is stored securely as JSON in `Tenant.kycProviderConfig` and i
 
 Controls how KYC status is resolved during transaction screening:
 
-| Mode       | Description                                                                  |
-| ---------- | ---------------------------------------------------------------------------- |
-| `STRICT`   | **Default.** KYC records must exist in Ratel's DB. Payload KYC is ignored.   |
-| `HYBRID`   | Uses payload KYC if provided, falls back to DB lookup.                       |
-| `EXTERNAL` | Requires KYC status in every transaction payload. No local DB lookup.        |
+| Mode       | Description                                                                |
+| ---------- | -------------------------------------------------------------------------- |
+| `STRICT`   | **Default.** KYC records must exist in Ratel's DB. Payload KYC is ignored. |
+| `HYBRID`   | Uses payload KYC if provided, falls back to DB lookup.                     |
+| `EXTERNAL` | Requires KYC status in every transaction payload. No local DB lookup.      |
 
 Managed via `PATCH /api/v1/tenants/me` with `kycTrustMode`.
 
@@ -80,48 +80,11 @@ Managed via `PATCH /api/v1/tenants/me` with `kycTrustMode`.
 
 Defines behavior when the BYOL provider is unavailable:
 
-| Mode             | Description                                                              |
-| ---------------- | ------------------------------------------------------------------------ |
-| `NONE`           | **Default.** Returns `ServiceUnavailableException`.                      |
-| `WALLET_RESERVE` | Falls back to the embedded provider if the wallet has available funds.   |
+| Mode             | Description                                                            |
+| ---------------- | ---------------------------------------------------------------------- |
+| `NONE`           | **Default.** Returns `ServiceUnavailableException`.                    |
+| `WALLET_RESERVE` | Falls back to the embedded provider if the wallet has available funds. |
 
 Managed via `PATCH /api/v1/tenants/me` with `byolFallbackMode`.
-
-## Automated VPS Provisioning
-
-For institutions requiring a dedicated deployment, Verifow includes an automated VPS provisioning script.
-
-### What It Does
-
-`scripts/provision-bank-vps.sh` creates a fully configured single-tenant deployment:
-
-- Generates secure secrets (JWT, DB, MinIO)
-- Installs Nginx with SSL via Certbot (auto-renewal)
-- Creates a systemd service (`ratel-{slug}.service`)
-- Configures log rotation at `/var/log/ratel-{slug}/`
-- Hardens UFW firewall (exposes only 22, 80, 443)
-- Optionally installs compliance engines (Marble, Tirreno)
-
-### Usage
-
-```bash
-./scripts/provision-bank-vps.sh \
-  --bank-name "First Bank of Nigeria" \
-  --slug "firstbank" \
-  --domain "compliance.firstbank.ng" \
-  --admin-email "admin@firstbank.ng" \
-  --with-engines
-```
-
-### Arguments
-
-| Flag             | Required | Description                                     |
-| ---------------- | -------- | ----------------------------------------------- |
-| `--bank-name`    | ✅       | Full institution name                           |
-| `--slug`         | ✅       | Short identifier for services/files             |
-| `--domain`       | ✅       | Primary domain for the deployment               |
-| `--admin-email`  | ✅       | Admin email for SSL notifications               |
-| `--with-engines` |          | Also provision Marble + Tirreno engines         |
-| `--skip-ssl`     |          | Skip Certbot SSL (use for internal deployments) |
 
 > **Note:** Tenant-level configuration changes for engine weights or feature flags are handled by platform administrators. Contact your account manager if you need adjustments beyond KYC provider selection.

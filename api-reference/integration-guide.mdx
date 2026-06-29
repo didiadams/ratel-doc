@@ -80,6 +80,7 @@ Submit a single transaction for real-time AML/CFT screening. The response includ
 | `senderKycTier`          | `string` |          | `TIER_1`, `TIER_2`, `TIER_3`. Required in EXTERNAL mode; enables CBN tier-based limits in rule engines.                     |
 | `senderKycVerifiedAt`    | `string` |          | ISO 8601 timestamp of last KYC verification.                                                                                |
 | `senderKycExternalRef`   | `string` |          | Internal KYC reference (e.g. `CORE-BANK-KYC-78432`).                                                                        |
+| `senderKybStatus`        | `string` |          | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`. For business transactions; bypasses Verifow KYB lookup when `VERIFIED`. |
 | `senderName`             | `string` | ✅       | Sender's full name. **Screened against global sanctions & PEP lists.**                                                      |
 | `senderBankCode`         | `string` |          | Sender's bank CBN code (e.g. `"058"` for GTBank).                                                                           |
 | `receiverAccountNumber`  | `string` |          | Receiver's account number.                                                                                                  |
@@ -232,6 +233,65 @@ print(result["data"]["outcome"])  # "APPROVE" | "REVIEW" | "ESCALATE" | "BLOCK"
 ```
 
 </CodeGroup>
+
+### Business Transactions (KYB)
+
+For corporate senders, set `metadata.entityType` to `"BUSINESS"` and provide the company's CAC registration number in `metadata.senderRcNumber`. The platform runs the transaction through the KYB identity-risk engine in addition to KYC and sanctions screening.
+
+If your bank has already verified the business outside of Verifow, send `senderKybStatus: "VERIFIED"` to bypass the Verifow KYB lookup. You should still send the sender's KYC fields (`senderKycStatus`, `senderKycTier`, `senderKycVerifiedAt`, `senderKycExternalRef`) when available, because authorized signatories and directors may still be evaluated under individual KYC rules.
+
+**Example Request — Business Transaction**
+
+```json
+{
+  "externalId": "TXN-2026-BIZ-001",
+  "type": "TRANSFER",
+  "channel": "INTERNET_BANKING",
+  "amount": 25000000,
+  "currency": "NGN",
+  "senderAccountNumber": "0123456789",
+  "senderBvn": "22012345678",
+  "senderName": "Acme Nigeria Ltd",
+  "senderBankCode": "058",
+  "senderKycStatus": "VERIFIED",
+  "senderKycTier": "TIER_3",
+  "senderKycVerifiedAt": "2026-05-01T10:00:00Z",
+  "senderKycExternalRef": "CORE-BANK-KYC-78432",
+  "senderKybStatus": "VERIFIED",
+  "receiverAccountNumber": "9876543210",
+  "receiverName": "Jane Smith",
+  "receiverBankCode": "033",
+  "receiverCountry": "NG",
+  "narration": "Invoice payment",
+  "timestamp": "2026-05-08T12:00:00Z",
+  "metadata": {
+    "entityType": "BUSINESS",
+    "senderRcNumber": "RC123456"
+  }
+}
+```
+
+**Business Screening Payload Fields**
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `senderKycStatus` | `string` | ✅ | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`. Required in EXTERNAL mode; asserts the sender's individual KYC status. |
+| `senderKycTier` | `string` | ✅ | `TIER_1`, `TIER_2`, `TIER_3`. Required in EXTERNAL mode; enables CBN tier-based limits. |
+| `senderKycVerifiedAt` | `string` | | ISO 8601 timestamp of last KYC verification. |
+| `senderKycExternalRef` | `string` | | Internal KYC reference for audit trail. |
+| `senderKybStatus` | `string` | ✅ | `VERIFIED`, `PENDING`, `IN_PROGRESS`, `REJECTED`, `EXPIRED`, `NONE`. For business transactions; asserts the corporate KYB status. |
+| `metadata.entityType` | `string` | ✅ | Must be `"BUSINESS"` to trigger KYB screening. |
+| `metadata.senderRcNumber` | `string` | ✅ | CAC registration number (e.g. `"RC123456"`). |
+
+<Note>
+  **Regulatory transparency:** When you assert `senderKycStatus` or `senderKybStatus` in the payload, you are attesting that your bank has independently verified the customer or business. Verifow will rely on these assertions instead of performing its own lookup when the tenant is configured for HYBRID or EXTERNAL mode.
+</Note>
+
+<Note>
+  If `senderKybStatus` is omitted for a business transaction, Verifow will attempt a local KYB lookup using `metadata.senderRcNumber`. If no KYB record exists, the transaction will be scored as high risk.
+</Note>
+
+---
 
 **Example Response — 200 OK (REVIEW)**
 

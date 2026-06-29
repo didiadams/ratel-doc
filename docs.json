@@ -60,7 +60,8 @@
         "group": "API Reference",
         "pages": [
           "api-reference/integration-guide",
-          "api-reference/quick-reference"
+          "api-reference/quick-reference",
+          "docs/api-testing-payloads"
         ]
       }
     ]
